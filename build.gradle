@@ -1,3 +1,4 @@
+//./gradlew bootRun  and then localhost:9090
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.5'
