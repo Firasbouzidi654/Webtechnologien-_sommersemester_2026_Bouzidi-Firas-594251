@@ -1,13 +1,23 @@
 <template>
-  <div class="signup-container">
+  <div class="signup-container" :class="{ 'dark-mode': isDark, 'lang-de': language === 'de' }">
+    <!-- Dark Mode Toggle Button -->
+    <button @click="toggleDarkMode" class="dark-mode-toggle">
+      {{ isDark ? '☀️' : '🌙' }}
+    </button>
+
+    <!-- Language Toggle Button -->
+    <button @click="toggleLanguage" class="lang-toggle">
+      {{ language.toUpperCase() }}
+    </button>
+
     <aside class="playground-aside">
       <div class="visual-content">
         <div class="play-icons">
           <span class="sun">☀️</span>
           <span class="blocks">🧱</span>
         </div>
-        <h2>Welcome to the fun zone!</h2>
-        <p>Your child's health journey starts with play and safety.</p>
+        <h2>{{ t('welcomeTitle') }}</h2>
+        <p>{{ t('welcomeText') }}</p>
       </div>
       <div class="visual-overlay"></div>
     </aside>
@@ -18,59 +28,68 @@
           <h1 class="brand-title">
             <span class="red-text">KinderCare</span>
             <span class="green-text">Connect</span>
-            <br><br>
           </h1>
           <p class="brand-tagline">
-            <span class="green-text">Making health communication</span>
+            <span class="green-text">{{ t('tagline1') }}</span>
             <br>
-            <span class="red-text">feel like child's play!</span>
+            <span class="red-text">{{ t('tagline2') }}</span>
           </p>
         </header>
 
         <form @submit.prevent="submitForm" class="signup-form">
           <div class="form-grid">
             <div class="input-wrapper">
-              <label for="fullName">Parent's Full Name</label>
-              <input id="fullName" v-model="fullName" type="text" placeholder="e.g., Papa Bear" required />
+              <label for="fullName">{{ t('fullNameLabel') }}</label>
+              <input id="fullName" v-model="fullName" type="text" :placeholder="t('fullNamePlaceholder')" required />
             </div>
 
             <div class="input-wrapper">
-              <label for="email">Email Address</label>
-              <input id="email" v-model="email" type="email" placeholder="email@example.com" required />
+              <label for="email">{{ t('emailLabel') }}</label>
+              <input id="email" v-model="email" type="email" :placeholder="t('emailPlaceholder')" required />
             </div>
 
             <div class="input-wrapper">
-              <label for="password">Password</label>
-              <input id="password" v-model="password" type="password" placeholder="••••••••" required />
+              <label for="password">{{ t('passwordLabel') }}</label>
+              <input id="password" v-model="password" type="password" :placeholder="t('passwordPlaceholder')" required />
             </div>
 
             <div class="input-wrapper">
-              <label for="confirmPassword">Confirm Password</label>
-              <input id="confirmPassword" v-model="confirmPassword" type="password" placeholder="••••••••" required />
+              <label for="confirmPassword">{{ t('confirmPasswordLabel') }}</label>
+              <input id="confirmPassword" v-model="confirmPassword" type="password" :placeholder="t('confirmPasswordPlaceholder')" required />
             </div>
 
             <div class="input-wrapper full-width">
-              <label for="phoneNumber">Emergency Number</label>
-              <input id="phoneNumber" v-model="phoneNumber" type="tel" placeholder="+49 176 12345678" required />
+              <label for="phoneNumber">{{ t('phoneLabel') }}</label>
+              <input id="phoneNumber" v-model="phoneNumber" type="tel" :placeholder="t('phonePlaceholder')" required />
             </div>
           </div>
 
           <div class="options-row">
             <label class="custom-checkbox">
               <input type="checkbox" v-model="agreeToTerms" required />
-              <span class="label-text">I accept the <a href="#">Fun Rules</a> & <a href="#">Privacy</a></span>
+              <span class="label-text">{{ t('agreeText') }} <a href="#" @click.prevent="showPrivacy = true">{{ t('privacyLink') }}</a></span>
             </label>
           </div>
 
-          <button type="submit" class="primary-btn">Join KinderCare!</button>
+          <button type="submit" class="primary-btn">{{ t('submitButton') }}</button>
 
           <footer class="form-footer">
-            <span>Already a member?</span>
-            <a href="#" class="login-link">Sign In</a>
+            <span>{{ t('alreadyMember') }}</span>
+            <a href="#" class="login-link">{{ t('signInLink') }}</a>
           </footer>
         </form>
       </div>
     </main>
+
+    <!-- Privacy Modal -->
+    <div v-if="showPrivacy" class="modal-overlay" @click="showPrivacy = false">
+      <div class="modal-content" @click.stop>
+        <h2>{{ t('privacyTitle') }}</h2>
+        <p>{{ t('privacyText1') }}</p>
+        <p>{{ t('privacyText2') }}</p>
+        <button @click="showPrivacy = false" class="close-btn">{{ t('closeButton') }}</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -84,42 +103,163 @@ export default {
       password: '',
       confirmPassword: '',
       phoneNumber: '',
-      agreeToTerms: false
+      agreeToTerms: false,
+      isDark: false,
+      showPrivacy: false,
+      language: 'en', // Default language
+      translations: {
+        en: {
+          welcomeTitle: 'Welcome to the fun zone!',
+          welcomeText: 'Your child\'s health journey starts with play and safety.',
+          tagline1: 'Making health communication',
+          tagline2: 'feel like child\'s play!',
+          fullNameLabel: 'Parent\'s Full Name',
+          fullNamePlaceholder: 'e.g., Papa Bear',
+          emailLabel: 'Email Address',
+          emailPlaceholder: 'email@example.com',
+          passwordLabel: 'Password',
+          passwordPlaceholder: '••••••••',
+          confirmPasswordLabel: 'Confirm Password',
+          confirmPasswordPlaceholder: '••••••••',
+          phoneLabel: 'Emergency Number',
+          phonePlaceholder: '+49 176 12345678',
+          agreeText: 'I accept the',
+          privacyLink: 'Privacy',
+          submitButton: 'Join KinderCare!',
+          alreadyMember: 'Already a member?',
+          signInLink: 'Sign In',
+          privacyTitle: 'Privacy Policy',
+          privacyText1: 'This is the privacy policy for KinderCare Connect. We respect your privacy and are committed to protecting your personal information.',
+          privacyText2: 'Details about data collection, usage, and your rights...',
+          closeButton: 'Close'
+        },
+        de: {
+          welcomeTitle: 'Willkommen in der Spaßzone!',
+          welcomeText: 'Die Gesundheitsreise Ihres Kindes beginnt mit Spiel und Sicherheit.',
+          tagline1: 'Gesundheitskommunikation machen',
+          tagline2: 'wie Kinderspiel!',
+          fullNameLabel: 'Name des Elternteils',
+          fullNamePlaceholder: 'z.B., Papa Bär',
+          emailLabel: 'E-Mail-Adresse',
+          emailPlaceholder: 'email@beispiel.com',
+          passwordLabel: 'Passwort',
+          passwordPlaceholder: '••••••••',
+          confirmPasswordLabel: 'Passwort bestätigen',
+          confirmPasswordPlaceholder: '••••••••',
+          phoneLabel: 'Notfallnummer',
+          phonePlaceholder: '+49 176 12345678',
+          agreeText: 'Ich akzeptiere die',
+          privacyLink: 'Datenschutz',
+          submitButton: 'Anmelden',
+          alreadyMember: 'Bereits Mitglied?',
+          signInLink: 'Anmelden',
+          privacyTitle: 'Datenschutzrichtlinie',
+          privacyText1: 'Dies ist die Datenschutzrichtlinie für KinderCare Connect. Wir respektieren Ihre Privatsphäre und verpflichten uns, Ihre persönlichen Informationen zu schützen.',
+          privacyText2: 'Details zur Datenerfassung, Nutzung und Ihren Rechten...',
+          closeButton: 'Schließen'
+        }
+      }
     };
   },
   methods: {
     submitForm() {
+      const errorMsg = this.language === 'en' ? "Oh no! Passwords don't match like friends!" : "Oh nein! Passwörter passen nicht zusammen wie Freunde!";
       if (this.password !== this.confirmPassword) {
-        alert("Oh no! Passwords don't match like friends!");
+        alert(errorMsg);
         return;
       }
       console.log("Form Submitted:", { ...this.$data });
+    },
+    toggleDarkMode() {
+      this.isDark = !this.isDark;
+    },
+    toggleLanguage() {
+      this.language = this.language === 'en' ? 'de' : 'en';
+    },
+    t(key) {
+      return this.translations[this.language][key] || key;
     }
   }
 };
 </script>
 
 <style scoped>
-/* COULEURS ET VARIABLES */
+/* Colors and Variables */
 :root {
   --red: #e63946;
   --green: #2a9d8f;
   --bg-light: #f0fff4;
+  --bg-dark: #121212;
+  --text-dark: #e0e0e0;
 }
 
-/* Classes pour les couleurs de texte demandées */
+/* Global styles for full screen */
+:global(html), :global(body) {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Classes for requested text colors */
 .red-text { color: #e63946; }
 .green-text { color: #2a9d8f; }
 
 .signup-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f0fff4;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
-/* PANNEAU GAUCHE */
+/* Dark Mode Toggle Button */
+.dark-mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: background 0.3s;
+  z-index: 10;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Language Toggle Button */
+.lang-toggle {
+  position: absolute;
+  top: 20px;
+  right: 80px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: background 0.3s;
+  z-index: 10;
+}
+
+.lang-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
 .playground-aside {
   flex: 1;
   position: relative;
@@ -149,7 +289,7 @@ export default {
   border-radius: 20px;
 }
 
-/* SECTION FORMULAIRE */
+/* FORM SECTION */
 .form-section {
   flex: 1.2;
   display: flex;
@@ -160,34 +300,19 @@ export default {
 
 .form-card {
   width: 100%;
-  max-width: 500px; /* Limite la largeur pour éviter le débordement */
+  max-width: 500px; /* Limit width to avoid overflow */
   background: white;
   padding: 40px;
   border-radius: 25px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-  box-sizing: border-box; /* RÈGLE MAGIQUE : force tout à rester dedans */
-}
-
-.brand-title {
-  font-size: 2.5rem;
-  font-weight: 900;
-  text-align: center;
-  margin-bottom: 10px;
-  transform: rotate(-1deg);
-}
-
-.brand-tagline {
-  text-align: center;
-  margin-bottom: 30px;
-  font-weight: 700;
-  font-size: 1rem;
+  box-sizing: border-box; /* MAGIC RULE: force everything to stay inside */
 }
 
 /* CORRECTION DES CARREAUX (INPUTS) */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px; /* Espacement entre les carreaux */
+  gap: 15px; /* Spacing between inputs */
   width: 100%;
 }
 
@@ -209,21 +334,38 @@ export default {
 }
 
 .input-wrapper input {
-  width: 100%; /* S'adapte à la colonne */
+  width: 100%;
   padding: 12px 20px;
   border-radius: 50px;
-  border: 2px solid #e2e8f0;
-  box-sizing: border-box; /* EMPÊCHE DE SORTIR DU CADRE */
-  transition: all 0.3s;
+
+  border: 2px solid #d1fae5;          /* light green */
+  background-color: #f9fffd;          /* soft background */
+
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+
+  font-size: 0.95rem;
+  color: #333;
 }
 
+/* Focus effect */
+.input-wrapper input:focus {
+  outline: none;
+  border-color: #2a9d8f;              /* main green */
+  box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.15);
+}
+
+/* Hover effect */
+.input-wrapper input:hover {
+  border-color: #a7f3d0;
+}
 .input-wrapper input:focus {
   outline: none;
   border-color: #2a9d8f;
   box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.1);
 }
 
-/* BOUTON ET FOOTER */
+/* BUTTON AND FOOTER */
 .primary-btn {
   width: 100%;
   padding: 15px;
@@ -255,10 +397,81 @@ export default {
   text-decoration: none;
 }
 
+/* DARK MODE STYLES */
+.dark-mode {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.dark-mode .form-card {
+  background: #1e1e1e;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+.dark-mode .input-wrapper input {
+  background-color: #2c2c2c;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-mode .primary-btn {
+  background: #2a9d8f;
+}
+
+.dark-mode .primary-btn:hover {
+  background: #218c74;
+}
+
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #e63946;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.close-btn:hover {
+  background: #c12b36;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .playground-aside { display: none; }
   .form-grid { grid-template-columns: 1fr; }
   .full-width { grid-column: span 1; }
+}
+
+.brand-title {
+  font-size: 2rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 10px;
+  transform: rotate(-1deg);
 }
 </style>

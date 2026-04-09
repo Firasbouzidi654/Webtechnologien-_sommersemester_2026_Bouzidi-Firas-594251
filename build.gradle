@@ -38,10 +38,11 @@ task buildFrontend(type: NpmTask) {
 }
 
 processResources {
-	dependsOn buildFrontend
+	// dependsOn buildFrontend  // Commented out since frontend is built manually
 	from("${project.projectDir}/src/main/frontend/dist") {
 		into "static"
 	}
+	duplicatesStrategy = 'include'
 }
 
 tasks.named('test') {
