@@ -205,8 +205,9 @@ export default {
 :global(html), :global(body) {
   margin: 0;
   padding: 0;
-  height: 100%;
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Classes for requested text colors */
@@ -215,15 +216,11 @@ export default {
 
 .signup-container {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #f0fff4;
   width: 100%;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Dark Mode Toggle Button */
@@ -277,6 +274,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 40px;
+  min-height: 100vh;
 }
 
 .visual-overlay {
@@ -303,24 +301,28 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  min-height: 100vh;
+  width: 100%;
 }
 
 .form-card {
   width: 100%;
-  max-width: 600px; /* Increased width for better readability */
+  max-width: 600px;
   background: white;
   padding: 40px;
   border-radius: 25px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-  box-sizing: border-box; /* MAGIC RULE: force everything to stay inside */
+  box-sizing: border-box;
+  margin: auto;
 }
 
 /* CORRECTION DES CARREAUX (INPUTS) */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px; /* Spacing between inputs */
+  gap: 15px;
   width: 100%;
+  margin-bottom: 15px;
 }
 
 .full-width {
@@ -344,13 +346,10 @@ export default {
   width: 100%;
   padding: 12px 20px;
   border-radius: 50px;
-
-  border: 2px solid #d1fae5;          /* light green */
-  background-color: #f9fffd;          /* soft background */
-
+  border: 2px solid #d1fae5;
+  background-color: #f9fffd;
   box-sizing: border-box;
   transition: all 0.25s ease;
-
   font-size: 0.95rem;
   color: #333;
 }
@@ -358,7 +357,7 @@ export default {
 /* Focus effect */
 .input-wrapper input:focus {
   outline: none;
-  border-color: #2a9d8f;              /* main green */
+  border-color: #2a9d8f;
   box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.15);
 }
 
@@ -366,10 +365,40 @@ export default {
 .input-wrapper input:hover {
   border-color: #a7f3d0;
 }
-.input-wrapper input:focus {
-  outline: none;
-  border-color: #2a9d8f;
-  box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.1);
+
+/* OPTIONS AND CHECKBOX */
+.options-row {
+  margin: 20px 0;
+  width: 100%;
+}
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.custom-checkbox input {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.label-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.label-text a {
+  color: #2a9d8f;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.label-text a:hover {
+  text-decoration: underline;
 }
 
 /* BUTTON AND FOOTER */
@@ -468,10 +497,101 @@ export default {
 }
 
 /* RESPONSIVE */
+@media (max-width: 1200px) {
+  .playground-aside {
+    flex: 0.8;
+  }
+  .form-section {
+    flex: 1.2;
+  }
+}
+
 @media (max-width: 900px) {
-  .playground-aside { display: none; }
-  .form-grid { grid-template-columns: 1fr; }
-  .full-width { grid-column: span 1; }
+  .signup-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .playground-aside {
+    display: none;
+  }
+
+  .form-section {
+    flex: 1;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .form-card {
+    max-width: 100%;
+    width: 100%;
+    padding: 30px;
+  }
+
+  .brand-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .form-section {
+    padding: 15px;
+    min-height: 100vh;
+  }
+
+  .form-card {
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  .dark-mode-toggle {
+    top: 15px;
+    right: 15px;
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+  }
+
+  .lang-dropdown {
+    top: 15px;
+    right: 65px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+  }
+
+  .input-wrapper label {
+    font-size: 0.8rem;
+  }
+
+  .input-wrapper input {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+
+  .primary-btn {
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  .form-footer {
+    font-size: 0.85rem;
+  }
 }
 
 .brand-title {
