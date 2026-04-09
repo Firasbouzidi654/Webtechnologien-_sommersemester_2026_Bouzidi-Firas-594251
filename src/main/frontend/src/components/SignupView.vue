@@ -5,10 +5,11 @@
       {{ isDark ? '☀️' : '🌙' }}
     </button>
 
-    <!-- Language Toggle Button -->
-    <button @click="toggleLanguage" class="lang-toggle">
-      {{ language.toUpperCase() }}
-    </button>
+    <!-- Language Dropdown -->
+    <select @change="toggleLanguage" v-model="language" class="lang-dropdown">
+      <option value="en">🇺🇸 English</option>
+      <option value="de">🇩🇪 Deutsch</option>
+    </select>
 
     <aside class="playground-aside">
       <div class="visual-content">
@@ -78,6 +79,8 @@
             <a href="#" class="login-link">{{ t('signInLink') }}</a>
           </footer>
         </form>
+
+        <FeaturesList :language="language" />
       </div>
     </main>
 
@@ -94,8 +97,13 @@
 </template>
 
 <script>
+import FeaturesList from './FeaturesList.vue';
+
 export default {
   name: 'SignupView',
+  components: {
+    FeaturesList
+  },
   data() {
     return {
       fullName: '',
@@ -239,24 +247,23 @@ export default {
   background: rgba(255, 255, 255, 1);
 }
 
-/* Language Toggle Button */
-.lang-toggle {
+/* Language Dropdown */
+.lang-dropdown {
   position: absolute;
   top: 20px;
   right: 80px;
   background: rgba(255, 255, 255, 0.8);
   border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 1.2rem;
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   transition: background 0.3s;
   z-index: 10;
 }
 
-.lang-toggle:hover {
+.lang-dropdown:hover {
   background: rgba(255, 255, 255, 1);
 }
 
@@ -300,7 +307,7 @@ export default {
 
 .form-card {
   width: 100%;
-  max-width: 500px; /* Limit width to avoid overflow */
+  max-width: 600px; /* Increased width for better readability */
   background: white;
   padding: 40px;
   border-radius: 25px;
