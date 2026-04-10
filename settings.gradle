@@ -1,1 +1,3 @@
-rootProject.name = 'Project_Webtechnologien_sommersemester_2026'
+rootProject.name = 'KinderCareConnect'
+
+include 'backend'
