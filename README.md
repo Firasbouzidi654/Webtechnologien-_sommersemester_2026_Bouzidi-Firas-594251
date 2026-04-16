@@ -18,4 +18,6 @@ Dieses Projekt trägt dazu bei, die Sicherheit der Kinder zu erhöhen, Fehler od
 - Erfassung von Krankheiten, Allergien und besonderen Bedürfnissen
 - Verwaltung von Medikamenten (Zeitplan, Dosierung, Häufigkeit)
 - Nachverfolgung der Medikamenteneinnahme (Pending / Taken / Missed)
-- Verwaltung von Notfallkontakten  
+- Verwaltung von Notfallkontakten
+- Benachrichtigungen und Erinnerungen für Eltern und Personal
+- Dashboard für Personal zur Übersicht über alle Kinder und deren Gesundheitsinformationen
