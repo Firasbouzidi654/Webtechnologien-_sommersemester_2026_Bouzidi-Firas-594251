@@ -11,6 +11,7 @@ import java.util.List;
  * REST Controller for managing children health information.
  * Provides endpoints to retrieve children data.
  */
+//Diese Route gibt eine Liste von Beispiel-Entitäten zurück, die aktuell im Backend simuliert werden,
 @RestController
 @RequestMapping("/api/children")
 public class ChildController {
