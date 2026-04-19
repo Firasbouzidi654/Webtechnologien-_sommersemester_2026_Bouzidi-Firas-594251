@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import SignupView from "./components/SignupView.vue";
+import SignupView from "./views/SignupView.vue";
 
 export default {
   components: {

@@ -34,8 +34,8 @@ dependencies {
 node {
 	download = true
 	version = '20.19.0'
-	workDir = file("${project.projectDir}/src/main/frontend/node_modules")
-	nodeProjectDir = file("${project.projectDir}/src/main/frontend")
+	workDir = file("${rootDir}/frontend/.gradle-node")
+	nodeProjectDir = file("${rootDir}/frontend")
 }
 
 task buildFrontend(type: NpmTask) {
@@ -45,7 +45,7 @@ task buildFrontend(type: NpmTask) {
 
 processResources {
 	// dependsOn buildFrontend  // Commented out since frontend is built manually
-	from("${project.projectDir}/src/main/frontend/dist") {
+	from("${rootDir}/frontend/dist") {
 		into "static"
 	}
 	duplicatesStrategy = 'include'

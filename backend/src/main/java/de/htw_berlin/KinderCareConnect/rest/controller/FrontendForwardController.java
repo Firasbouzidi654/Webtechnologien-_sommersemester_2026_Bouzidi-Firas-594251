@@ -1,14 +1,14 @@
-package de.htw_berlin.KinderCareConnect;
+package de.htw_berlin.KinderCareConnect.rest.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class HelloController {
+public class FrontendForwardController {
 
     @GetMapping("/")
     public String home() {
-        return "index"; // This will serve index.html from static/
+        return "index";
     }
 
     @GetMapping("/{path:[^\\.]*}")

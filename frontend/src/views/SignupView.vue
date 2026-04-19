@@ -2,20 +2,20 @@
   <div class="signup-container" :class="{ 'dark-mode': isDark, 'lang-de': language === 'de' }">
     <!-- Dark Mode Toggle Button -->
     <button @click="toggleDarkMode" class="dark-mode-toggle">
-      {{ isDark ? '☀️' : '🌙' }}
+      {{ isDark ? 'â˜€ï¸' : 'ðŸŒ™' }}
     </button>
 
     <!-- Language Dropdown -->
     <select @change="toggleLanguage" v-model="language" class="lang-dropdown">
-      <option value="en">🇺🇸 English</option>
-      <option value="de">🇩🇪 Deutsch</option>
+      <option value="en">ðŸ‡ºðŸ‡¸ English</option>
+      <option value="de">ðŸ‡©ðŸ‡ª Deutsch</option>
     </select>
 
     <aside class="playground-aside">
       <div class="visual-content">
         <div class="play-icons">
-          <span class="sun">☀️</span>
-          <span class="blocks">🧱</span>
+          <span class="sun">â˜€ï¸</span>
+          <span class="blocks">ðŸ§±</span>
         </div>
         <h2>{{ t('welcomeTitle') }}</h2>
         <p>{{ t('welcomeText') }}</p>
@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import FeaturesList from './FeaturesList.vue';
+import FeaturesList from '../components/FeaturesList.vue';
 
 export default {
   name: 'SignupView',
@@ -126,9 +126,9 @@ export default {
           emailLabel: 'Email Address',
           emailPlaceholder: 'email@example.com',
           passwordLabel: 'Password',
-          passwordPlaceholder: '••••••••',
+          passwordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
           confirmPasswordLabel: 'Confirm Password',
-          confirmPasswordPlaceholder: '••••••••',
+          confirmPasswordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
           phoneLabel: 'Emergency Number',
           phonePlaceholder: '+49 176 12345678',
           agreeText: 'I accept the',
@@ -142,18 +142,18 @@ export default {
           closeButton: 'Close'
         },
         de: {
-          welcomeTitle: 'Willkommen in der Spaßzone!',
+          welcomeTitle: 'Willkommen in der SpaÃŸzone!',
           welcomeText: 'Die Gesundheitsreise Ihres Kindes beginnt mit Spiel und Sicherheit.',
           tagline1: 'Gesundheitskommunikation machen',
           tagline2: 'wie Kinderspiel!',
           fullNameLabel: 'Name des Elternteils',
-          fullNamePlaceholder: 'z.B., Papa Bär',
+          fullNamePlaceholder: 'z.B., Papa BÃ¤r',
           emailLabel: 'E-Mail-Adresse',
           emailPlaceholder: 'email@beispiel.com',
           passwordLabel: 'Passwort',
-          passwordPlaceholder: '••••••••',
-          confirmPasswordLabel: 'Passwort bestätigen',
-          confirmPasswordPlaceholder: '••••••••',
+          passwordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+          confirmPasswordLabel: 'Passwort bestÃ¤tigen',
+          confirmPasswordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
           phoneLabel: 'Notfallnummer',
           phonePlaceholder: '+49 176 12345678',
           agreeText: 'Ich akzeptiere die',
@@ -162,16 +162,16 @@ export default {
           alreadyMember: 'Bereits Mitglied?',
           signInLink: 'Anmelden',
           privacyTitle: 'Datenschutzrichtlinie',
-          privacyText1: 'Dies ist die Datenschutzrichtlinie für KinderCare Connect. Wir respektieren Ihre Privatsphäre und verpflichten uns, Ihre persönlichen Informationen zu schützen.',
+          privacyText1: 'Dies ist die Datenschutzrichtlinie fÃ¼r KinderCare Connect. Wir respektieren Ihre PrivatsphÃ¤re und verpflichten uns, Ihre persÃ¶nlichen Informationen zu schÃ¼tzen.',
           privacyText2: 'Details zur Datenerfassung, Nutzung und Ihren Rechten...',
-          closeButton: 'Schließen'
+          closeButton: 'SchlieÃŸen'
         }
       }
     };
   },
   methods: {
     submitForm() {
-      const errorMsg = this.language === 'en' ? "Oh no! Passwords don't match like friends!" : "Oh nein! Passwörter passen nicht zusammen wie Freunde!";
+      const errorMsg = this.language === 'en' ? "Oh no! Passwords don't match like friends!" : "Oh nein! PasswÃ¶rter passen nicht zusammen wie Freunde!";
       if (this.password !== this.confirmPassword) {
         alert(errorMsg);
         return;
