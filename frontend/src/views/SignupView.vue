@@ -1,604 +1,374 @@
 <template>
-  <div class="signup-container" :class="{ 'dark-mode': isDark, 'lang-de': language === 'de' }">
-    <!-- Dark Mode Toggle Button -->
-    <button @click="toggleDarkMode" class="dark-mode-toggle">
-      {{ isDark ? 'â˜€ï¸' : 'ðŸŒ™' }}
-    </button>
+  <AuthShell
+    :common="common"
+    :hero="hero"
+    :is-dark="isDark"
+    :language="language"
+    :page="signup"
+    @navigate="$emit('navigate', $event)"
+    @toggle-theme="$emit('toggle-theme')"
+    @update-language="$emit('update-language', $event)"
+  >
+    <section class="page-header">
+      <h3>{{ signup.title }}</h3>
+      <p>{{ signup.subtitle }}</p>
+    </section>
 
-    <!-- Language Dropdown -->
-    <select @change="toggleLanguage" v-model="language" class="lang-dropdown">
-      <option value="en">ðŸ‡ºðŸ‡¸ English</option>
-      <option value="de">ðŸ‡©ðŸ‡ª Deutsch</option>
-    </select>
+    <form class="auth-form" @submit.prevent="submitForm">
+      <div class="form-grid">
+        <label class="field">
+          <span>{{ signup.fullNameLabel }}</span>
+          <input v-model.trim="form.fullName" type="text" :placeholder="signup.fullNamePlaceholder" required />
+        </label>
 
-    <aside class="playground-aside">
-      <div class="visual-content">
-        <div class="play-icons">
-          <span class="sun">â˜€ï¸</span>
-          <span class="blocks">ðŸ§±</span>
-        </div>
-        <h2>{{ t('welcomeTitle') }}</h2>
-        <p>{{ t('welcomeText') }}</p>
+        <label class="field">
+          <span>{{ signup.emailLabel }}</span>
+          <input v-model.trim="form.email" type="email" :placeholder="signup.emailPlaceholder" required />
+        </label>
+
+        <label class="field">
+          <span>{{ signup.passwordLabel }}</span>
+          <input
+            v-model="form.password"
+            :class="{ invalid: showPasswordError }"
+            type="password"
+            :placeholder="signup.passwordPlaceholder"
+            minlength="8"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span>{{ signup.confirmPasswordLabel }}</span>
+          <input
+            v-model="form.confirmPassword"
+            :class="{ invalid: showPasswordError }"
+            type="password"
+            :placeholder="signup.confirmPasswordPlaceholder"
+            minlength="8"
+            required
+          />
+        </label>
+
+        <label class="field field-full">
+          <span>{{ signup.phoneLabel }}</span>
+          <input v-model.trim="form.phoneNumber" type="tel" :placeholder="signup.phonePlaceholder" required />
+        </label>
       </div>
-      <div class="visual-overlay"></div>
+
+      <div class="checkbox-row">
+        <label class="checkbox">
+          <input v-model="form.agreeToTerms" type="checkbox" required />
+          <span>
+            {{ signup.checkboxText }}
+            <button class="text-link" type="button" @click="$emit('navigate', '/privacy')">
+              {{ common.privacyLink }}
+            </button>
+          </span>
+        </label>
+      </div>
+
+      <p v-if="feedback" class="feedback" :class="{ error: feedbackType === 'error' }">{{ feedback }}</p>
+
+      <button class="primary-button" type="submit">{{ signup.submitButton }}</button>
+
+      <footer class="auth-footer">
+        <span>{{ signup.alternatePrompt }}</span>
+        <button class="text-link" type="button" @click="$emit('navigate', '/signin')">
+          {{ signup.alternateAction }}
+        </button>
+      </footer>
+    </form>
+
+    <aside class="helper-panel">
+      <h4>{{ signup.helperTitle }}</h4>
+      <ul>
+        <li v-for="item in signup.helperItems" :key="item">{{ item }}</li>
+      </ul>
     </aside>
 
-    <main class="form-section">
-      <div class="form-card">
-        <header class="form-header">
-          <h1 class="brand-title">
-            <span class="red-text">KinderCare</span>
-            <span class="green-text">Connect</span>
-          </h1>
-          <p class="brand-tagline">
-            <span class="green-text">{{ t('tagline1') }}</span>
-            <br>
-            <span class="red-text">{{ t('tagline2') }}</span>
-          </p>
-        </header>
-
-        <form @submit.prevent="submitForm" class="signup-form">
-          <div class="form-grid">
-            <div class="input-wrapper">
-              <label for="fullName">{{ t('fullNameLabel') }}</label>
-              <input id="fullName" v-model="fullName" type="text" :placeholder="t('fullNamePlaceholder')" required />
-            </div>
-
-            <div class="input-wrapper">
-              <label for="email">{{ t('emailLabel') }}</label>
-              <input id="email" v-model="email" type="email" :placeholder="t('emailPlaceholder')" required />
-            </div>
-
-            <div class="input-wrapper">
-              <label for="password">{{ t('passwordLabel') }}</label>
-              <input id="password" v-model="password" type="password" :placeholder="t('passwordPlaceholder')" required />
-            </div>
-
-            <div class="input-wrapper">
-              <label for="confirmPassword">{{ t('confirmPasswordLabel') }}</label>
-              <input id="confirmPassword" v-model="confirmPassword" type="password" :placeholder="t('confirmPasswordPlaceholder')" required />
-            </div>
-
-            <div class="input-wrapper full-width">
-              <label for="phoneNumber">{{ t('phoneLabel') }}</label>
-              <input id="phoneNumber" v-model="phoneNumber" type="tel" :placeholder="t('phonePlaceholder')" required />
-            </div>
-          </div>
-
-          <div class="options-row">
-            <label class="custom-checkbox">
-              <input type="checkbox" v-model="agreeToTerms" required />
-              <span class="label-text">{{ t('agreeText') }} <a href="#" @click.prevent="showPrivacy = true">{{ t('privacyLink') }}</a></span>
-            </label>
-          </div>
-
-          <button type="submit" class="primary-btn">{{ t('submitButton') }}</button>
-
-          <footer class="form-footer">
-            <span>{{ t('alreadyMember') }}</span>
-            <a href="#" class="login-link">{{ t('signInLink') }}</a>
-          </footer>
-        </form>
-
-        <FeaturesList :language="language" />
-      </div>
-    </main>
-
-    <!-- Privacy Modal -->
-    <div v-if="showPrivacy" class="modal-overlay" @click="showPrivacy = false">
-      <div class="modal-content" @click.stop>
-        <h2>{{ t('privacyTitle') }}</h2>
-        <p>{{ t('privacyText1') }}</p>
-        <p>{{ t('privacyText2') }}</p>
-        <button @click="showPrivacy = false" class="close-btn">{{ t('closeButton') }}</button>
-      </div>
-    </div>
-  </div>
+    <FeaturesList :content="features" :is-dark="isDark" />
+  </AuthShell>
 </template>
 
 <script>
+import AuthShell from '../components/AuthShell.vue';
 import FeaturesList from '../components/FeaturesList.vue';
 
 export default {
   name: 'SignupView',
   components: {
+    AuthShell,
     FeaturesList
   },
+  props: {
+    isDark: {
+      type: Boolean,
+      default: false
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    translations: {
+      type: Object,
+      required: true
+    }
+  },
+  emits: ['navigate', 'toggle-theme', 'update-language'],
   data() {
     return {
-      fullName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      phoneNumber: '',
-      agreeToTerms: false,
-      isDark: false,
-      showPrivacy: false,
-      language: 'en', // Default language
-      translations: {
-        en: {
-          welcomeTitle: 'Welcome to the fun zone!',
-          welcomeText: 'Your child\'s health journey starts with play and safety.',
-          tagline1: 'Making health communication',
-          tagline2: 'feel like child\'s play!',
-          fullNameLabel: 'Parent\'s Full Name',
-          fullNamePlaceholder: 'e.g., Papa Bear',
-          emailLabel: 'Email Address',
-          emailPlaceholder: 'email@example.com',
-          passwordLabel: 'Password',
-          passwordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-          confirmPasswordLabel: 'Confirm Password',
-          confirmPasswordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-          phoneLabel: 'Emergency Number',
-          phonePlaceholder: '+49 176 12345678',
-          agreeText: 'I accept the',
-          privacyLink: 'Privacy',
-          submitButton: 'Join KinderCare!',
-          alreadyMember: 'Already a member?',
-          signInLink: 'Sign In',
-          privacyTitle: 'Privacy Policy',
-          privacyText1: 'This is the privacy policy for KinderCare Connect. We respect your privacy and are committed to protecting your personal information.',
-          privacyText2: 'Details about data collection, usage, and your rights...',
-          closeButton: 'Close'
-        },
-        de: {
-          welcomeTitle: 'Willkommen in der SpaÃŸzone!',
-          welcomeText: 'Die Gesundheitsreise Ihres Kindes beginnt mit Spiel und Sicherheit.',
-          tagline1: 'Gesundheitskommunikation machen',
-          tagline2: 'wie Kinderspiel!',
-          fullNameLabel: 'Name des Elternteils',
-          fullNamePlaceholder: 'z.B., Papa BÃ¤r',
-          emailLabel: 'E-Mail-Adresse',
-          emailPlaceholder: 'email@beispiel.com',
-          passwordLabel: 'Passwort',
-          passwordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-          confirmPasswordLabel: 'Passwort bestÃ¤tigen',
-          confirmPasswordPlaceholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-          phoneLabel: 'Notfallnummer',
-          phonePlaceholder: '+49 176 12345678',
-          agreeText: 'Ich akzeptiere die',
-          privacyLink: 'Datenschutz',
-          submitButton: 'Anmelden',
-          alreadyMember: 'Bereits Mitglied?',
-          signInLink: 'Anmelden',
-          privacyTitle: 'Datenschutzrichtlinie',
-          privacyText1: 'Dies ist die Datenschutzrichtlinie fÃ¼r KinderCare Connect. Wir respektieren Ihre PrivatsphÃ¤re und verpflichten uns, Ihre persÃ¶nlichen Informationen zu schÃ¼tzen.',
-          privacyText2: 'Details zur Datenerfassung, Nutzung und Ihren Rechten...',
-          closeButton: 'SchlieÃŸen'
-        }
-      }
+      form: {
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phoneNumber: '',
+        agreeToTerms: false
+      },
+      feedback: '',
+      feedbackType: 'success'
     };
+  },
+  computed: {
+    dictionary() {
+      return this.translations[this.language] || this.translations.en;
+    },
+    common() {
+      return this.dictionary.common;
+    },
+    hero() {
+      return this.dictionary.hero;
+    },
+    signup() {
+      return this.dictionary.signup;
+    },
+    features() {
+      return this.dictionary.features;
+    },
+    showPasswordError() {
+      return Boolean(this.form.password && this.form.confirmPassword && this.form.password !== this.form.confirmPassword);
+    }
   },
   methods: {
     submitForm() {
-      const errorMsg = this.language === 'en' ? "Oh no! Passwords don't match like friends!" : "Oh nein! PasswÃ¶rter passen nicht zusammen wie Freunde!";
-      if (this.password !== this.confirmPassword) {
-        alert(errorMsg);
+      if (this.form.password !== this.form.confirmPassword) {
+        this.feedback = this.signup.mismatchError;
+        this.feedbackType = 'error';
         return;
       }
-      console.log("Form Submitted:", { ...this.$data });
-    },
-    toggleDarkMode() {
-      this.isDark = !this.isDark;
-    },
-    toggleLanguage() {
-      this.language = this.language === 'en' ? 'de' : 'en';
-    },
-    t(key) {
-      return this.translations[this.language][key] || key;
+
+      this.feedback = this.signup.successMessage;
+      this.feedbackType = 'success';
+      console.log('Sign up form ready:', { ...this.form });
     }
   }
 };
 </script>
 
 <style scoped>
-/* Colors and Variables */
-:root {
-  --red: #e63946;
-  --green: #2a9d8f;
-  --bg-light: #f0fff4;
-  --bg-dark: #121212;
-  --text-dark: #e0e0e0;
-}
-
-/* Global styles for full screen */
-:global(html), :global(body) {
+.page-header h3 {
   margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
+  font-size: 1.7rem;
+  color: inherit;
 }
 
-/* Classes for requested text colors */
-.red-text { color: #e63946; }
-.green-text { color: #2a9d8f; }
-
-.signup-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f0fff4;
-  width: 100%;
-  overflow-x: hidden;
-  position: relative;
+.page-header p {
+  margin: 10px 0 0;
+  color: rgba(91, 107, 123, 1);
+  line-height: 1.6;
 }
 
-/* Dark Mode Toggle Button */
-.dark-mode-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  transition: background 0.3s;
-  z-index: 10;
+.auth-form {
+  margin-top: 26px;
+  animation: fade-up 0.55s ease;
 }
 
-.dark-mode-toggle:hover {
-  background: rgba(255, 255, 255, 1);
-}
-
-/* Language Dropdown */
-.lang-dropdown {
-  position: absolute;
-  top: 20px;
-  right: 80px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  border-radius: 50px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  transition: background 0.3s;
-  z-index: 10;
-}
-
-.lang-dropdown:hover {
-  background: rgba(255, 255, 255, 1);
-}
-
-.playground-aside {
-  flex: 1;
-  position: relative;
-  background-image: url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1000&q=80');
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  min-height: 100vh;
-}
-
-.visual-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(230, 57, 70, 0.8), rgba(42, 157, 143, 0.7));
-}
-
-.visual-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 30px;
-  border-radius: 20px;
-}
-
-/* FORM SECTION */
-.form-section {
-  flex: 1.2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  min-height: 100vh;
-  width: 100%;
-}
-
-.form-card {
-  width: 100%;
-  max-width: 600px;
-  background: white;
-  padding: 40px;
-  border-radius: 25px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-  box-sizing: border-box;
-  margin: auto;
-}
-
-/* CORRECTION DES CARREAUX (INPUTS) */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  width: 100%;
-  margin-bottom: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.full-width {
-  grid-column: span 2;
-}
-
-.input-wrapper {
+.field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
-.input-wrapper label {
-  font-size: 0.85rem;
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.field span {
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #1e3a8a;
-  margin-left: 10px;
 }
 
-.input-wrapper input {
+.field input {
   width: 100%;
-  padding: 12px 20px;
-  border-radius: 50px;
-  border: 2px solid #d1fae5;
-  background-color: #f9fffd;
   box-sizing: border-box;
-  transition: all 0.25s ease;
-  font-size: 0.95rem;
-  color: #333;
+  border: 1px solid rgba(34, 62, 79, 0.14);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.78);
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
-/* Focus effect */
-.input-wrapper input:focus {
+.field input::placeholder {
+  color: rgba(91, 107, 123, 0.8);
+}
+
+.field input:hover {
+  border-color: rgba(45, 143, 123, 0.3);
+}
+
+.field input:focus {
   outline: none;
-  border-color: #2a9d8f;
-  box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.15);
+  border-color: rgba(45, 143, 123, 0.55);
+  box-shadow: 0 0 0 4px rgba(45, 143, 123, 0.14);
 }
 
-/* Hover effect */
-.input-wrapper input:hover {
-  border-color: #a7f3d0;
+.field input.invalid {
+  border-color: rgba(228, 91, 91, 0.7);
+  box-shadow: 0 0 0 4px rgba(228, 91, 91, 0.12);
 }
 
-/* OPTIONS AND CHECKBOX */
-.options-row {
-  margin: 20px 0;
+.checkbox-row {
+  margin-top: 18px;
+}
+
+.checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: rgba(91, 107, 123, 1);
+  line-height: 1.5;
+}
+
+.checkbox input {
+  margin-top: 3px;
+}
+
+.text-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #2d8f7b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.text-link:hover {
+  color: #246f60;
+  transform: translateY(-1px);
+}
+
+.primary-button {
   width: 100%;
-}
-
-.custom-checkbox {
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #333;
+  margin-top: 20px;
+  border: none;
+  border-radius: 18px;
+  padding: 15px 18px;
+  font: inherit;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #e45b5b, #d84848);
   cursor: pointer;
+  box-shadow: 0 16px 30px rgba(228, 91, 91, 0.26);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.custom-checkbox input {
-  margin-right: 8px;
-  cursor: pointer;
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 34px rgba(228, 91, 91, 0.3);
+  filter: saturate(1.05);
 }
 
-.label-text {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.label-text a {
-  color: #2a9d8f;
-  text-decoration: none;
+.feedback {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(45, 143, 123, 0.12);
+  color: #1f6f60;
   font-weight: 600;
 }
 
-.label-text a:hover {
-  text-decoration: underline;
+.feedback.error {
+  background: rgba(228, 91, 91, 0.12);
+  color: #b53f3f;
 }
 
-/* BUTTON AND FOOTER */
-.primary-btn {
-  width: 100%;
-  padding: 15px;
-  background: #e63946;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  margin-top: 25px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.primary-btn:hover {
-  background: #c12b36;
-  transform: translateY(-2px);
-}
-
-.form-footer {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.login-link {
-  color: #2a9d8f;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-/* DARK MODE STYLES */
-.dark-mode {
-  background-color: var(--bg-dark);
-  color: var(--text-dark);
-}
-
-.dark-mode .form-card {
-  background: #1e1e1e;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-}
-
-.dark-mode .input-wrapper input {
-  background-color: #2c2c2c;
-  border-color: #444;
-  color: #e0e0e0;
-}
-
-.dark-mode .primary-btn {
-  background: #2a9d8f;
-}
-
-.dark-mode .primary-btn:hover {
-  background: #218c74;
-}
-
-/* MODAL STYLES */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+.auth-footer {
+  margin-top: 18px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: rgba(91, 107, 123, 1);
 }
 
-.modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+.helper-panel {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(45, 143, 123, 0.08);
+  animation: fade-up 0.65s ease;
 }
 
-.close-btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background: #e63946;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
+.helper-panel h4 {
+  margin: 0 0 12px;
+  font-size: 1rem;
 }
 
-.close-btn:hover {
-  background: #c12b36;
+.helper-panel ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  color: rgba(91, 107, 123, 1);
 }
 
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-  .playground-aside {
-    flex: 0.8;
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
-  .form-section {
-    flex: 1.2;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 900px) {
-  .signup-container {
-    flex-direction: column;
-    min-height: auto;
-  }
+:global(.dark-mode) .page-header p,
+:global(.dark-mode) .checkbox,
+:global(.dark-mode) .auth-footer,
+:global(.dark-mode) .helper-panel ul,
+:global(.dark-mode) .field input::placeholder {
+  color: #b6c3ce;
+}
 
-  .playground-aside {
-    display: none;
-  }
+:global(.dark-mode) .field input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(212, 230, 241, 0.12);
+}
 
-  .form-section {
-    flex: 1;
-    padding: 20px;
-    min-height: 100vh;
-  }
+:global(.dark-mode) .helper-panel {
+  background: rgba(45, 143, 123, 0.12);
+}
 
+@media (max-width: 640px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  .full-width {
-    grid-column: span 1;
+  .field-full {
+    grid-column: auto;
   }
-
-  .form-card {
-    max-width: 100%;
-    width: 100%;
-    padding: 30px;
-  }
-
-  .brand-title {
-    font-size: 1.8rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .form-section {
-    padding: 15px;
-    min-height: 100vh;
-  }
-
-  .form-card {
-    padding: 20px;
-    border-radius: 15px;
-  }
-
-  .form-grid {
-    gap: 12px;
-  }
-
-  .dark-mode-toggle {
-    top: 15px;
-    right: 15px;
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem;
-  }
-
-  .lang-dropdown {
-    top: 15px;
-    right: 65px;
-    padding: 8px 15px;
-    font-size: 0.9rem;
-  }
-
-  .brand-title {
-    font-size: 1.5rem;
-  }
-
-  .input-wrapper label {
-    font-size: 0.8rem;
-  }
-
-  .input-wrapper input {
-    padding: 10px 15px;
-    font-size: 0.9rem;
-  }
-
-  .primary-btn {
-    padding: 12px;
-    font-size: 1rem;
-  }
-
-  .form-footer {
-    font-size: 0.85rem;
-  }
-}
-
-.brand-title {
-  font-size: 2rem;
-  font-weight: 900;
-  text-align: center;
-  margin-bottom: 10px;
-  transform: rotate(-1deg);
 }
 </style>
