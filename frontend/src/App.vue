@@ -8,9 +8,11 @@
     @toggle-theme="toggleTheme"
     @update-language="updateLanguage"
   />
+  <ExampleEntities />
 </template>
 
 <script>
+import ExampleEntities from './components/ExampleEntities.vue';
 import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
@@ -26,6 +28,7 @@ const routes = {
 export default {
   name: 'App',
   components: {
+    ExampleEntities,
     SignInView,
     SignupView,
     PrivacyView

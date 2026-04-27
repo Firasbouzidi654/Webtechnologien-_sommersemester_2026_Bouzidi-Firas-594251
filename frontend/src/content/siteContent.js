@@ -26,7 +26,7 @@ export const translations = {
     signup: {
       badge: 'Create account',
       title: 'Register for KinderCare Connect',
-      subtitle: 'Set up your parent account to share your child health information safely with kindergarten staff.',
+      subtitle: 'Set up your  account to share your child health information safely with kindergarden staff.',
       fullNameLabel: 'Full name',
       fullNamePlaceholder: 'e.g. Sofia Becker',
       emailLabel: 'Email address',
@@ -53,7 +53,7 @@ export const translations = {
     signin: {
       badge: 'Welcome back',
       title: 'Sign in to your account',
-      subtitle: 'Access your family dashboard, messages, and care information.',
+      subtitle: 'Access your Kids dashboard, messages, and care information.',
       emailLabel: 'Email address',
       emailPlaceholder: 'parent@example.com',
       passwordLabel: 'Password',
