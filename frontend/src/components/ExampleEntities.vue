@@ -2,7 +2,7 @@
   <section class="example-entities" aria-labelledby="example-entities-title">
     <div class="example-entities-header">
       <p class="eyebrow">Sample entities</p>
-      <h2 id="example-entities-title">Child emergency overview</h2>
+      <h2 id="example-entities-title">Example Entities</h2>
     </div>
 
     <ul class="entity-list">
@@ -10,6 +10,7 @@
         <div class="entity-card-header">
           <span class="entity-id">#{{ child.id }}</span>
           <h3>{{ child.name }}</h3>
+          <button class="info-btn" @click="toggleInfo(child.id)">ℹ️</button>
         </div>
 
         <dl>
@@ -22,6 +23,13 @@
             <dd>{{ child.emergencyContact }}</dd>
           </div>
         </dl>
+          <div v-if="openChildId === child.id" class="extra-info">
+            <p><strong>Age:</strong> {{ child.age }}</p>
+            <p><strong>Parent Email:</strong> {{ child.parentEmail }}</p>
+            <p><strong>Siblings:</strong> {{ child.siblings }}</p>
+            <p><strong>Hobbies:</strong> {{ child.hobbies }}</p>
+            <p><strong>Notes:</strong> {{ child.notes }}</p>
+        </div>
       </li>
     </ul>
   </section>
@@ -30,29 +38,90 @@
 <script>
 export default {
   name: 'ExampleEntities',
+
   data() {
     return {
+      openChildId: null,
+
       children: [
         {
           id: 1,
           name: 'Mila Schneider',
           allergies: 'Peanuts',
-          emergencyContact: 'Sara Schneider, +49 151 123456'
+          emergencyContact: 'Sara Schneider, +49 151 123456',
+          age: 4,
+          parentEmail: 'sara@email.de',
+          siblings: '1 brother',
+          hobbies: 'Painting',
+          notes: 'Carry allergy pen'
         },
         {
           id: 2,
           name: 'Noah Becker',
           allergies: 'None known',
-          emergencyContact: 'Jonas Becker, +49 152 987654'
+          emergencyContact: 'Jonas Becker, +49 152 987654',
+          age: 5,
+          parentEmail: 'jonas@email.de',
+          siblings: 'No siblings',
+          hobbies: 'Football',
+          notes: 'Needs inhaler'
         },
         {
           id: 3,
           name: 'Lina Wagner',
           allergies: 'Bee stings',
-          emergencyContact: 'Amira Wagner, +49 176 456789'
+          emergencyContact: 'Amira Wagner, +49 176 456789',
+          age: 4,
+          parentEmail: 'amira@email.de',
+          siblings: '1 sister',
+          hobbies: 'Music',
+          notes: 'Bee allergy spray'
+        },
+        {
+          id: 4,
+          name: 'Liam Müller',
+          allergies: 'Shellfish',
+          emergencyContact: 'Anna Müller, +49 153 345678',
+          age: 5,
+          parentEmail: 'anna@email.de',
+          siblings: '2 sisters',
+          hobbies: 'Cars',
+          notes: 'Avoid seafood'
+        },
+        {
+          id: 5,
+          name: 'Emma Fischer',
+          allergies: 'Gluten',
+          emergencyContact: 'Markus Fischer, +49 154 234567',
+          age: 4,
+          parentEmail: 'markus@email.de',
+          siblings: '1 brother',
+          hobbies: 'Reading',
+          notes: 'Needs gluten-free snacks'
+        },
+        {
+          id: 6,
+          name: 'Ben Hoffmann',
+          allergies: 'None known',
+          emergencyContact: 'Laura Hoffmann, +49 155 678901',
+          age: 5,
+          parentEmail: 'laura@email.de',
+          siblings: '1 sister',
+          hobbies: 'Gaming',
+          notes: 'Prefers quiet activities'
         }
       ]
     };
+  },
+
+  methods: {
+    toggleInfo(id) {
+      if (this.openChildId === id) {
+        this.openChildId = null;
+      } else {
+        this.openChildId = id;
+      }
+    }
   }
 };
 </script>
