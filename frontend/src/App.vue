@@ -8,11 +8,14 @@
     @toggle-theme="toggleTheme"
     @update-language="updateLanguage"
   />
-  <ExampleEntities />
+  <ExampleEntities v-if="showExampleEntities" />
 </template>
 
 <script>
 import ExampleEntities from './components/ExampleEntities.vue';
+import AdminDashboard from './views/AdminDashboard.vue';
+import LoginPage from './views/LoginPage.vue';
+import ParentDashboard from './views/ParentDashboard.vue';
 import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
@@ -22,13 +25,19 @@ const routes = {
   '/': 'signup',
   '/signup': 'signup',
   '/signin': 'signin',
+  '/login': 'login',
+  '/parent': 'parent',
+  '/admin': 'admin',
   '/privacy': 'privacy'
 };
 
 export default {
   name: 'App',
   components: {
+    AdminDashboard,
     ExampleEntities,
+    LoginPage,
+    ParentDashboard,
     SignInView,
     SignupView,
     PrivacyView
@@ -43,6 +52,18 @@ export default {
   },
   computed: {
     currentView() {
+      if (this.currentRoute === 'login') {
+        return 'LoginPage';
+      }
+
+      if (this.currentRoute === 'parent') {
+        return 'ParentDashboard';
+      }
+
+      if (this.currentRoute === 'admin') {
+        return 'AdminDashboard';
+      }
+
       if (this.currentRoute === 'signin') {
         return 'SignInView';
       }
@@ -52,6 +73,9 @@ export default {
       }
 
       return 'SignupView';
+    },
+    showExampleEntities() {
+      return ['signup', 'signin', 'privacy'].includes(this.currentRoute);
     }
   },
   created() {

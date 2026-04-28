@@ -1,7 +1,8 @@
 package de.htw_berlin.KinderCareConnect.rest.controller;
 
-import de.htw_berlin.KinderCareConnect.business.service.ChildService;
-import de.htw_berlin.KinderCareConnect.rest.model.ChildResponse;
+import de.htw_berlin.KinderCareConnect.business.service.HealthPrototypeService;
+import de.htw_berlin.KinderCareConnect.rest.model.ChildHealthResponse;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,14 +13,19 @@ import java.util.List;
 @RequestMapping("/api/children")
 public class ChildController {
 
-    private final ChildService childService;
+    private final HealthPrototypeService healthPrototypeService;
 
-    public ChildController(ChildService childService) {
-        this.childService = childService;
+    public ChildController(HealthPrototypeService healthPrototypeService) {
+        this.healthPrototypeService = healthPrototypeService;
     }
 
     @GetMapping
-    public List<ChildResponse> getAllChildren() {
-        return childService.getAllChildren();
+    public List<ChildHealthResponse> getAllChildren() {
+        return healthPrototypeService.getAllChildren();
+    }
+
+    @GetMapping("/{id}")
+    public ChildHealthResponse getChildById(@PathVariable Long id) {
+        return healthPrototypeService.getChildById(id);
     }
 }
