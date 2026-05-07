@@ -74,22 +74,22 @@ export default {
   align-items: center;
   padding: 48px;
   background:
-    radial-gradient(circle at 18% 14%, rgba(255, 232, 168, 0.56), transparent 32%),
-    linear-gradient(135deg, rgba(45, 143, 123, 0.16), rgba(231, 240, 255, 0.72)),
-    #f7faf8;
+    linear-gradient(135deg, #f0f4f8 0%, #e1e8ed 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .login-panel,
 .visual-panel {
   overflow: hidden;
-  border: 1px solid rgba(32, 48, 63, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 22px 54px rgba(32, 48, 63, 0.13);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .login-panel {
-  padding: 34px;
+  padding: 40px;
 }
 
 .visual-panel img {
@@ -97,18 +97,20 @@ export default {
   width: 100%;
   height: min(42vh, 360px);
   object-fit: cover;
+  border-radius: 16px 16px 0 0;
 }
 
 .preview-content {
-  padding: 28px;
+  padding: 32px;
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #287b68;
-  font-size: 0.8rem;
-  font-weight: 900;
+  color: #3182ce;
+  font-size: 0.875rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 h1,
@@ -121,66 +123,100 @@ h1 {
   max-width: 720px;
   font-size: clamp(2rem, 5vw, 4rem);
   line-height: 1.02;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3182ce, #2d3748);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 h2 {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
 .intro {
   max-width: 620px;
   margin-top: 16px;
-  color: #536577;
-  font-size: 1.05rem;
+  color: #4a5568;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 form {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   max-width: 520px;
-  margin-top: 28px;
+  margin-top: 32px;
 }
 
 label {
   display: grid;
-  gap: 7px;
-  color: #20303f;
-  font-weight: 800;
+  gap: 8px;
+  color: #2d3748;
+  font-weight: 600;
 }
 
 input,
 select {
   width: 100%;
-  border: 1px solid rgba(32, 48, 63, 0.14);
-  border-radius: 8px;
-  padding: 13px 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
   background: #fff;
-  color: #20303f;
+  color: #1a202c;
+  font-weight: 500;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
 button {
-  min-height: 48px;
+  min-height: 50px;
   border: none;
-  border-radius: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #2d8f7b, #246f60);
+  border-radius: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #38a169, #2f855a);
   color: #fff;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 161, 105, 0.4);
 }
 
 ul {
   display: grid;
   gap: 12px;
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   padding-left: 20px;
-  color: #536577;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 @media (max-width: 860px) {
   .login-page {
     grid-template-columns: 1fr;
-    padding: 22px;
+    padding: 24px;
+  }
+
+  .login-panel {
+    padding: 32px;
+  }
+
+  .preview-content {
+    padding: 24px;
   }
 }
 </style>

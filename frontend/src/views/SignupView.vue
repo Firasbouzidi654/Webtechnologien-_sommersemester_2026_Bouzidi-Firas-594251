@@ -169,31 +169,37 @@ export default {
 <style scoped>
 .page-header h3 {
   margin: 0;
-  font-size: 1.7rem;
-  color: inherit;
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #2d3748;
+  background: linear-gradient(135deg, #3182ce, #2d3748);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .page-header p {
-  margin: 10px 0 0;
-  color: rgba(91, 107, 123, 1);
+  margin: 12px 0 0;
+  color: #4a5568;
   line-height: 1.6;
+  font-weight: 500;
 }
 
 .auth-form {
-  margin-top: 26px;
+  margin-top: 28px;
   animation: fade-up 0.55s ease;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .field-full {
@@ -201,148 +207,166 @@ export default {
 }
 
 .field span {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: #2d3748;
 }
 
 .field input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(34, 62, 79, 0.14);
-  border-radius: 16px;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.78);
-  color: inherit;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a202c;
   font: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  font-weight: 500;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .field input::placeholder {
-  color: rgba(91, 107, 123, 0.8);
+  color: #a0aec0;
 }
 
 .field input:hover {
-  border-color: rgba(45, 143, 123, 0.3);
+  border-color: rgba(49, 130, 206, 0.3);
 }
 
 .field input:focus {
   outline: none;
-  border-color: rgba(45, 143, 123, 0.55);
-  box-shadow: 0 0 0 4px rgba(45, 143, 123, 0.14);
+  border-color: #3182ce;
+  box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.1);
+  background: #fff;
 }
 
 .field input.invalid {
-  border-color: rgba(228, 91, 91, 0.7);
-  box-shadow: 0 0 0 4px rgba(228, 91, 91, 0.12);
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.1);
 }
 
 .checkbox-row {
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .checkbox {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
-  color: rgba(91, 107, 123, 1);
-  line-height: 1.5;
+  color: #4a5568;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 .checkbox input {
-  margin-top: 3px;
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
 }
 
 .text-link {
   border: none;
   background: none;
   padding: 0;
-  color: #2d8f7b;
+  color: #3182ce;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .text-link:hover {
-  color: #246f60;
+  color: #2c5282;
   transform: translateY(-1px);
 }
 
 .primary-button {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 24px;
   border: none;
-  border-radius: 18px;
-  padding: 15px 18px;
+  border-radius: 14px;
+  padding: 16px 20px;
   font: inherit;
-  font-weight: 800;
+  font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, #e45b5b, #d84848);
+  background: linear-gradient(135deg, #38a169, #2f855a);
   cursor: pointer;
-  box-shadow: 0 16px 30px rgba(228, 91, 91, 0.26);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 6px 20px rgba(56, 161, 105, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
 }
 
 .primary-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 20px 34px rgba(228, 91, 91, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(56, 161, 105, 0.4);
   filter: saturate(1.05);
 }
 
 .feedback {
-  margin: 14px 0 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(45, 143, 123, 0.12);
-  color: #1f6f60;
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e9f6f2, #c6f6df);
+  color: #22543d;
   font-weight: 600;
 }
 
 .feedback.error {
-  background: rgba(228, 91, 91, 0.12);
-  color: #b53f3f;
+  background: linear-gradient(135deg, #ffe3e3, #feb2b2);
+  color: #742a2a;
 }
 
 .auth-footer {
-  margin-top: 18px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
-  color: rgba(91, 107, 123, 1);
+  color: #4a5568;
+  font-weight: 500;
 }
 
 .helper-panel {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 24px;
-  background: rgba(45, 143, 123, 0.08);
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(56, 161, 105, 0.08), rgba(49, 130, 206, 0.04));
   animation: fade-up 0.65s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .helper-panel h4 {
-  margin: 0 0 12px;
-  font-size: 1rem;
+  margin: 0 0 14px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
 .helper-panel ul {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 20px;
   display: grid;
-  gap: 10px;
-  color: rgba(91, 107, 123, 1);
+  gap: 12px;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(16px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+:global(.dark-mode) .page-header h3 {
+  background: linear-gradient(135deg, #63b3ed, #a0aec0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 :global(.dark-mode) .page-header p,
@@ -356,10 +380,15 @@ export default {
 :global(.dark-mode) .field input {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(212, 230, 241, 0.12);
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .field input:focus {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 :global(.dark-mode) .helper-panel {
-  background: rgba(45, 143, 123, 0.12);
+  background: linear-gradient(135deg, rgba(56, 161, 105, 0.12), rgba(49, 130, 206, 0.08));
 }
 
 @media (max-width: 640px) {
@@ -369,6 +398,10 @@ export default {
 
   .field-full {
     grid-column: auto;
+  }
+
+  .page-header h3 {
+    font-size: 1.5rem;
   }
 }
 </style>
