@@ -24,9 +24,21 @@ repositories {
 }
 
 dependencies {
+	// Spring Boot Core
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// PostgreSQL Database Driver
+	implementation 'org.postgresql:postgresql:42.7.2'
+
+	// H2 Database for local development/testing
 	runtimeOnly 'com.h2database:h2'
+
+	// Connection Pool (HikariCP - bundled with Spring Boot)
+	implementation 'com.zaxxer:HikariCP:5.1.0'
+
+
+	// Testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

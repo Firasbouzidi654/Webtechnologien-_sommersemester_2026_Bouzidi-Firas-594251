@@ -1,0 +1,12 @@
+# Ignore frontend (Node.js) - Render should only build backend (Java)
+frontend/
+*.md
+.git/
+.idea/
+.vscode/
+.gitignore
+.gitattributes
+node_modules/
+package.json
+package-lock.json
+

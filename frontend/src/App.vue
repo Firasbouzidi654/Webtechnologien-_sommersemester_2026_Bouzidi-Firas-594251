@@ -9,6 +9,7 @@
     @update-language="updateLanguage"
   />
   <ExampleEntities v-if="showExampleEntities" />
+  <!-- Affiche le composant ExampleEntities si showExampleEntities est vrai -->
 </template>
 
 <script>
@@ -74,6 +75,9 @@ export default {
 
       return 'SignupView';
     },
+
+    // Retourne vrai si la route actuelle est 'signup', 'signin' ou 'privacy' (Sichtbar)
+
     showExampleEntities() {
       return ['signup', 'signin', 'privacy'].includes(this.currentRoute);
     }
