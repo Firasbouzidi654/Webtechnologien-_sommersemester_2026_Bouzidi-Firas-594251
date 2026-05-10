@@ -5,6 +5,7 @@
       <h2 id="example-entities-title">Example Entities</h2>
     </div>
 
+    <!-- Section;Style CSS appliqué via la classe .entity-card -->
     <ul class="entity-list">
       <li v-for="child in children" :key="child.id" class="entity-card">
         <div class="entity-card-header">
