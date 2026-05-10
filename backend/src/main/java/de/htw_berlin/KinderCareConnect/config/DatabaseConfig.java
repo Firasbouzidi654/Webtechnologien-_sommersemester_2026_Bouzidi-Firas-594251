@@ -1,7 +1,7 @@
 package de.htw_berlin.KinderCareConnect.config;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,47 +16,20 @@ import javax.sql.DataSource;
 @Configuration
 public class DatabaseConfig {
 
-    /**
-     * Configures HikariCP connection pool for production environment
-     * This bean is used when spring.profiles.active includes 'production'
-     */
     @Bean
-    @Profile("production")
-    public DataSource productionDataSource() {
-        HikariConfig config = new HikariConfig();
+    @Profile({"production", "postgresql"})
+    @ConfigurationProperties("spring.datasource.hikari")
+    public DataSource configuredDataSource(DataSourceProperties properties) {
+        HikariDataSource dataSource = properties
+            .initializeDataSourceBuilder()
+            .type(HikariDataSource.class)
+            .build();
 
-        // Connection pool settings optimized for Render's resource limits
-        config.setMaximumPoolSize(5);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(300000);
-        config.setMaxLifetime(900000);
+        if (dataSource.getMaximumPoolSize() < 1) {
+            dataSource.setMaximumPoolSize(5);
+        }
 
-        // Performance settings
-        config.setLeakDetectionThreshold(60000);
-        config.setAutoCommit(true);
-
-        return new HikariDataSource(config);
-    }
-
-    /**
-     * Configures HikariCP connection pool for development environment
-     * This bean is used for local development with PostgreSQL
-     */
-    @Bean
-    @Profile("postgresql")
-    public DataSource postgresqlDataSource() {
-        HikariConfig config = new HikariConfig();
-
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-
-        config.setAutoCommit(true);
-
-        return new HikariDataSource(config);
+        return dataSource;
     }
 }
 
