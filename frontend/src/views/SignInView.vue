@@ -108,6 +108,7 @@ export default {
     submitForm() {
       this.feedback = this.signin.successMessage;
       console.log('Sign in form ready:', { ...this.form });
+      this.$emit('navigate', '/parent');
     }
   }
 };
