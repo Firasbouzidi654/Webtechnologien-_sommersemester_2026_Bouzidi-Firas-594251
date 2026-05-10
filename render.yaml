@@ -1,7 +1,7 @@
 services:
   - type: web
     name: kindercare-backend-java
-    env: java
+    runtime: java
     region: frankfurt
     plan: free
     rootDir: backend
