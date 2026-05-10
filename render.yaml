@@ -1,24 +1,15 @@
 services:
   - type: web
-    name: kindercare-connect-backend
-    env: java
+    name: kindercare-backend
+    runtime: docker
     region: frankfurt
     plan: free
-
-    # Backend directory (Spring Boot application)
     rootDir: backend
-
-    # Build configuration
-    buildCommand: ./mvnw clean package
-    startCommand: java -jar target/*.jar
-
-    # Environment variables
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     envVars:
       - key: DATABASE_URL
-        value: jdbc:postgresql://demo_user:rFM6UgUtpNItQTXfSWuyWktS1hkPFOLh@dpg-d80eo77lk1mc73da4qcg-a:5432/render_db_9td1
+        sync: false
       - key: SPRING_PROFILES_ACTIVE
         value: production
-    # Health check
     healthCheckPath: /api/children
-    healthCheckStartFailureThresholdSeconds: 60
-
