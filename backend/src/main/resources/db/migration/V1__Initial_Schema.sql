@@ -1,77 +1,27 @@
--- V1__Initial_Schema.sql
--- Initial database schema for KinderCareConnect application
+spring.application.name=KinderCareConnect
 
--- Create children table
-CREATE TABLE IF NOT EXISTS children (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    date_of_birth VARCHAR(50),
-    allergies TEXT,
-    chronic_diseases TEXT,
-    special_needs TEXT,
-    emergency_contact TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+server.port=${PORT:10000}
+server.address=0.0.0.0
+server.servlet.context-path=/
 
--- Create users table
-CREATE TABLE IF NOT EXISTS app_users (
-    id SERIAL PRIMARY KEY,
-    full_name VARCHAR(255),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    role VARCHAR(50) DEFAULT 'PARENT',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+spring.datasource.url=${DATABASE_URL:jdbc:h2:mem:testdb}
+spring.datasource.driver-class-name=org.postgresql.Driver
 
--- Create medications table
-CREATE TABLE IF NOT EXISTS medications (
-    id SERIAL PRIMARY KEY,
-    child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    dosage VARCHAR(100),
-    frequency VARCHAR(100),
-    start_date VARCHAR(50),
-    end_date VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+spring.flyway.enabled=true
+spring.flyway.url=${DATABASE_URL:jdbc:h2:mem:testdb}
+spring.flyway.baseline-on-migrate=true
 
--- Create medication_schedules table
-CREATE TABLE IF NOT EXISTS medication_schedules (
-    id SERIAL PRIMARY KEY,
-    medication_id INT NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
-    scheduled_time VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'PENDING',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
--- Create medication_logs table
-CREATE TABLE IF NOT EXISTS medication_logs (
-    id SERIAL PRIMARY KEY,
-    medication_id INT NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
-    taken_at TIMESTAMP,
-    status VARCHAR(50),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
 
--- Create emergency_contacts table
-CREATE TABLE IF NOT EXISTS emergency_contacts (
-    id SERIAL PRIMARY KEY,
-    child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
-    contact_name VARCHAR(255) NOT NULL,
-    relationship VARCHAR(100),
-    phone_number VARCHAR(20),
-    email VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+logging.level.root=INFO
+logging.level.de.htw_berlin=INFO
 
--- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_medications_child_id ON medications(child_id);
-CREATE INDEX IF NOT EXISTS idx_medication_schedules_medication_id ON medication_schedules(medication_id);
-CREATE INDEX IF NOT EXISTS idx_medication_logs_medication_id ON medication_logs(medication_id);
-CREATE INDEX IF NOT EXISTS idx_emergency_contacts_child_id ON emergency_contacts(child_id);
-CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
+server.servlet.encoding.charset=UTF-8
+server.servlet.encoding.enabled=true
+server.compression.enabled=true
