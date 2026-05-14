@@ -1,26 +1,26 @@
 # Étape 1 : Build
-FROM gradle:8.7-jdk21 AS build
+FROM maven:3.9.4-openjdk-21 AS build
 
 # On s'assure d'être dans le bon répertoire
-WORKDIR /home/gradle/src
+WORKDIR /app
 
-# On copie d'abord uniquement les fichiers de configuration Gradle
-# Cela aide Docker à mieux voir les fichiers
-COPY --chown=gradle:gradle gradlew .
-COPY --chown=gradle:gradle gradle gradle
-COPY --chown=gradle:gradle build.gradle .
-COPY --chown=gradle:gradle settings.gradle .
+# On copie d'abord le pom.xml pour optimiser le cache Docker
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
 
-# On copie ensuite le reste du code source
-COPY --chown=gradle:gradle . .
+# On donne les droits d'exécution au Maven wrapper
+RUN chmod +x mvnw
 
-# On donne les droits et on compile
-RUN chmod +x gradlew
-RUN ./gradlew build --no-daemon -x test
+# On copie le code source
+COPY src src
+
+# On compile avec Maven (skip tests pour accélérer)
+RUN ./mvnw clean package -DskipTests
 
 # Étape 2 : Run
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
-COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 10000
 ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=10000"]
