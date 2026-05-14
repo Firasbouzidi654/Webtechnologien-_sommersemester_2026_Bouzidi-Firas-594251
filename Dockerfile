@@ -1,4 +1,4 @@
-# Étape 1 : Build du frontend
+# Force update 1
 FROM node:20 AS frontend-build
 
 WORKDIR /app/frontend
