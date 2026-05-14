@@ -56,7 +56,7 @@ task buildFrontend(type: NpmTask) {
 }
 
 processResources {
-	// dependsOn buildFrontend  // Commented out since frontend is built manually
+	dependsOn buildFrontend
 	from("${rootDir}/frontend/dist") {
 		into "static"
 	}

@@ -5,11 +5,13 @@ services:
     region: frankfurt
     plan: free
     rootDir: backend
-    buildCommand: ./mvnw clean package
-    startCommand: java -jar target/*.jar
+    buildCommand: ./mvnw -DskipTests clean package
+    startCommand: java -jar target/backend-0.0.1-SNAPSHOT.jar
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: SPRING_PROFILES_ACTIVE
         value: production
+      - key: PORT
+        value: 10000
     healthCheckPath: /api/children
