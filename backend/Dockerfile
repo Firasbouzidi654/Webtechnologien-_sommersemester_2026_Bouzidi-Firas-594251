@@ -1,15 +1,16 @@
-# 1. Étape de construction (Build stage)
+# Étape 1 : Build
 FROM gradle:8.7-jdk21 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
-# On compile le projet en ignorant les tests pour aller plus vite
+# Donne la permission d'exécution au wrapper Gradle
+RUN chmod +x gradlew
+# Compile sans lancer les tests
 RUN ./gradlew build --no-daemon -x test
 
-# 2. Étape d'exécution (Package stage)
+# Étape 2 : Run
 FROM eclipse-temurin:21-jdk-jammy
-# On récupère le fichier JAR généré à l'étape précédente
-COPY --from=build /home/gradle/src/build/libs/backend-0.0.1-SNAPSHOT.jar app.jar
-# Port standard pour Render
+WORKDIR /app
+# Cette ligne cherche n'importe quel fichier .jar dans build/libs
+COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 EXPOSE 10000
-# Commande pour démarrer l'application
-ENTRYPOINT ["java", "-jar", "/app.jar", "--server.port=10000"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=10000"]
