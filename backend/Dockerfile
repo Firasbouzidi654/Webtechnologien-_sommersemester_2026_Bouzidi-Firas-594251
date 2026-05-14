@@ -1,19 +1,15 @@
 # Étape 1 : Build
-FROM maven:3.9.4-openjdk-21 AS build
+FROM eclipse-temurin:21-jdk-jammy AS build
 
 # On s'assure d'être dans le bon répertoire
 WORKDIR /app
 
-# On copie d'abord le pom.xml pour optimiser le cache Docker
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
+# On copie tous les fichiers (mvnw téléchargera Maven si nécessaire)
+COPY . .
 
 # On donne les droits d'exécution au Maven wrapper
 RUN chmod +x mvnw
 
-# On copie le code source
-COPY src src
 
 # On compile avec Maven (skip tests pour accélérer)
 RUN ./mvnw clean package -DskipTests
