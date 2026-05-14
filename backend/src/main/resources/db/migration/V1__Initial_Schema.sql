@@ -15,11 +15,10 @@ CREATE TABLE IF NOT EXISTS children (
 );
 
 -- Create users table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS app_users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
+    full_name VARCHAR(255),
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'PARENT',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -75,5 +74,4 @@ CREATE INDEX IF NOT EXISTS idx_medications_child_id ON medications(child_id);
 CREATE INDEX IF NOT EXISTS idx_medication_schedules_medication_id ON medication_schedules(medication_id);
 CREATE INDEX IF NOT EXISTS idx_medication_logs_medication_id ON medication_logs(medication_id);
 CREATE INDEX IF NOT EXISTS idx_emergency_contacts_child_id ON emergency_contacts(child_id);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
+CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
