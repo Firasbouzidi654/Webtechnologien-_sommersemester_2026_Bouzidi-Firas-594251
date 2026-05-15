@@ -11,7 +11,8 @@ public class ChildRestMapper {
         return new ChildResponse(
             childEntity.getId(),
             childEntity.getName(),
-            childEntity.getDateOfBirth(),
+            // convert LocalDate to ISO string for the REST response (null-safe)
+            childEntity.getDateOfBirth() != null ? childEntity.getDateOfBirth().toString() : null,
             childEntity.getAllergies(),
             childEntity.getChronicDiseases(),
             childEntity.getSpecialNeeds(),
