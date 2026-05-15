@@ -6,29 +6,38 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "children")
 public class ChildEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
-    private String dateOfBirth;
+
+    private LocalDate dateOfBirth;
+
     private String allergies;
+
     private String chronicDiseases;
+
     private String specialNeeds;
+
     private String emergencyContact;
 
     public ChildEntity() {
     }
 
     public ChildEntity(
-        String name,
-        String dateOfBirth,
-        String allergies,
-        String chronicDiseases,
-        String specialNeeds,
-        String emergencyContact
+            String name,
+            LocalDate dateOfBirth,
+            String allergies,
+            String chronicDiseases,
+            String specialNeeds,
+            String emergencyContact
     ) {
         this.name = name;
         this.dateOfBirth = dateOfBirth;
@@ -50,11 +59,11 @@ public class ChildEntity {
         this.name = name;
     }
 
-    public String getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(String dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
