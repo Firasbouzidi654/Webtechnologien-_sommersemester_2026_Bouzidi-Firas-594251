@@ -1,15 +1,17 @@
 <template>
-  <component
-    :is="currentView"
-    :is-dark="isDark"
-    :language="language"
-    :translations="translations"
-    @navigate="navigate"
-    @toggle-theme="toggleTheme"
-    @update-language="updateLanguage"
-  />
-  <ExampleEntities v-if="showExampleEntities" />
-  <!-- Affiche le composant ExampleEntities si showExampleEntities est vrai -->
+  <div :data-theme="isDark ? 'dark' : 'light'">
+    <component
+      :is="currentView"
+      :is-dark="isDark"
+      :language="language"
+      :translations="translations"
+      @navigate="navigate"
+      @toggle-theme="toggleTheme"
+      @update-language="updateLanguage"
+    />
+    <ExampleEntities v-if="showExampleEntities" />
+    <!-- Affiche le composant ExampleEntities si showExampleEntities est vrai -->
+  </div>
 </template>
 
 <script>

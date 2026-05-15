@@ -16,7 +16,6 @@
           A simple place to keep medication, allergies, emergency contacts, and notes ready for the kindergarten team.
         </p>
       </div>
-      <img :src="heroImage" alt="Child-friendly health care overview" />
     </section>
 
     <section class="child-toolbar">
@@ -151,19 +150,13 @@
               <h3>{{ medication.name }}</h3>
               <p>{{ medication.dosage }} - {{ medication.instructions }}</p>
               <small>{{ medication.medicationId }}</small>
-              <div class="inline-actions">
-                <button type="button" @click="toggleQr(medication.medicationId)">
-                  {{ selectedQrId === medication.medicationId ? 'Hide QR' : 'View QR code / Medication ID' }}
-                </button>
-                <button type="button" @click="editMedicationItem(medication)">Edit</button>
-                <button type="button" @click="removeMedicationItem(medication.medicationId)">Remove</button>
-              </div>
-              <div v-if="selectedQrId === medication.medicationId" class="qr-inline">
-                <div class="mock-qr">
-                  <span v-for="cell in qrCells(medication.medicationId)" :key="cell" :class="{ filled: cell % 2 === 0 || cell % 7 === 0 }"></span>
-                </div>
-                <p>QR payload: {{ medication.qrPayload }}</p>
-              </div>
+               <div class="inline-actions">
+                 <button type="button" @click="toggleQr(medication.medicationId)">
+                   View QR / ID
+                 </button>
+                 <button type="button" @click="editMedicationItem(medication)">Edit</button>
+                 <button type="button" @click="removeMedicationItem(medication.medicationId)">Remove</button>
+               </div>
             </div>
             <span class="status-badge">{{ medication.status }}</span>
           </article>
@@ -251,6 +244,35 @@
       accept=".pdf,.png,.jpg,.jpeg"
       @change="handlePrescriptionFile"
     />
+
+    <!-- QR Modal -->
+    <section v-if="selectedQrId" class="modal-backdrop" @click.self="selectedQrId = ''">
+      <form class="modal qr-modal" @submit.prevent="selectedQrId = ''">
+        <header>
+          <h2>Medication ID & QR Code</h2>
+          <button type="button" aria-label="Close dialog" @click="selectedQrId = ''">x</button>
+        </header>
+        <div v-if="selectedQrMedication" class="qr-content">
+          <div class="qr-section">
+            <h3>{{ selectedQrMedication.name }}</h3>
+            <p class="dosage">{{ selectedQrMedication.dosage }} - {{ selectedQrMedication.instructions }}</p>
+            <div class="qr-display">
+              <div class="mock-qr">
+                <span v-for="cell in qrCells(selectedQrMedication.medicationId)" :key="cell" :class="{ filled: cell % 2 === 0 || cell % 7 === 0 }"></span>
+              </div>
+            </div>
+            <div class="medication-id-box">
+              <p class="label">Medication ID:</p>
+              <p class="id">{{ selectedQrMedication.medicationId }}</p>
+            </div>
+            <p class="payload-info">QR Payload: {{ selectedQrMedication.qrPayload }}</p>
+          </div>
+        </div>
+        <footer>
+          <button type="submit">Close</button>
+        </footer>
+      </form>
+    </section>
 
     <section v-if="activeDialog" class="modal-backdrop" @click.self="closeDialog">
       <form class="modal" @submit.prevent="submitDialog">
@@ -416,6 +438,10 @@ export default {
     };
   },
   computed: {
+    selectedQrMedication() {
+      if (!this.selectedQrId) return null;
+      return this.medicationTimeline.find((med) => med.medicationId === this.selectedQrId);
+    },
     parentChildren() {
       return parentChildren();
     },
@@ -756,10 +782,10 @@ export default {
 .parent-dashboard {
   min-height: 100vh;
   padding: 28px;
-  background:
-    linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  color: #1a202c;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .topbar,
@@ -778,12 +804,13 @@ export default {
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  background: var(--color-bg-secondary);
   border-radius: 12px;
   padding: 16px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 20px;
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
 }
 
 .eyebrow,
@@ -795,7 +822,7 @@ p {
 }
 
 .eyebrow {
-  color: #3182ce;
+  color: var(--color-brand);
   font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -806,7 +833,7 @@ h1 {
   margin-top: 4px;
   font-size: 2.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #3182ce, #2d3748);
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -824,11 +851,11 @@ h1 {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .logout-button {
-  background: linear-gradient(135deg, #2d3748, #1a202c);
+  background: linear-gradient(135deg, var(--color-brand-dark), #1a202c);
   color: #fff;
 }
 
@@ -839,41 +866,33 @@ h1 {
 
 .welcome-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: 1fr;
   gap: 24px;
   align-items: center;
   margin-top: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
 }
 
 .welcome-copy h2 {
   max-width: 700px;
   margin-top: 8px;
-  font-size: clamp(1.875rem, 4vw, 3.5rem);
+  font-size: clamp(1.875rem, 4vw, 2.5rem);
   line-height: 1.1;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .welcome-copy p:not(.eyebrow) {
   max-width: 660px;
   margin-top: 12px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   font-weight: 500;
-}
-
-.welcome-panel img {
-  width: 100%;
-  height: 200px;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .child-toolbar {
@@ -882,11 +901,11 @@ h1 {
   gap: 12px;
   align-items: end;
   margin-top: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
 }
 
@@ -894,18 +913,18 @@ label {
   display: grid;
   gap: 8px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 select,
 input,
 textarea {
   width: 100%;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--color-border);
   border-radius: 10px;
   padding: 12px;
-  background: #fff;
-  color: #1a202c;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   font: inherit;
   transition: border-color 0.3s ease;
 }
@@ -914,7 +933,7 @@ select:focus,
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #3182ce;
+  border-color: var(--color-brand);
   box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
@@ -925,7 +944,7 @@ textarea {
 .child-toolbar button,
 .note-card button,
 .modal footer button:not(.secondary-button) {
-  background: linear-gradient(135deg, #38a169, #2f855a);
+  background: linear-gradient(135deg, var(--color-success), #2f855a);
   color: #fff;
 }
 
@@ -938,7 +957,7 @@ textarea {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -948,17 +967,17 @@ textarea {
   gap: 8px;
   justify-items: center;
   min-height: 80px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1a202c;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .quick-actions button:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .quick-actions span {
@@ -968,14 +987,14 @@ textarea {
   place-items: center;
   border-radius: 50%;
   background: linear-gradient(135deg, #bee3f8, #90cdf4);
-  color: #2c5282;
+  color: var(--color-info);
   font-size: 0.875rem;
   font-weight: 700;
 }
 
 .care-cues {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
   max-width: 1240px;
   margin: 20px auto 0;
@@ -986,11 +1005,11 @@ textarea {
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease;
 }
@@ -1012,23 +1031,23 @@ textarea {
 
 .care-cues p {
   margin-top: 4px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
 .health-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
 
 .health-summary article,
 .panel {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease;
 }
@@ -1047,24 +1066,24 @@ textarea {
 }
 
 .health-summary p {
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 
 .health-summary strong {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .health-summary span {
-  color: #718096;
+  color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
 .manage-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
@@ -1074,15 +1093,15 @@ textarea {
   border: none;
   border-radius: 10px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #edf2f7, #e2e8f0);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
 }
 
 .compact-list header button:hover {
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  background: var(--color-border);
 }
 
 .item-actions,
@@ -1098,8 +1117,8 @@ textarea {
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #edf2f7, #e2e8f0);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
@@ -1107,7 +1126,7 @@ textarea {
 
 .item-actions button:hover,
 .inline-actions button:hover {
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  background: var(--color-border);
 }
 
 .dashboard-grid {
@@ -1131,7 +1150,7 @@ textarea {
 }
 
 .panel header span {
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 
@@ -1153,12 +1172,12 @@ textarea {
   grid-template-columns: 70px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-left: 5px solid #9fb0be;
   border-radius: 12px;
   padding: 16px;
-  background: rgba(251, 252, 253, 0.9);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease;
 }
 
@@ -1166,45 +1185,14 @@ textarea {
   transform: translateY(-2px);
 }
 
-.qr-inline {
-  display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  margin-top: 12px;
-  border-radius: 10px;
-  padding: 12px;
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.mock-qr {
-  display: grid;
-  width: 78px;
-  height: 78px;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 3px;
-  border: 5px solid #1a202c;
-  padding: 4px;
-  background: #fff;
-}
-
-.mock-qr span {
-  background: #edf2f7;
-}
-
-.mock-qr .filled {
-  background: #1a202c;
-}
-
 .timeline-item time {
   font-weight: 700;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .timeline-item p,
 .timeline-item small {
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .timeline-item small {
@@ -1216,8 +1204,8 @@ textarea {
 .status-badge {
   border-radius: 20px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #edf2f7, #e2e8f0);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -1227,39 +1215,39 @@ textarea {
 }
 
 .timeline-item.status-pending {
-  border-left-color: #f0a83a;
+  border-left-color: var(--color-warning);
 }
 
 .timeline-item.status-taken {
-  border-left-color: #38a169;
+  border-left-color: var(--color-success);
 }
 
 .timeline-item.status-missed {
-  border-left-color: #e53e3e;
+  border-left-color: var(--color-danger);
 }
 
 .status-badge.status-upcoming,
 .status-upcoming .status-badge {
-  background: linear-gradient(135deg, #e7f0ff, #bee3f8);
-  color: #2c5282;
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
 }
 
 .status-badge.status-pending,
 .status-pending .status-badge {
-  background: linear-gradient(135deg, #fff1d6, #fbd38d);
-  color: #744210;
+  background: var(--color-pending);
+  color: var(--color-pending-text);
 }
 
 .status-badge.status-taken,
 .status-taken .status-badge {
-  background: linear-gradient(135deg, #e9f6f2, #c6f6df);
-  color: #22543d;
+  background: var(--color-taken);
+  color: var(--color-taken-text);
 }
 
 .status-badge.status-missed,
 .status-missed .status-badge {
-  background: linear-gradient(135deg, #ffe3e3, #feb2b2);
-  color: #742a2a;
+  background: var(--color-missed);
+  color: var(--color-missed-text);
 }
 
 .status-explainer {
@@ -1269,12 +1257,12 @@ textarea {
   margin-top: 16px;
   border-radius: 10px;
   padding: 12px;
-  background: linear-gradient(135deg, #f8fafb, #edf2f7);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .status-explainer strong {
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .side-stack {
@@ -1284,7 +1272,7 @@ textarea {
 
 .update-card h2 {
   margin-top: 8px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 1.125rem;
   line-height: 1.5;
   font-weight: 600;
@@ -1300,14 +1288,14 @@ textarea {
 .empty-state {
   border-radius: 10px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #e9f6f2, #c6f6df);
-  color: #22543d;
+  background: var(--color-taken);
+  color: var(--color-taken-text);
   font-weight: 600;
 }
 
 .saved-note {
-  background: linear-gradient(135deg, #f8fafb, #edf2f7);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .compact-list {
@@ -1318,12 +1306,12 @@ textarea {
 .compact-list article {
   display: grid;
   gap: 3px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--color-border-light);
   padding-top: 12px;
 }
 
 .compact-list span {
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .hidden-input {
@@ -1347,8 +1335,95 @@ textarea {
   width: min(480px, 100%);
   border-radius: 16px;
   padding: 24px;
-  background: #fff;
+  background: var(--color-bg-secondary);
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  color: var(--color-text-primary);
+}
+
+.qr-modal {
+  width: min(500px, 100%);
+}
+
+.qr-content {
+  display: grid;
+  gap: 16px;
+}
+
+.qr-section {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+}
+
+.qr-section h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dosage {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.qr-display {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--color-bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.mock-qr {
+  display: grid;
+  width: 120px;
+  height: 120px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  border: 5px solid var(--color-text-primary);
+  padding: 4px;
+  background: var(--color-bg-secondary);
+}
+
+.mock-qr span {
+  background: var(--color-bg-tertiary);
+}
+
+.mock-qr .filled {
+  background: var(--color-text-primary);
+}
+
+.medication-id-box {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.medication-id-box .label {
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.medication-id-box .id {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-brand);
+  font-family: 'Courier New', monospace;
+  margin: 0;
+}
+
+.payload-info {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  font-family: 'Courier New', monospace;
+  margin: 0;
 }
 
 .modal header,
@@ -1361,25 +1436,27 @@ textarea {
 
 .modal header button {
   border: none;
-  background: linear-gradient(135deg, #edf2f7, #e2e8f0);
+  background: var(--color-bg-tertiary);
   border-radius: 50%;
   width: 36px;
   height: 36px;
   cursor: pointer;
   transition: background 0.3s ease;
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 
 .modal header button:hover {
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  background: var(--color-border);
 }
 
 .secondary-button {
-  background: linear-gradient(135deg, #edf2f7, #e2e8f0);
-  color: #4a5568;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .secondary-button:hover {
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  background: var(--color-border);
 }
 
 @media (max-width: 980px) {
@@ -1392,7 +1469,11 @@ textarea {
   }
 
   .quick-actions {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1404,7 +1485,6 @@ textarea {
   .topbar,
   .child-toolbar,
   .timeline-item,
-  .qr-inline,
   .status-explainer {
     grid-template-columns: 1fr;
   }
@@ -1414,7 +1494,12 @@ textarea {
   }
 
   .welcome-copy h2 {
-    font-size: 2rem;
+    font-size: 1.5rem;
+  }
+
+  .modal {
+    width: 100%;
+    margin: 0 auto;
   }
 }
 </style>
