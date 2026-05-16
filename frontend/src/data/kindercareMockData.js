@@ -4,6 +4,9 @@ export const children = [
     name: 'Adam Schneider',
     groupName: 'Sunflowers',
     dateOfBirth: '2021-03-15',
+    // approximate coordinates (mock) near central Berlin
+    location: { lat: 52.5208, lng: 13.4094 },
+    photo: null,
     parentName: 'Sara Schneider',
     parentEmail: 'sara.schneider@example.com',
     allergies: ['Peanuts'],
@@ -63,6 +66,9 @@ export const children = [
     name: 'Noah Becker',
     groupName: 'Sunflowers',
     dateOfBirth: '2020-07-22',
+    // slight offset to avoid exact overlap
+    location: { lat: 52.5225, lng: 13.4000 },
+    photo: null,
     parentName: 'Jonas Becker',
     parentEmail: 'jonas.becker@example.com',
     allergies: ['None known'],
@@ -142,6 +148,8 @@ export const children = [
     name: 'Lina Wagner',
     groupName: 'Rainbows',
     dateOfBirth: '2021-01-10',
+    location: { lat: 52.5185, lng: 13.4120 },
+    photo: null,
     parentName: 'Amira Wagner',
     parentEmail: 'amira.wagner@example.com',
     allergies: ['Bee stings'],

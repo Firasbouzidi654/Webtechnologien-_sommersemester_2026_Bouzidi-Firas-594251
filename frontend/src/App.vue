@@ -25,13 +25,16 @@ import PrivacyView from './views/PrivacyView.vue';
 import { translations } from './content/siteContent';
 
 const routes = {
-  '/': 'signup',
+  '/': 'signin',
+  '/login': 'signin',
   '/signup': 'signup',
   '/signin': 'signin',
-  '/login': 'login',
   '/parent': 'parent',
+  '/parent/': 'parent',
   '/admin': 'admin',
-  '/privacy': 'privacy'
+  '/admin/': 'admin',
+  '/privacy': 'privacy',
+  '/privacy/': 'privacy'
 };
 
 export default {
@@ -78,10 +81,9 @@ export default {
       return 'SignupView';
     },
 
-    // Retourne vrai si la route actuelle est 'signup', 'signin' ou 'privacy' (Sichtbar)
-
+    // Show the example / overview only to staff (admin view)
     showExampleEntities() {
-      return ['signup', 'signin', 'privacy'].includes(this.currentRoute);
+      return this.currentRoute === 'admin';
     }
   },
   created() {
@@ -91,8 +93,12 @@ export default {
     window.removeEventListener('popstate', this.handlePopState);
   },
   methods: {
+    normalizePath(pathname) {
+      const clean = pathname.split('?')[0].split('#')[0].replace(/\/+$|^\s+|\s+$/g, '');
+      return clean === '' ? '/' : clean;
+    },
     resolveRoute(pathname) {
-      return routes[pathname] || 'signup';
+      return routes[this.normalizePath(pathname)] || 'signup';
     },
     handlePopState() {
       this.currentRoute = this.resolveRoute(window.location.pathname);

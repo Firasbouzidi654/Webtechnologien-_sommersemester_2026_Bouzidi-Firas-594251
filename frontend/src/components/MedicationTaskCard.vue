@@ -6,7 +6,7 @@
         <h3>{{ task.childName }}</h3>
         <p>{{ task.groupName }} - {{ task.medicationName }}</p>
       </div>
-      <span class="status">{{ task.status }}</span>
+      <span class="status clickable" @click="$emit('toggle-status', task.medicationId)" title="Click to change status">{{ task.status }}</span>
     </header>
 
     <dl>
@@ -23,14 +23,18 @@
     <p class="instructions">{{ task.instructions }}</p>
     <p v-if="task.reminderDue" class="reminder">Reminder: scheduled medication time has arrived.</p>
 
-    <button
-      class="confirm-button"
-      type="button"
-      :disabled="task.status === 'Taken'"
-      @click="$emit('confirm', task.medicationId)"
-    >
-      Confirm taken
-    </button>
+    <div class="card-actions">
+      <button
+        class="confirm-button"
+        type="button"
+        :disabled="task.status === 'Taken'"
+        @click="$emit('confirm', task.medicationId)"
+      >
+        Confirm taken
+      </button>
+      <button class="secondary-button" type="button" @click="$emit('edit', task.medicationId)">Edit</button>
+      <button class="delete-button" type="button" @click="$emit('delete', task.medicationId)">Delete</button>
+    </div>
   </article>
 </template>
 
@@ -43,7 +47,7 @@ export default {
       required: true
     }
   },
-  emits: ['confirm'],
+  emits: ['confirm', 'edit', 'delete', 'toggle-status'],
   computed: {
     statusClass() {
       return `status-${this.task.status.toLowerCase()}`;
@@ -98,6 +102,15 @@ header {
 .status {
   height: fit-content;
   background: var(--color-bg-tertiary);
+}
+
+.status.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.status.clickable:hover {
+  opacity: 0.85;
 }
 
 .status-pending .status {
@@ -174,5 +187,31 @@ dd {
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
   cursor: not-allowed;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.secondary-button,
+.delete-button {
+  min-height: 42px;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-button {
+  background: rgba(66, 153, 225, 0.12);
+  color: var(--color-text-primary);
+}
+
+.delete-button {
+  background: rgba(229, 62, 62, 0.12);
+  color: var(--color-danger);
 }
 </style>

@@ -7,24 +7,45 @@
         A calm prototype for child profiles, medication schedules, emergency contacts, and daily staff confirmations.
       </p>
 
-      <form @submit.prevent="login">
+      <form @submit.prevent="login" class="auth-card">
         <label>
           <span>Email</span>
           <input v-model.trim="email" type="email" placeholder="parent@example.com" required />
         </label>
+
         <label>
           <span>Password</span>
           <input v-model="password" type="password" placeholder="prototype" required />
         </label>
-        <label>
-          <span>Role</span>
-          <select v-model="role">
-            <option value="parent">Parent</option>
-            <option value="admin">Kindergarten staff / administrator</option>
-          </select>
-        </label>
 
-        <button type="submit">Open dashboard</button>
+        <div class="role-select">
+          <p class="role-label">Continue as</p>
+          <div class="role-cards">
+            <button
+              type="button"
+              :class="['role-card', { active: role === 'parent' }]"
+              @click="role = 'parent'"
+              aria-pressed="role === 'parent'"
+            >
+              <div class="icon">👪</div>
+              <div class="text">Parent</div>
+            </button>
+
+            <button
+              type="button"
+              :class="['role-card', { active: role === 'admin' }]"
+              @click="role = 'admin'"
+              aria-pressed="role === 'admin'"
+            >
+              <div class="icon">🩺</div>
+              <div class="text">Staff</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Open dashboard</button>
+        </div>
       </form>
     </section>
 
@@ -59,6 +80,7 @@ export default {
   },
   methods: {
     login() {
+      // Redirect to the selected role dashboard
       this.$emit('navigate', this.role === 'parent' ? '/parent' : '/admin');
     }
   }
@@ -149,7 +171,70 @@ form {
   display: grid;
   gap: 20px;
   max-width: 520px;
-  margin-top: 32px;
+  margin-top: 24px;
+}
+
+.auth-card {
+  padding: 18px 0 0;
+}
+
+.role-select {
+  margin-top: 6px;
+}
+
+.role-label {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: #2d3748;
+}
+
+.role-cards {
+  display: flex;
+  gap: 12px;
+}
+
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid rgba(0,0,0,0.06);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.role-card .icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg,#fef3c7,#c7f9f0);
+  font-size: 1.1rem;
+}
+
+.role-card.active {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(45,55,72,0.12);
+  border-color: rgba(45,143,123,0.18);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.primary {
+  min-height: 50px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3182ce, #2d8f7b);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 label {

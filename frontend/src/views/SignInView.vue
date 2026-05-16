@@ -15,6 +15,31 @@
     </section>
 
     <form class="auth-form" @submit.prevent="submitForm">
+      <div class="role-select">
+        <p class="role-label">Continue as</p>
+        <div class="role-cards">
+          <button
+            type="button"
+            :class="['role-card', { active: role === 'parent' }]"
+            @click="role = 'parent'"
+            aria-pressed="role === 'parent'"
+          >
+            <div class="icon">👪</div>
+            <div class="text">Parent</div>
+          </button>
+
+          <button
+            type="button"
+            :class="['role-card', { active: role === 'admin' }]"
+            @click="role = 'admin'"
+            aria-pressed="role === 'admin'"
+          >
+            <div class="icon">🩺</div>
+            <div class="text">Staff</div>
+          </button>
+        </div>
+      </div>
+
       <label class="field">
         <span>{{ signin.emailLabel }}</span>
         <input v-model.trim="form.email" type="email" :placeholder="signin.emailPlaceholder" required />
@@ -79,6 +104,7 @@ export default {
   emits: ['navigate', 'toggle-theme', 'update-language'],
   data() {
     return {
+      role: 'parent',
       form: {
         email: '',
         password: '',
@@ -107,8 +133,8 @@ export default {
   methods: {
     submitForm() {
       this.feedback = this.signin.successMessage;
-      console.log('Sign in form ready:', { ...this.form });
-      this.$emit('navigate', '/parent');
+      console.log('Sign in form ready:', { role: this.role, ...this.form });
+      this.$emit('navigate', this.role === 'admin' ? '/admin' : '/parent');
     }
   }
 };
@@ -158,6 +184,56 @@ export default {
   outline: none;
   border-color: rgba(45, 143, 123, 0.55);
   box-shadow: 0 0 0 4px rgba(45, 143, 123, 0.14);
+}
+
+.role-select {
+  display: grid;
+  gap: 12px;
+}
+
+.role-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: rgba(34, 62, 79, 0.85);
+}
+
+.role-cards {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(34, 62, 79, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.role-card.active {
+  border-color: rgba(45, 143, 123, 0.35);
+  box-shadow: 0 12px 24px rgba(45, 143, 123, 0.18);
+  transform: translateY(-2px);
+}
+
+.role-card .icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c7f9f0, #dbeafe);
+  font-size: 1.1rem;
+}
+
+.role-card .text {
+  font-weight: 700;
+  color: #2d3748;
 }
 
 .signin-row {

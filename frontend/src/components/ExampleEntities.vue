@@ -1,8 +1,8 @@
 <template>
   <section class="example-entities" aria-labelledby="example-entities-title">
     <div class="example-entities-header">
-      <p class="eyebrow">Sample entities</p>
-      <h2 id="example-entities-title">Example Entities</h2>
+      <p class="eyebrow">Live Kindergarten Overview</p>
+      <h2 id="example-entities-title">Live Kindergarten Overview</h2>
     </div>
 
     <!-- Section;Style CSS appliqué via la classe .entity-card -->

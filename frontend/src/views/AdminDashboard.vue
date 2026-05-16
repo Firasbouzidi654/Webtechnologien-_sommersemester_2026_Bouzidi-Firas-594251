@@ -6,8 +6,9 @@
         <h1>Medication tasks today</h1>
       </div>
       <div class="top-actions">
-        <button class="emergency" type="button">Emergency mode</button>
-        <button type="button" @click="$emit('navigate', '/login')">Log out</button>
+        <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
+        <button type="button" @click="openTaskModal('add')">Add medication</button>
+        <button type="button" @click="$emit('navigate', '/')">Log out</button>
       </div>
     </nav>
 
@@ -16,6 +17,143 @@
         <p class="eyebrow">Live care operations</p>
         <h2>Clear schedule, quick confirmations, safer handovers</h2>
         <p>Staff can scan the plan, confirm medication, see missed alerts, and check the daily calendar without leaving the dashboard.</p>
+      </div>
+    </section>
+    <!-- Verification modal -->
+    <section v-if="verificationActive" class="modal-backdrop" @click.self="verificationActive = false">
+      <form class="modal" @submit.prevent="verifyMedication">
+        <header>
+          <h2>Confirm medication — verification</h2>
+          <button type="button" aria-label="Close" @click="verificationActive = false">x</button>
+        </header>
+        <div>
+          <p v-if="verificationTask"><strong>{{ verificationTask.childName }} — {{ verificationTask.medicationName }}</strong></p>
+          <label>
+            <span>Enter Medication ID or scan (mock)</span>
+            <input v-model="verificationInput" placeholder="MED-001 or scan result" />
+          </label>
+          <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+            <button type="submit" :disabled="verificationLoading">Verify</button>
+            <button type="button" @click="verificationInput = verificationTask?.medicationId">Fill ID</button>
+            <div v-if="verificationLoading">Checking…</div>
+          </div>
+          <p v-if="verificationMessage" :class="{ 'success': verificationState === 'success', 'error': verificationState === 'error' }">{{ verificationMessage }}</p>
+        </div>
+      </form>
+    </section>
+
+    <section v-if="taskModalActive" class="modal-backdrop" @click.self="closeTaskModal">
+      <form class="modal" @submit.prevent="saveTask">
+        <header>
+          <div>
+            <p class="eyebrow">Medication task</p>
+            <h2>{{ taskModalMode === 'edit' ? 'Edit medication task' : 'Add medication task' }}</h2>
+          </div>
+          <button type="button" aria-label="Close" @click="closeTaskModal">x</button>
+        </header>
+
+        <div class="modal-fields">
+          <label>
+            <span>Child</span>
+            <select v-model.number="taskForm.childId" :disabled="taskModalMode === 'edit'" required>
+              <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }} — {{ child.groupName }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Medication</span>
+            <input v-model="taskForm.medicationName" placeholder="E.g. Amoxicillin" required />
+          </label>
+          <label>
+            <span>Dosage</span>
+            <input v-model="taskForm.dosage" placeholder="E.g. 5 ml" required />
+          </label>
+          <label>
+            <span>Time</span>
+            <input v-model="taskForm.time" type="time" required />
+          </label>
+          <label>
+            <span>Instructions</span>
+            <textarea v-model="taskForm.instructions" placeholder="Take with food or water" rows="3"></textarea>
+          </label>
+          <p v-if="taskError" class="form-error">{{ taskError }}</p>
+          <div class="modal-actions">
+            <button type="submit">{{ taskModalMode === 'edit' ? 'Save changes' : 'Create task' }}</button>
+            <button type="button" class="secondary-button" @click="closeTaskModal">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Emergency modal -->
+    <section v-if="emergencyActive" class="modal-backdrop" @click.self="closeEmergency" role="dialog" aria-modal="true">
+      <div class="modal emergency-modal">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Emergency mode</p>
+            <h2>Child safety instant response</h2>
+          </div>
+          <button type="button" aria-label="Close emergency dialog" @click="closeEmergency">x</button>
+        </header>
+
+        <div class="emergency-body">
+          <div class="emergency-details">
+            <label class="field-label">
+              <span>Active child</span>
+              <select v-model.number="selectedEmergencyChildId" aria-label="Select child for emergency response">
+                <option v-for="c in children" :key="c.id" :value="c.id">{{ c.name }} — {{ c.groupName }}</option>
+              </select>
+            </label>
+
+            <template v-if="selectedEmergencyChild">
+              <section class="child-summary" aria-label="Selected child summary">
+                <img v-if="selectedEmergencyChild.photo" :src="selectedEmergencyChild.photo" class="child-photo" alt="Selected child photo" />
+                <div>
+                  <h3>{{ selectedEmergencyChild.name }}</h3>
+                  <p class="summary-line"><strong>Class:</strong> {{ selectedEmergencyChild.groupName }}</p>
+                  <p class="summary-line"><strong>Allergies:</strong> {{ selectedEmergencyChild.allergies.join(', ') || 'None' }}</p>
+                  <p class="summary-line"><strong>Chronic:</strong> {{ selectedEmergencyChild.chronicDiseases.join(', ') || 'None' }}</p>
+                  <p class="summary-line"><strong>Parent contact:</strong> {{ selectedEmergencyChild.emergencyContacts[0]?.name || 'No parent' }} - {{ selectedEmergencyChild.emergencyContacts[0]?.phone || 'N/A' }}</p>
+                </div>
+              </section>
+
+              <div id="emergency-map" class="emergency-map" aria-label="Emergency location map">
+                <template v-if="emergencyMapError">
+                  <div class="map-fallback">
+                    <p>{{ emergencyMapError }}</p>
+                    <p><strong>Coordinates:</strong> {{ selectedEmergencyChild.location.lat }}, {{ selectedEmergencyChild.location.lng }}</p>
+                  </div>
+                </template>
+                <template v-else>
+                  Map loading…
+                </template>
+              </div>
+
+              <div class="emergency-actions">
+                <button type="button" class="secondary-button" @click="callParent">Call parent</button>
+                <button type="button" class="secondary-button" @click="callServices">Call services</button>
+                <button type="button" class="secondary-button" @click="shareEmergencyInfo">Share info</button>
+              </div>
+            </template>
+          </div>
+
+          <aside class="emergency-poi-panel">
+            <div class="panel-header">
+              <p class="eyebrow">Nearby emergency support</p>
+              <p class="panel-note">Route directly from the child's location.</p>
+            </div>
+
+            <div class="poi-list">
+              <div v-if="poiLoading" class="loading-state">Searching nearby hospitals, pharmacies, and police...</div>
+              <div v-else-if="nearbyPOIs.length === 0" class="empty-state">No nearby emergency points found. Try again in a moment.</div>
+              <EmergencyPoiCard
+                v-for="poi in nearbyPOIs"
+                :key="poi.id"
+                :poi="poi"
+                :from="selectedEmergencyChild?.location"
+              />
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
@@ -110,7 +248,10 @@
           v-for="task in filteredTasks"
           :key="task.taskId"
           :task="task"
-          @confirm="confirmMedication"
+          @confirm="openVerificationModal"
+          @edit="openTaskModal('edit', $event)"
+          @delete="deleteTask($event)"
+          @toggle-status="toggleTaskStatus"
         />
       </div>
 
@@ -141,6 +282,8 @@
           />
         </section>
 
+        <VerificationHistoryPanel :logs="verificationLogs" />
+
         <section class="panel">
           <header>
             <h2>Emergency contacts</h2>
@@ -160,28 +303,63 @@
 <script>
 import AdminCalendar from '../components/AdminCalendar.vue';
 import EmergencyContactCard from '../components/EmergencyContactCard.vue';
-import MedicationTaskCard from '../components/MedicationTaskCard.vue';
+import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import QRMedicationCard from '../components/QRMedicationCard.vue';
-import heroImage from '../assets/hero.png';
-import { kindercareStore, markMedicationTaken, taskReminderDue } from '../state/kindercareStore';
+import VerificationHistoryPanel from '../components/VerificationHistoryPanel.vue';
+import L from 'leaflet';
+import { kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication } from '../state/kindercareStore';
+import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 
 export default {
   name: 'AdminDashboard',
   components: {
     AdminCalendar,
     EmergencyContactCard,
-    MedicationTaskCard,
-    QRMedicationCard
+    EmergencyPoiCard,
+    QRMedicationCard,
+    VerificationHistoryPanel
   },
   emits: ['navigate'],
   data() {
     return {
-      heroImage,
       groupFilter: 'all',
-      childFilter: 'all'
+      childFilter: 'all',
+      verificationActive: false,
+      verificationInput: '',
+      verificationTask: null,
+      verificationMessage: '',
+      verificationState: '',
+      verificationLoading: false,
+      emergencyActive: false,
+      selectedEmergencyChildId: null,
+      nearbyPOIs: [],
+      poiLoading: false,
+      emergencyMap: null,
+      emergencyMarkers: [],
+      emergencyMapError: '',
+      taskModalActive: false,
+      taskModalMode: 'add',
+      taskForm: {
+        medicationId: null,
+        childId: null,
+        medicationName: '',
+        dosage: '',
+        time: '',
+        instructions: ''
+      },
+      taskError: ''
     };
   },
+  created() {
+    // noop
+  },
   computed: {
+    selectedEmergencyChild() {
+      return this.children.find((child) => child.id === this.selectedEmergencyChildId) || this.children[0] || null;
+    },
+    verificationLogs() {
+      return kindercareStore.verificationLogs;
+    },
     children() {
       return kindercareStore.children;
     },
@@ -235,9 +413,214 @@ export default {
         })));
     }
   },
+  watch: {
+    selectedEmergencyChildId() {
+      if (this.emergencyActive) {
+        this.$nextTick(() => this.initEmergencyModal());
+      }
+    }
+  },
   methods: {
     confirmMedication(medicationId) {
       markMedicationTaken(medicationId);
+    },
+    openVerificationModal(medicationId) {
+      this.verificationTask = this.tasks.find((t) => t.medicationId === medicationId) || null;
+      this.verificationInput = '';
+      this.verificationMessage = '';
+      this.verificationState = '';
+      this.verificationLoading = false;
+      this.verificationActive = true;
+    },
+    async verifyMedication() {
+      if (!this.verificationTask) return;
+
+      this.verificationLoading = true;
+      const input = this.verificationInput.trim();
+      const ok = input === this.verificationTask.medicationId || (this.verificationTask.qrPayload && this.verificationTask.qrPayload.includes(input));
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      if (ok) {
+        addVerificationLog({ medicationId: this.verificationTask.medicationId, method: input === this.verificationTask.medicationId ? 'ID' : 'QR', admin: 'Staff Demo', time: new Date().toISOString() });
+        markMedicationTaken(this.verificationTask.medicationId);
+        this.verificationMessage = 'Verification successful — medication confirmed.';
+        this.verificationState = 'success';
+      } else {
+        this.verificationMessage = 'Verification failed — ID or QR did not match.';
+        this.verificationState = 'error';
+      }
+
+      this.verificationLoading = false;
+    },
+    openEmergency() {
+      this.selectedEmergencyChildId = this.children?.[0]?.id || null;
+      this.emergencyActive = true;
+      this.$nextTick(() => this.initEmergencyModal());
+    },
+    async initEmergencyModal() {
+      if (!this.selectedEmergencyChild) {
+        this.emergencyMapError = 'No child location available.';
+        return;
+      }
+
+      const { lat = 52.52, lng = 13.405 } = this.selectedEmergencyChild.location || {};
+      const mapEl = document.getElementById('emergency-map');
+      if (!mapEl) {
+        return;
+      }
+
+      this.emergencyMapError = '';
+
+      try {
+        if (!this.emergencyMap) {
+          this.emergencyMap = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 13);
+          const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+          });
+          tileLayer.on('tileerror', () => {
+            this.emergencyMapError = 'Map tiles failed to load. Emergency POIs are still listed below.';
+          });
+          tileLayer.addTo(this.emergencyMap);
+        } else {
+          this.emergencyMap.setView([lat, lng], 13);
+        }
+
+        this.clearEmergencyMarkers();
+        this.addEmergencyMarker([lat, lng], `${this.selectedEmergencyChild.name} location`);
+        await this.loadNearbyPois(lat, lng);
+      } catch (e) {
+        console.warn('Leaflet map init error', e);
+      }
+    },
+    clearEmergencyMarkers() {
+      if (!this.emergencyMap) {
+        return;
+      }
+
+      this.emergencyMarkers.forEach((marker) => {
+        this.emergencyMap.removeLayer(marker);
+      });
+      this.emergencyMarkers = [];
+    },
+    openTaskModal(mode, medicationId = null) {
+      this.taskModalMode = mode;
+      this.taskError = '';
+
+      if (mode === 'edit' && medicationId) {
+        const task = this.tasks.find((item) => item.medicationId === medicationId);
+        if (task) {
+          this.taskForm = {
+            medicationId: task.medicationId,
+            childId: task.childId,
+            medicationName: task.medicationName,
+            dosage: task.dosage,
+            time: task.scheduledTime,
+            instructions: task.instructions || ''
+          };
+        }
+      } else {
+        this.taskForm = {
+          medicationId: null,
+          childId: this.children?.[0]?.id || null,
+          medicationName: '',
+          dosage: '',
+          time: '',
+          instructions: ''
+        };
+      }
+
+      this.taskModalActive = true;
+    },
+    closeTaskModal() {
+      this.taskModalActive = false;
+      this.taskError = '';
+    },
+    saveTask() {
+      if (!this.taskForm.childId || !this.taskForm.medicationName || !this.taskForm.dosage || !this.taskForm.time) {
+        this.taskError = 'Please complete all required fields.';
+        return;
+      }
+
+      if (this.taskModalMode === 'edit' && this.taskForm.medicationId) {
+        editMedication(this.taskForm.childId, this.taskForm.medicationId, {
+          name: this.taskForm.medicationName,
+          dosage: this.taskForm.dosage,
+          instructions: this.taskForm.instructions,
+          time: this.taskForm.time
+        });
+      } else {
+        addMedication(this.taskForm.childId, {
+          name: this.taskForm.medicationName,
+          dosage: this.taskForm.dosage,
+          instructions: this.taskForm.instructions,
+          time: this.taskForm.time
+        });
+      }
+
+      this.closeTaskModal();
+    },
+    deleteTask(medicationId) {
+      const task = this.tasks.find((item) => item.medicationId === medicationId);
+      if (!task) {
+        return;
+      }
+
+      if (!window.confirm('Delete this medication task? This action cannot be undone.')) {
+        return;
+      }
+
+      removeMedication(task.childId, medicationId);
+    },
+    addEmergencyMarker(position, label) {
+      if (!this.emergencyMap) {
+        return;
+      }
+
+      const marker = L.marker(position).addTo(this.emergencyMap).bindPopup(label);
+      this.emergencyMarkers.push(marker);
+      return marker;
+    },
+    async loadNearbyPois(lat, lng) {
+      this.poiLoading = true;
+      this.nearbyPOIs = [];
+
+      const pois = await fetchNearbyEmergencyPOIs(lat, lng);
+      this.nearbyPOIs = pois;
+
+      if (this.emergencyMap && pois.length) {
+        pois.forEach((poi) => {
+          const marker = L.marker([poi.lat, poi.lng]).addTo(this.emergencyMap).bindPopup(`${poi.name} — ${poi.type} — ${poi.distance} m`);
+          this.emergencyMarkers.push(marker);
+        });
+      }
+
+      this.poiLoading = false;
+    },
+    closeEmergency() {
+      this.emergencyActive = false;
+      this.emergencyMapError = '';
+    },
+    callParent() {
+      const phone = this.selectedEmergencyChild.emergencyContacts[0]?.phone || 'N/A';
+      if (phone !== 'N/A') {
+        window.open(`tel:${phone}`);
+      } else {
+        window.alert('Parent contact number unavailable.');
+      }
+    },
+    callServices() {
+      window.open('tel:112');
+    },
+    shareEmergencyInfo() {
+      window.alert('Copied emergency summary to clipboard');
+    },
+    toggleTaskStatus(medicationId) {
+      const current = this.tasks.find((task) => task.medicationId === medicationId)?.status;
+      if (!current) return;
+      const statuses = ['Pending', 'Taken', 'Missed'];
+      const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
+      setMedicationStatus(medicationId, next);
     },
     meaningfulList(items, fallback) {
       const values = items.filter((item) => item && !['None', 'None known'].includes(item));
@@ -347,6 +730,146 @@ select {
 
 .top-actions .emergency:hover {
   box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.modal {
+  width: min(100%, 620px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.child-summary {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.child-summary img.child-photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 18px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.child-summary h3 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.summary-line {
+  margin: 6px 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.emergency-map {
+  min-height: 280px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+  margin-top: 18px;
+}
+
+.map-fallback {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.map-fallback p {
+  margin: 0 0 12px;
+}
+
+.emergency-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.emergency-actions .secondary-button {
+  min-width: 160px;
+  background: rgba(45, 143, 123, 0.12);
+  color: var(--color-text-primary);
+}
+
+.emergency-actions .secondary-button:hover {
+  opacity: 0.92;
+}
+
+.modal-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.modal-fields label {
+  display: grid;
+  gap: 8px;
+  color: var(--color-text-primary);
+}
+
+.modal-fields input,
+.modal-fields select,
+.modal-fields textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.modal-fields textarea {
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.emergency-map {
+  min-height: 280px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+  margin-top: 18px;
 }
 
 .hero-strip {

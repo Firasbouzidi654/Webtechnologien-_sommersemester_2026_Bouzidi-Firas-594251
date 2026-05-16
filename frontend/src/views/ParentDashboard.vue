@@ -1,11 +1,24 @@
 <template>
   <main class="parent-dashboard">
     <nav class="topbar">
-      <div>
-        <p class="eyebrow">Parent dashboard</p>
-        <h1>KinderCare Connect</h1>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div class="parent-avatar" style="display:flex;align-items:center;gap:10px;">
+          <div v-if="kindercareStore.parentAvatar">
+            <img :src="kindercareStore.parentAvatar" alt="Parent avatar" style="width:56px;height:56px;border-radius:999px;object-fit:cover;" />
+          </div>
+          <div v-else class="initials" style="width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,#fef3c7,#c7f9f0);display:grid;place-items:center;font-weight:800;color:#1f2937;">
+            {{ parentInitials }}
+          </div>
+          <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleParentAvatar" />
+        </div>
+        <div>
+          <p class="eyebrow">Parent dashboard</p>
+          <h1>KinderCare Connect</h1>
+        </div>
       </div>
-      <button class="logout-button" type="button" @click="$emit('navigate', '/login')">Log out</button>
+      <div>
+        <button class="logout-button" type="button" @click="$emit('navigate', '/')">Log out</button>
+      </div>
     </nav>
 
     <section class="welcome-panel">
@@ -403,6 +416,7 @@ import {
   markMedicationTaken,
   parentChildren,
   removeAllergy as storeRemoveAllergy,
+  setParentAvatar,
   removeDisease as storeRemoveDisease,
   removeMedication as storeRemoveMedication,
   saveParentNote as storeSaveParentNote,
@@ -415,7 +429,7 @@ export default {
   data() {
     return {
       heroImage,
-      selectedChildId: parentChildren()[0].id,
+      selectedChildId: parentChildren()[0]?.id || null,
       activeDialog: '',
       parentNoteDraft: '',
       noteFeedback: '',
@@ -446,7 +460,16 @@ export default {
       return parentChildren();
     },
     selectedChild() {
-      return this.parentChildren.find((child) => child.id === this.selectedChildId) || this.parentChildren[0];
+      return this.parentChildren.find((child) => child.id === this.selectedChildId) || this.parentChildren[0] || {
+        name: 'No child selected',
+        groupName: '—',
+        allergies: [],
+        chronicDiseases: [],
+        emergencyContacts: [],
+        medications: [],
+        prescriptionFileName: null,
+        location: { lat: 0, lng: 0 }
+      };
     },
     medicationTimeline() {
       return [...this.selectedChild.medications]
@@ -461,6 +484,11 @@ export default {
     },
     parentNotes() {
       return kindercareStore.parentNotes;
+    },
+    parentInitials() {
+      const name = kindercareStore.parentAvatar ? '' : 'Sara Schneider';
+      const parts = name.split(' ');
+      return parts.map((p) => p[0]).join('').slice(0, 2).toUpperCase();
     },
     allergySummary() {
       const allergies = this.meaningfulItems(this.selectedChild.allergies);
@@ -673,7 +701,8 @@ export default {
       const newChild = storeAddChild({
         name: this.forms.child.name,
         groupName: this.forms.child.groupName,
-        dateOfBirth: this.forms.child.dateOfBirth
+        dateOfBirth: this.forms.child.dateOfBirth,
+        photo: this.forms.child.photo || null
       });
 
       this.selectedChildId = newChild.id;
@@ -760,6 +789,31 @@ export default {
     },
     toggleQr(medicationId) {
       this.selectedQrId = this.selectedQrId === medicationId ? '' : medicationId;
+    },
+
+    handleParentAvatar(event) {
+      const [file] = event.target.files;
+
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setParentAvatar(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    },
+
+    handleChildPhotoUpload(event) {
+      const [file] = event.target.files;
+
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // attach temporarily to forms for new child
+        this.forms.child.photo = e.target.result;
+      };
+      reader.readAsDataURL(file);
     },
     qrCells(medicationId) {
       const seed = medicationId.split('').reduce((total, character) => total + character.charCodeAt(0), 0);

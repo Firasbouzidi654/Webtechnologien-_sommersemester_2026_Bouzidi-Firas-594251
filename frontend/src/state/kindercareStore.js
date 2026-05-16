@@ -5,7 +5,9 @@ export const kindercareStore = reactive({
   children: cloneMockData(children),
   medicationTasks: cloneMockData(medicationTasks),
   parentChildIds: [1, 3],
-  parentNotes: {}
+  parentNotes: {},
+  parentAvatar: null,
+  verificationLogs: []
 });
 
 function findChild(childId) {
@@ -41,7 +43,9 @@ export function addChild(data) {
     groupName: data.groupName,
     dateOfBirth: data.dateOfBirth,
     parentName: 'Sara Schneider',
+    photo: data.photo || null,
     parentEmail: 'sara.schneider@example.com',
+    photo: null,
     allergies: [],
     chronicDiseases: [],
     healthNotes: '',
@@ -52,6 +56,22 @@ export function addChild(data) {
   kindercareStore.children.push(child);
   kindercareStore.parentChildIds.push(child.id);
   return child;
+}
+
+export function setParentAvatar(dataUrl) {
+  kindercareStore.parentAvatar = dataUrl;
+}
+
+export function setChildPhoto(childId, dataUrl) {
+  const child = findChild(childId);
+
+  if (child) {
+    child.photo = dataUrl;
+  }
+}
+
+export function addVerificationLog(entry) {
+  kindercareStore.verificationLogs.unshift({ id: Date.now(), ...entry });
 }
 
 export function addAllergy(childId, name) {
@@ -209,6 +229,35 @@ export function markMedicationTaken(medicationId) {
       adminName: 'Ms. Mueller',
       loggedAt: new Date().toISOString(),
       note: 'Confirmed by staff from admin dashboard'
+    });
+  }
+}
+
+export function setMedicationStatus(medicationId, status) {
+  const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
+  if (!task) {
+    return;
+  }
+
+  task.status = status;
+  task.reminderDue = false;
+
+  const child = findChild(task.childId);
+  const medication = child?.medications.find((item) => item.medicationId === medicationId);
+
+  if (!medication) {
+    return;
+  }
+
+  medication.todayStatus = status;
+
+  if (status === 'Taken') {
+    medication.history.unshift({
+      id: Date.now(),
+      status: 'Taken',
+      adminName: 'Ms. Mueller',
+      loggedAt: new Date().toISOString(),
+      note: 'Status updated by staff'
     });
   }
 }
