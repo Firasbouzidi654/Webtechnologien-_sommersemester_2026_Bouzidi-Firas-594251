@@ -1,4 +1,4 @@
-<template>
+p<template>
   <section class="calendar-panel">
     <header>
       <div>
@@ -128,11 +128,11 @@ export default {
 .calendar-panel {
   display: grid;
   gap: 14px;
-  border: 1px solid rgba(32, 48, 63, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 18px;
-  background: #fff;
-  box-shadow: 0 18px 40px rgba(32, 48, 63, 0.08);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-md);
 }
 
 header {
@@ -150,7 +150,7 @@ h3,
 }
 
 .eyebrow {
-  color: #287b68;
+  color: var(--color-brand);
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -159,8 +159,8 @@ h3,
 header span {
   border-radius: 999px;
   padding: 5px 10px;
-  background: #edf2f7;
-  color: #405265;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
@@ -174,7 +174,7 @@ header span {
 }
 
 .weekdays strong {
-  color: #637486;
+  color: var(--color-text-secondary);
   font-size: 0.72rem;
   text-align: center;
 }
@@ -183,12 +183,13 @@ header span {
   display: grid;
   min-height: 58px;
   place-items: center;
-  border: 1px solid rgba(32, 48, 63, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 6px;
-  background: #f8fafb;
-  color: #20303f;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .day-cell span {
@@ -196,7 +197,7 @@ header span {
 }
 
 .day-cell small {
-  color: #287b68;
+  color: var(--color-brand);
   font-size: 0.68rem;
   font-weight: 900;
 }
@@ -206,18 +207,18 @@ header span {
 }
 
 .day-cell.today {
-  border-color: #2d8f7b;
-  background: #e9f6f2;
+  border-color: var(--color-success);
+  background: var(--color-taken);
 }
 
 .day-cell.selected {
-  box-shadow: 0 0 0 3px rgba(45, 143, 123, 0.16);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.3);
 }
 
 .day-plan {
   display: grid;
   gap: 8px;
-  border-top: 1px solid rgba(32, 48, 63, 0.1);
+  border-top: 1px solid var(--color-border);
   padding-top: 14px;
 }
 
@@ -226,27 +227,32 @@ header span {
   grid-template-columns: 48px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
-  border-left: 4px solid #f0a83a;
+  border-left: 4px solid var(--color-pending-text);
   border-radius: 8px;
   padding: 9px 10px;
-  background: #fbfcfd;
+  background: var(--color-bg-primary);
 }
 
 .calendar-task.taken {
-  border-left-color: #2d8f7b;
+  border-left-color: var(--color-taken-text);
 }
 
 .calendar-task.missed {
-  border-left-color: #d94a4a;
+  border-left-color: var(--color-missed-text);
 }
 
 .calendar-task span {
   overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}
+
+.calendar-task strong {
+  color: var(--color-text-primary);
 }
 
 .calendar-task em,
 .empty {
-  color: #637486;
+  color: var(--color-text-tertiary);
   font-size: 0.76rem;
   font-style: normal;
   font-weight: 900;

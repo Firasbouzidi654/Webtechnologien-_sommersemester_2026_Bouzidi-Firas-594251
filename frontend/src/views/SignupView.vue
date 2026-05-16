@@ -171,8 +171,8 @@ export default {
   margin: 0;
   font-size: 1.875rem;
   font-weight: 800;
-  color: #2d3748;
-  background: linear-gradient(135deg, #3182ce, #2d3748);
+  color: var(--color-text-primary);
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -180,7 +180,7 @@ export default {
 
 .page-header p {
   margin: 12px 0 0;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   font-weight: 500;
 }
@@ -209,24 +209,24 @@ export default {
 .field span {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .field input {
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--color-border);
   border-radius: 12px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1a202c;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   font: inherit;
   font-weight: 500;
   transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .field input::placeholder {
-  color: #a0aec0;
+  color: var(--color-text-tertiary);
 }
 
 .field input:hover {
@@ -235,14 +235,14 @@ export default {
 
 .field input:focus {
   outline: none;
-  border-color: #3182ce;
-  box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.1);
-  background: #fff;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.08);
+  background: var(--color-bg-secondary);
 }
 
 .field input.invalid {
-  border-color: #e53e3e;
-  box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.1);
+  border-color: var(--color-missed-text);
+  box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.08);
 }
 
 .checkbox-row {
@@ -253,7 +253,7 @@ export default {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   font-weight: 500;
 }
@@ -268,7 +268,7 @@ export default {
   border: none;
   background: none;
   padding: 0;
-  color: #3182ce;
+  color: var(--color-brand);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -276,7 +276,7 @@ export default {
 }
 
 .text-link:hover {
-  color: #2c5282;
+  color: var(--color-info);
   transform: translateY(-1px);
 }
 
@@ -289,15 +289,15 @@ export default {
   font: inherit;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, #38a169, #2f855a);
+  background: linear-gradient(135deg, var(--color-success), #2f855a);
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(56, 161, 105, 0.3);
+  box-shadow: 0 6px 20px rgba(56, 161, 105, 0.18);
   transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
 }
 
 .primary-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(56, 161, 105, 0.4);
+  box-shadow: 0 8px 25px rgba(56, 161, 105, 0.25);
   filter: saturate(1.05);
 }
 
@@ -305,14 +305,14 @@ export default {
   margin: 16px 0 0;
   padding: 14px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #e9f6f2, #c6f6df);
-  color: #22543d;
+  background: var(--color-taken);
+  color: var(--color-taken-text);
   font-weight: 600;
 }
 
 .feedback.error {
-  background: linear-gradient(135deg, #ffe3e3, #feb2b2);
-  color: #742a2a;
+  background: var(--color-missed);
+  color: var(--color-missed-text);
 }
 
 .auth-footer {
@@ -321,7 +321,7 @@ export default {
   justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -329,16 +329,16 @@ export default {
   margin-top: 28px;
   padding: 24px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(56, 161, 105, 0.08), rgba(49, 130, 206, 0.04));
+  background: var(--color-bg-tertiary);
   animation: fade-up 0.65s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .helper-panel h4 {
   margin: 0 0 14px;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .helper-panel ul {
@@ -346,7 +346,7 @@ export default {
   padding-left: 20px;
   display: grid;
   gap: 12px;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -362,34 +362,6 @@ export default {
   }
 }
 
-:global(.dark-mode) .page-header h3 {
-  background: linear-gradient(135deg, #63b3ed, #a0aec0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-:global(.dark-mode) .page-header p,
-:global(.dark-mode) .checkbox,
-:global(.dark-mode) .auth-footer,
-:global(.dark-mode) .helper-panel ul,
-:global(.dark-mode) .field input::placeholder {
-  color: #b6c3ce;
-}
-
-:global(.dark-mode) .field input {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(212, 230, 241, 0.12);
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .field input:focus {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark-mode) .helper-panel {
-  background: linear-gradient(135deg, rgba(56, 161, 105, 0.12), rgba(49, 130, 206, 0.08));
-}
 
 @media (max-width: 640px) {
   .form-grid {

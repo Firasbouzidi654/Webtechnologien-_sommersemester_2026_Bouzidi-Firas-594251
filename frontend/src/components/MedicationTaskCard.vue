@@ -56,23 +56,23 @@ export default {
 .task-card {
   display: grid;
   gap: 14px;
-  border: 1px solid rgba(32, 48, 63, 0.12);
-  border-left: 5px solid #d7e0e7;
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--color-bg-tertiary);
   border-radius: 8px;
   padding: 16px;
-  background: #fff;
+  background: var(--color-bg-secondary);
 }
 
 .status-pending {
-  border-left-color: #f0a83a;
+  border-left-color: var(--color-pending-text);
 }
 
 .status-taken {
-  border-left-color: #2d8f7b;
+  border-left-color: var(--color-taken-text);
 }
 
 .status-missed {
-  border-left-color: #d94a4a;
+  border-left-color: var(--color-missed-text);
 }
 
 header {
@@ -91,28 +91,28 @@ header {
 }
 
 .time {
-  background: #edf2f7;
-  color: #405265;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .status {
   height: fit-content;
-  background: #edf2f7;
+  background: var(--color-bg-tertiary);
 }
 
 .status-pending .status {
-  background: #fff1d6;
-  color: #8a5b00;
+  background: var(--color-pending);
+  color: var(--color-pending-text);
 }
 
 .status-taken .status {
-  background: #e9f6f2;
-  color: #287b68;
+  background: var(--color-taken);
+  color: var(--color-taken-text);
 }
 
 .status-missed .status {
-  background: #ffe3e3;
-  color: #a12d2d;
+  background: var(--color-missed);
+  color: var(--color-missed-text);
 }
 
 h3,
@@ -129,7 +129,7 @@ h3 {
 
 header p,
 dt {
-  color: #637486;
+  color: var(--color-text-secondary);
 }
 
 dl {
@@ -148,14 +148,14 @@ dd {
 }
 
 .instructions {
-  color: #405265;
+  color: var(--color-text-secondary);
 }
 
 .reminder {
   border-radius: 8px;
   padding: 10px 12px;
-  background: #fff1d6;
-  color: #7d5100;
+  background: var(--color-pending);
+  color: var(--color-pending-text);
   font-weight: 800;
 }
 
@@ -164,15 +164,15 @@ dd {
   border: none;
   border-radius: 8px;
   padding: 10px 14px;
-  background: #2d8f7b;
+  background: linear-gradient(135deg, var(--color-success), #2f855a);
   color: #fff;
   font-weight: 900;
   cursor: pointer;
 }
 
 .confirm-button:disabled {
-  background: #cad5dd;
-  color: #637486;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
 }
 </style>
