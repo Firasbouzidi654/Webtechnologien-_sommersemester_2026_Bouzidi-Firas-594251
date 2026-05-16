@@ -33,6 +33,12 @@
   --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
 
+  /* Icon/Badge backgrounds */
+  --color-icon-bg: linear-gradient(135deg, #bee3f8, #90cdf4);
+  --color-icon-text: #2c5282;
+  --color-care-bg: linear-gradient(135deg, #fef5e7, #fbd38d);
+  --color-care-text: #744210;
+
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -63,6 +69,12 @@
   --color-taken-text: #86efac;
   --color-missed: #5a1f1f;
   --color-missed-text: #f87171;
+
+  /* Dark mode icon backgrounds */
+  --color-icon-bg: linear-gradient(135deg, #1e3a8a, #1e40af);
+  --color-icon-text: #93c5fd;
+  --color-care-bg: linear-gradient(135deg, #78350f, #92400e);
+  --color-care-text: #fbbf24;
 }
 
 * {

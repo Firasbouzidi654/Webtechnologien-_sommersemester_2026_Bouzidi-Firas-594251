@@ -986,8 +986,8 @@ textarea {
   height: 40px;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #bee3f8, #90cdf4);
-  color: var(--color-info);
+  background: var(--color-icon-bg);
+  color: var(--color-icon-text);
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -1024,8 +1024,8 @@ textarea {
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fef5e7, #fbd38d);
-  color: #744210;
+  background: var(--color-care-bg);
+  color: var(--color-care-text);
   font-weight: 700;
 }
 
