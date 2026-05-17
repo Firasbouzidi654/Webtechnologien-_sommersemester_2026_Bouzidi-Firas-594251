@@ -1,11 +1,15 @@
-p<template>
+<template>
   <section class="calendar-panel">
     <header>
       <div>
         <p class="eyebrow">Medication calendar</p>
         <h2>{{ monthLabel }}</h2>
       </div>
-      <span>{{ todayLabel }}</span>
+      <div class="calendar-actions">
+        <button type="button" aria-label="Previous month" @click="moveMonth(-1)">‹</button>
+        <span>{{ todayLabel }}</span>
+        <button type="button" aria-label="Next month" @click="moveMonth(1)">›</button>
+      </div>
     </header>
 
     <div class="weekdays">
@@ -19,7 +23,7 @@ p<template>
         class="day-cell"
         :class="{ muted: !day.inMonth, today: day.isToday, selected: day.date === selectedDate }"
         type="button"
-        @click="selectedDate = day.date"
+        @click="onDayClick(day)"
       >
         <span>{{ day.dayNumber }}</span>
         <small v-if="tasksForDate(day.date).length">{{ tasksForDate(day.date).length }} task(s)</small>
@@ -27,11 +31,18 @@ p<template>
     </div>
 
     <section class="day-plan">
-      <h3>{{ selectedDateLabel }}</h3>
-      <article v-for="task in selectedTasks" :key="task.taskId" class="calendar-task" :class="task.status.toLowerCase()">
-        <strong>{{ task.scheduledTime }}</strong>
-        <span>{{ task.childName }} - {{ task.medicationName }}</span>
-        <em>{{ task.status }}</em>
+      <div class="day-plan-header">
+        <h3>{{ selectedDateLabel }}</h3>
+        <button type="button" @click="$emit('create-task', selectedDate)">Add task</button>
+      </div>
+      <article v-for="task in selectedTasks" :key="task.taskId || task.medicationId" class="calendar-task" :class="statusClass(task.status)">
+        <strong>{{ task.scheduledTime || '--:--' }}</strong>
+        <span>{{ task.childName || 'Unknown child' }} - {{ task.medicationName || 'Medication' }}</span>
+        <em>{{ normalizedStatus(task.status) }}</em>
+        <div class="task-actions">
+          <button type="button" @click="$emit('edit-task', task.medicationId)">Edit</button>
+          <button type="button" @click="$emit('delete-task', task.medicationId)">Delete</button>
+        </div>
       </article>
       <p v-if="selectedTasks.length === 0" class="empty">No medication tasks planned.</p>
     </section>
@@ -51,6 +62,7 @@ export default {
     const today = new Date();
     return {
       selectedDate: this.toDateKey(today),
+      calendarCursor: new Date(today.getFullYear(), today.getMonth(), 1),
       weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     };
   },
@@ -59,7 +71,7 @@ export default {
       return new Date();
     },
     monthLabel() {
-      return this.today.toLocaleDateString([], { month: 'long', year: 'numeric' });
+      return this.calendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' });
     },
     todayLabel() {
       return this.today.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
@@ -72,13 +84,13 @@ export default {
       });
     },
     calendarDays() {
-      const year = this.today.getFullYear();
-      const month = this.today.getMonth();
+      const year = this.calendarCursor.getFullYear();
+      const month = this.calendarCursor.getMonth();
       const firstDay = new Date(year, month, 1);
       const startOffset = (firstDay.getDay() + 6) % 7;
       const firstVisibleDay = new Date(year, month, 1 - startOffset);
 
-      return Array.from({ length: 35 }, (_, index) => {
+      return Array.from({ length: 42 }, (_, index) => {
         const date = new Date(firstVisibleDay);
         date.setDate(firstVisibleDay.getDate() + index);
         const dateKey = this.toDateKey(date);
@@ -102,23 +114,29 @@ export default {
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     },
+    onDayClick(day) {
+      this.selectedDate = day.date;
+      this.$emit('day-click', day.date);
+    },
+    moveMonth(direction) {
+      this.calendarCursor = new Date(
+        this.calendarCursor.getFullYear(),
+        this.calendarCursor.getMonth() + direction,
+        1
+      );
+    },
+    normalizedStatus(status) {
+      return ['Pending', 'Taken', 'Missed', 'Upcoming'].includes(status) ? status : 'Pending';
+    },
+    statusClass(status) {
+      return this.normalizedStatus(status).toLowerCase();
+    },
+
     tasksForDate(dateKey) {
-      const todayKey = this.toDateKey(this.today);
-      const tomorrow = new Date(this.today);
-      tomorrow.setDate(this.today.getDate() + 1);
-      const tomorrowKey = this.toDateKey(tomorrow);
-
-      if (dateKey === todayKey) {
-        return this.tasks;
-      }
-
-      if (dateKey === tomorrowKey) {
-        return this.tasks
-          .filter((task) => task.status !== 'Missed')
-          .map((task) => ({ ...task, status: 'Pending' }));
-      }
-
-      return [];
+      if (!Array.isArray(this.tasks)) return [];
+      return this.tasks
+        .filter((task) => (task?.scheduledDate || this.toDateKey(this.today)) === dateKey)
+        .sort((first, second) => (first.scheduledTime || '').localeCompare(second.scheduledTime || ''));
     }
   }
 };
@@ -156,7 +174,13 @@ h3,
   text-transform: uppercase;
 }
 
-header span {
+.calendar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.calendar-actions span {
   border-radius: 999px;
   padding: 5px 10px;
   background: var(--color-bg-tertiary);
@@ -164,6 +188,28 @@ header span {
   font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.calendar-actions button,
+.day-plan-header button,
+.task-actions button {
+  min-height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.calendar-actions button:hover,
+.day-plan-header button:hover,
+.task-actions button:hover,
+.day-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .weekdays,
@@ -222,23 +268,40 @@ header span {
   padding-top: 14px;
 }
 
+.day-plan-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
 .calendar-task {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto;
   gap: 8px;
   align-items: center;
-  border-left: 4px solid var(--color-pending-text);
+  border-left: 4px solid var(--color-pending-border);
   border-radius: 8px;
   padding: 9px 10px;
   background: var(--color-bg-primary);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.calendar-task:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-task.upcoming {
+  border-left-color: var(--color-upcoming-border);
 }
 
 .calendar-task.taken {
-  border-left-color: var(--color-taken-text);
+  border-left-color: var(--color-taken-border);
 }
 
 .calendar-task.missed {
-  border-left-color: var(--color-missed-text);
+  border-left-color: var(--color-missed-border);
 }
 
 .calendar-task span {
@@ -256,6 +319,39 @@ header span {
   font-size: 0.76rem;
   font-style: normal;
   font-weight: 900;
+}
+
+.calendar-task em {
+  border-radius: 999px;
+  padding: 5px 9px;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.06);
+}
+
+.calendar-task.pending em {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+.calendar-task.upcoming em {
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+}
+
+.calendar-task.taken em {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+}
+
+.calendar-task.missed em {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+}
+
+.task-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: end;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 520px) {

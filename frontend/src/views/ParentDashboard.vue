@@ -1,5 +1,8 @@
 <template>
   <main class="parent-dashboard">
+    <div v-if="componentError" class="error-banner" role="alert">
+      <strong>Component error:</strong> {{ componentError }}
+    </div>
     <nav class="topbar">
       <div style="display:flex;gap:12px;align-items:center;">
         <div class="parent-avatar" style="display:flex;align-items:center;gap:10px;">
@@ -16,10 +19,18 @@
           <h1>KinderCare Connect</h1>
         </div>
       </div>
-      <div>
+      <div class="parent-top-actions">
+        <label class="global-search" aria-label="Search parent dashboard">
+          <span>Search</span>
+          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication, contact..." />
+        </label>
+        <NotificationCenter />
+        <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
         <button class="logout-button" type="button" @click="$emit('navigate', '/')">Log out</button>
       </div>
     </nav>
+
+    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent care view" />
 
     <section class="welcome-panel">
       <div class="welcome-copy">
@@ -30,6 +41,8 @@
         </p>
       </div>
     </section>
+
+    <p v-if="parentSearchEmpty" class="search-empty">No health record matches "{{ searchQuery }}".</p>
 
     <section class="child-toolbar">
       <label>
@@ -78,7 +91,7 @@
       </article>
       <article>
         <p>Emergency contacts</p>
-        <strong>{{ selectedChild.emergencyContacts.length }}</strong>
+        <strong>{{ (selectedChild.emergencyContacts || []).length }}</strong>
         <span>{{ emergencyContactSummary }}</span>
       </article>
       <article>
@@ -149,6 +162,23 @@
           >
             {{ status }}
           </span>
+        </div>
+
+        <div class="medication-progress">
+          <div>
+            <strong>{{ medicationProgress.completed }}/{{ medicationProgress.total }}</strong>
+            <span>completed today</span>
+          </div>
+          <div class="progress-track">
+            <span :style="{ width: `${medicationProgress.percent}%` }"></span>
+          </div>
+        </div>
+
+        <div class="daily-periods">
+          <article v-for="section in medicationPeriods" :key="section.key">
+            <strong>{{ section.label }}</strong>
+            <span>{{ section.tasks.length }} item(s)</span>
+          </article>
         </div>
 
         <div class="timeline">
@@ -239,11 +269,11 @@
             </div>
             <button type="button" @click="openDialog('emergency')">Add emergency contact</button>
           </header>
-          <article v-for="contact in selectedChild.emergencyContacts" :key="contact.id">
+          <article v-for="contact in (selectedChild.emergencyContacts || [])" :key="contact.id">
             <strong>{{ contact.name }}</strong>
             <span>{{ contact.relationship }} - {{ contact.phone }}</span>
           </article>
-          <p v-if="selectedChild.emergencyContacts.length === 0" class="empty-state">
+          <p v-if="(selectedChild.emergencyContacts || []).length === 0" class="empty-state">
             No emergency contact added yet.
           </p>
         </section>
@@ -403,7 +433,10 @@
 
 <script>
 import heroImage from '../assets/hero.png';
+import LiveDashboardBar from '../components/LiveDashboardBar.vue';
+import NotificationCenter from '../components/NotificationCenter.vue';
 import {
+  MEDICATION_STATUSES,
   addAllergy as storeAddAllergy,
   addChild as storeAddChild,
   addDisease as storeAddDisease,
@@ -425,16 +458,23 @@ import {
 
 export default {
   name: 'ParentDashboard',
-  emits: ['navigate'],
+  components: {
+    LiveDashboardBar,
+    NotificationCenter
+  },
+  emits: ['navigate', 'toggle-theme'],
   data() {
     return {
       heroImage,
+      kindercareStore,
       selectedChildId: parentChildren()[0]?.id || null,
+      componentError: '',
       activeDialog: '',
       parentNoteDraft: '',
       noteFeedback: '',
       selectedQrId: '',
       editingMedicationId: '',
+      searchQuery: '',
       forms: this.emptyForms(),
       quickActions: [
         { key: 'child', label: 'Add child', icon: 'Kid' },
@@ -472,21 +512,74 @@ export default {
       };
     },
     medicationTimeline() {
-      return [...this.selectedChild.medications]
+      return [...(this.selectedChild.medications || [])]
         .map((medication) => ({
           ...medication,
+          schedule: {
+            specificTime: '12:00',
+            dosage: medication.dosage || '',
+            instructions: medication.instructions || '',
+            ...(medication.schedule || {})
+          },
           status: this.medicationStatus(medication)
         }))
-        .sort((first, second) => first.schedule.specificTime.localeCompare(second.schedule.specificTime));
+        .filter((medication) => this.matchesParentSearch([
+          medication.name,
+          medication.medicationId,
+          medication.dosage,
+          medication.instructions,
+          medication.status
+        ]))
+        .sort((first, second) => (first.schedule?.specificTime || '').localeCompare(second.schedule?.specificTime || ''));
+    },
+    medicationProgress() {
+      const total = this.medicationTimeline.length;
+      const completed = this.medicationTimeline.filter((medication) => medication.status === 'Taken').length;
+      return {
+        total,
+        completed,
+        percent: total ? Math.round((completed / total) * 100) : 0
+      };
+    },
+    medicationPeriods() {
+      const sections = [
+        { key: 'morning', label: 'Morning', tasks: [] },
+        { key: 'afternoon', label: 'Afternoon', tasks: [] },
+        { key: 'evening', label: 'Evening', tasks: [] }
+      ];
+
+      this.medicationTimeline.forEach((medication) => {
+        const hour = Number((medication.schedule?.specificTime || '12:00').split(':')[0]);
+        const target = hour < 12 ? sections[0] : hour < 17 ? sections[1] : sections[2];
+        target.tasks.push(medication);
+      });
+
+      return sections;
+    },
+    normalizedSearchQuery() {
+      return this.searchQuery.trim().toLowerCase();
+    },
+    parentSearchEmpty() {
+      return Boolean(this.normalizedSearchQuery) && this.medicationTimeline.length === 0 && !this.matchesSelectedChildSearch;
+    },
+    matchesSelectedChildSearch() {
+      return this.matchesParentSearch([
+        this.selectedChild.name,
+        this.selectedChild.parentName,
+        this.selectedChild.groupName,
+        ...(this.selectedChild.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone]),
+        ...(this.selectedChild.allergies || []),
+        ...(this.selectedChild.chronicDiseases || [])
+      ]);
     },
     savedParentNote() {
-      return kindercareStore.parentNotes[this.selectedChildId] || '';
+      return this.kindercareStore.parentNotes[this.selectedChildId] || '';
     },
     parentNotes() {
-      return kindercareStore.parentNotes;
+      return this.kindercareStore.parentNotes;
     },
     parentInitials() {
-      const name = kindercareStore.parentAvatar ? '' : 'Sara Schneider';
+      const name = this.kindercareStore.parentAvatar ? '' : 'Sara Schneider';
       const parts = name.split(' ');
       return parts.map((p) => p[0]).join('').slice(0, 2).toUpperCase();
     },
@@ -499,7 +592,7 @@ export default {
       return diseases.length ? diseases.join(', ') : 'No chronic disease recorded yet.';
     },
     emergencyContactSummary() {
-      return this.selectedChild.emergencyContacts[0]?.name || 'No emergency contact added yet.';
+      return this.selectedChild.emergencyContacts?.[0]?.name || 'No emergency contact added yet.';
     },
     lastKindergartenUpdate() {
       const confirmed = this.medicationHistory[0];
@@ -522,13 +615,13 @@ export default {
       return `Next medication: ${nextMedication.name} at ${nextMedication.schedule.specificTime}`;
     },
     medicationHistory() {
-      return this.selectedChild.medications
+      return (this.selectedChild.medications || [])
         .flatMap((medication) => (medication.history || []).map((entry) => ({
           ...entry,
           medicationName: medication.name,
           time: this.formatTime(entry.loggedAt)
         })))
-        .sort((first, second) => second.loggedAt.localeCompare(first.loggedAt));
+        .sort((first, second) => (second.loggedAt || '').localeCompare(first.loggedAt || ''));
     },
     prescriptionStatus() {
       if (this.selectedChild.prescriptionFileName) {
@@ -538,7 +631,7 @@ export default {
         };
       }
 
-      const uploadedMedication = this.selectedChild.medications.find((medication) => medication.prescriptionUploaded);
+      const uploadedMedication = (this.selectedChild.medications || []).find((medication) => medication.prescriptionUploaded);
 
       if (uploadedMedication) {
         return {
@@ -594,6 +687,18 @@ export default {
       }
     }
   },
+
+  errorCaptured(err, vm, info) {
+    // surface runtime errors to the UI for easier debugging
+    // eslint-disable-next-line no-console
+    console.error('Captured error in ParentDashboard:', err, info);
+    try {
+      this.componentError = err?.message || String(err);
+    } catch (e) {
+      this.componentError = 'Unknown error';
+    }
+    return false; // allow global handler to also run
+  },
   methods: {
     emptyForms() {
       return {
@@ -627,10 +732,21 @@ export default {
       };
     },
     firstName(name) {
-      return name.split(' ')[0];
+      return (name || '').split(' ')[0] || 'your child';
     },
     meaningfulItems(items) {
-      return items.filter((item) => item && !['None', 'None known'].includes(item));
+      return (items || []).filter((item) => item && !['None', 'None known'].includes(item));
+    },
+    matchesParentSearch(values) {
+      if (!this.normalizedSearchQuery) {
+        return true;
+      }
+
+      return values
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(this.normalizedSearchQuery);
     },
     applySuggestion(formName) {
       const selectedSuggestion = this.forms[formName].suggestion;
@@ -642,16 +758,17 @@ export default {
       this.forms[formName].name = selectedSuggestion === 'Other' ? '' : selectedSuggestion;
     },
     statusClass(status) {
-      return `status-${status.toLowerCase()}`;
+      const normalizedStatus = MEDICATION_STATUSES.includes(status) ? status : 'Upcoming';
+      return `status-${normalizedStatus.toLowerCase()}`;
     },
     medicationStatus(medication) {
-      const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medication.medicationId);
+      const task = this.kindercareStore.medicationTasks.find((item) => item.medicationId === medication.medicationId);
 
-      if (task?.status === 'Taken' || task?.status === 'Missed') {
+      if (MEDICATION_STATUSES.includes(task?.status)) {
         return task.status;
       }
 
-      return medication.todayStatus || 'Upcoming';
+      return MEDICATION_STATUSES.includes(medication.todayStatus) ? medication.todayStatus : 'Upcoming';
     },
     handleQuickAction(actionKey) {
       if (actionKey === 'prescription') {
@@ -778,7 +895,7 @@ export default {
         suggestion: '',
         name: medication.name,
         dosage: medication.dosage,
-        time: medication.schedule.specificTime,
+        time: medication.schedule?.specificTime || '12:00',
         instructions: medication.instructions
       };
       this.editingMedicationId = medication.medicationId;
@@ -816,7 +933,7 @@ export default {
       reader.readAsDataURL(file);
     },
     qrCells(medicationId) {
-      const seed = medicationId.split('').reduce((total, character) => total + character.charCodeAt(0), 0);
+      const seed = String(medicationId || '').split('').reduce((total, character) => total + character.charCodeAt(0), 0);
       return Array.from({ length: 36 }, (_, index) => index + seed);
     },
     formatTime(value) {
@@ -830,6 +947,7 @@ export default {
     }
   }
 };
+
 </script>
 
 <style scoped>
@@ -865,6 +983,81 @@ export default {
   margin-bottom: 20px;
   border: 1px solid var(--color-border);
   backdrop-filter: blur(10px);
+}
+
+.parent-top-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.global-search {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: min(300px, 100%);
+}
+
+.global-search span {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.global-search input {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px 14px 10px 38px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.global-search::before {
+  position: absolute;
+  left: 13px;
+  bottom: 12px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-text-tertiary);
+  border-radius: 999px;
+  content: '';
+}
+
+.global-search::after {
+  position: absolute;
+  left: 25px;
+  bottom: 10px;
+  width: 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-text-tertiary);
+  content: '';
+  transform: rotate(45deg);
+}
+
+.search-empty {
+  max-width: 1240px;
+  margin: 16px auto 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
 .eyebrow,
@@ -911,6 +1104,12 @@ h1 {
 .logout-button {
   background: linear-gradient(135deg, var(--color-brand-dark), #1a202c);
   color: #fff;
+}
+
+.logout-button.secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
 
 .logout-button:hover {
@@ -1219,6 +1418,69 @@ textarea {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 16px;
+}
+
+.medication-progress {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--color-bg-primary);
+}
+
+.medication-progress > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-primary);
+  font-weight: 900;
+}
+
+.medication-progress span {
+  color: var(--color-text-secondary);
+}
+
+.progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-taken-border), var(--color-upcoming-border));
+  transition: width 0.35s ease;
+}
+
+.daily-periods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.daily-periods article {
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-primary);
+}
+
+.daily-periods strong,
+.daily-periods span {
+  display: block;
+}
+
+.daily-periods span {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .timeline-item {
@@ -1543,8 +1805,17 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .parent-top-actions,
+  .global-search {
+    width: 100%;
+  }
+
   .quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-periods {
+    grid-template-columns: 1fr;
   }
 
   .welcome-copy h2 {

@@ -15,8 +15,8 @@
     >
       <span class="avatar">{{ initials(child.name) }}</span>
       <span>
-        <strong>{{ child.name }}</strong>
-        <small>{{ child.groupName }} - {{ child.medications.length }} medication(s)</small>
+        <strong>{{ child.name || 'Unnamed child' }}</strong>
+        <small>{{ child.groupName || 'No group' }} - {{ medicationCount(child) }} medication(s)</small>
       </span>
     </button>
   </section>
@@ -46,11 +46,14 @@ export default {
   emits: ['select-child'],
   methods: {
     initials(name) {
-      return name
+      return (name || '?')
         .split(' ')
         .map((part) => part[0])
         .join('')
         .slice(0, 2);
+    },
+    medicationCount(child) {
+      return Array.isArray(child?.medications) ? child.medications.length : 0;
     }
   }
 };

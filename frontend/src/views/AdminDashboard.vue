@@ -6,11 +6,19 @@
         <h1>Medication tasks today</h1>
       </div>
       <div class="top-actions">
+        <label class="global-search" aria-label="Search dashboard">
+          <span>Search</span>
+          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication, parent, contact..." />
+        </label>
+        <NotificationCenter />
+        <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
         <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
         <button type="button" @click="openTaskModal('add')">Add medication</button>
         <button type="button" @click="$emit('navigate', '/')">Log out</button>
       </div>
     </nav>
+
+    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team" />
 
     <section class="hero-strip">
       <div>
@@ -54,8 +62,8 @@
 
         <div class="modal-fields">
           <label>
-            <span>Child</span>
-            <select v-model.number="taskForm.childId" :disabled="taskModalMode === 'edit'" required>
+            <span>Child name</span>
+            <select v-model.number="taskForm.childId" required>
               <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }} — {{ child.groupName }}</option>
             </select>
           </label>
@@ -68,11 +76,21 @@
             <input v-model="taskForm.dosage" placeholder="E.g. 5 ml" required />
           </label>
           <label>
-            <span>Time</span>
+            <span>Date</span>
+            <input v-model="taskForm.date" type="date" required />
+          </label>
+          <label>
+            <span>Hour</span>
             <input v-model="taskForm.time" type="time" required />
           </label>
           <label>
-            <span>Instructions</span>
+            <span>Status</span>
+            <select v-model="taskForm.status" required>
+              <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Notes</span>
             <textarea v-model="taskForm.instructions" placeholder="Take with food or water" rows="3"></textarea>
           </label>
           <p v-if="taskError" class="form-error">{{ taskError }}</p>
@@ -91,8 +109,9 @@
           <div>
             <p class="eyebrow">Emergency mode</p>
             <h2>Child safety instant response</h2>
+            <p class="modal-subtitle">Review medical context, locate nearby support, and contact help quickly.</p>
           </div>
-          <button type="button" aria-label="Close emergency dialog" @click="closeEmergency">x</button>
+          <button class="modal-close" type="button" aria-label="Close emergency dialog" @click="closeEmergency">x</button>
         </header>
 
         <div class="emergency-body">
@@ -107,49 +126,106 @@
             <template v-if="selectedEmergencyChild">
               <section class="child-summary" aria-label="Selected child summary">
                 <img v-if="selectedEmergencyChild.photo" :src="selectedEmergencyChild.photo" class="child-photo" alt="Selected child photo" />
-                <div>
-                  <h3>{{ selectedEmergencyChild.name }}</h3>
-                  <p class="summary-line"><strong>Class:</strong> {{ selectedEmergencyChild.groupName }}</p>
-                  <p class="summary-line"><strong>Allergies:</strong> {{ selectedEmergencyChild.allergies.join(', ') || 'None' }}</p>
-                  <p class="summary-line"><strong>Chronic:</strong> {{ selectedEmergencyChild.chronicDiseases.join(', ') || 'None' }}</p>
-                  <p class="summary-line"><strong>Parent contact:</strong> {{ selectedEmergencyChild.emergencyContacts[0]?.name || 'No parent' }} - {{ selectedEmergencyChild.emergencyContacts[0]?.phone || 'N/A' }}</p>
+                <span v-else class="child-photo placeholder">{{ initials(selectedEmergencyChild.name) }}</span>
+                <div class="child-summary-content">
+                  <div class="child-summary-heading">
+                    <h3>{{ selectedEmergencyChild.name || 'Unknown child' }}</h3>
+                    <p>{{ selectedEmergencyChild.groupName || 'No group assigned' }}</p>
+                  </div>
+                  <dl class="child-medical-grid">
+                    <div>
+                      <dt>Allergies</dt>
+                      <dd>{{ meaningfulList(selectedEmergencyChild.allergies, 'None recorded') }}</dd>
+                    </div>
+                    <div>
+                      <dt>Chronic conditions</dt>
+                      <dd>{{ meaningfulList(selectedEmergencyChild.chronicDiseases, 'None recorded') }}</dd>
+                    </div>
+                    <div>
+                      <dt>Parent contact</dt>
+                      <dd>{{ selectedEmergencyChild.emergencyContacts?.[0]?.name || 'No parent' }} - {{ selectedEmergencyChild.emergencyContacts?.[0]?.phone || 'N/A' }}</dd>
+                    </div>
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{{ selectedEmergencyLocation.lat }}, {{ selectedEmergencyLocation.lng }}</dd>
+                    </div>
+                  </dl>
                 </div>
               </section>
 
-              <div id="emergency-map" class="emergency-map" aria-label="Emergency location map">
+              <section class="support-grid" aria-label="Emergency support shortcuts">
+                <article
+                  v-for="card in emergencySupportCards"
+                  :key="card.key"
+                  class="support-card"
+                  :class="card.key"
+                >
+                  <img v-if="card.image" class="support-photo" :src="card.image" :alt="card.title" loading="lazy" />
+                  <span v-else class="support-icon">{{ card.icon }}</span>
+                  <div class="support-card-copy">
+                    <strong>{{ card.title }}</strong>
+                    <span>{{ card.name }}</span>
+                    <div class="support-metrics">
+                      <small>{{ card.distance }}</small>
+                      <small>{{ card.eta }}</small>
+                    </div>
+                  </div>
+                  <button type="button" @click="card.action">{{ card.actionLabel }}</button>
+                </article>
+              </section>
+
+              <div class="map-card">
+                <div class="map-card-header">
+                  <div>
+                    <p class="eyebrow">Live map</p>
+                    <h3>Nearby route context</h3>
+                  </div>
+                  <span>{{ nearbyPOIs.length }} result(s)</span>
+                </div>
+
+                <div id="emergency-map" class="emergency-map" aria-label="Emergency location map">
                 <template v-if="emergencyMapError">
                   <div class="map-fallback">
                     <p>{{ emergencyMapError }}</p>
-                    <p><strong>Coordinates:</strong> {{ selectedEmergencyChild.location.lat }}, {{ selectedEmergencyChild.location.lng }}</p>
+                    <p><strong>Coordinates:</strong> {{ selectedEmergencyLocation.lat }}, {{ selectedEmergencyLocation.lng }}</p>
                   </div>
                 </template>
                 <template v-else>
                   Map loading…
                 </template>
+                </div>
               </div>
 
               <div class="emergency-actions">
                 <button type="button" class="secondary-button" @click="callParent">Call parent</button>
                 <button type="button" class="secondary-button" @click="callServices">Call services</button>
-                <button type="button" class="secondary-button" @click="shareEmergencyInfo">Share info</button>
               </div>
             </template>
           </div>
 
           <aside class="emergency-poi-panel">
             <div class="panel-header">
-              <p class="eyebrow">Nearby emergency support</p>
+              <div>
+                <p class="eyebrow">Nearby emergency support</p>
+                <h3>Fast response options</h3>
+              </div>
               <p class="panel-note">Route directly from the child's location.</p>
             </div>
 
             <div class="poi-list">
-              <div v-if="poiLoading" class="loading-state">Searching nearby hospitals, pharmacies, and police...</div>
+              <div v-if="poiLoading" class="loading-state">
+                <span class="spinner" aria-hidden="true"></span>
+                <div>
+                  <strong>Searching nearby support</strong>
+                  <p>Looking for hospitals, pharmacies, and police stations...</p>
+                </div>
+              </div>
               <div v-else-if="nearbyPOIs.length === 0" class="empty-state">No nearby emergency points found. Try again in a moment.</div>
               <EmergencyPoiCard
-                v-for="poi in nearbyPOIs"
+                v-for="poi in displayedEmergencyPOIs"
                 :key="poi.id"
                 :poi="poi"
-                :from="selectedEmergencyChild?.location"
+                :from="selectedEmergencyLocation"
               />
             </div>
           </aside>
@@ -169,6 +245,10 @@
       <article class="missed">
         <span>{{ stats.Missed }}</span>
         <p>Missed today</p>
+      </article>
+      <article class="upcoming">
+        <span>{{ stats.Upcoming }}</span>
+        <p>Upcoming</p>
       </article>
       <article class="alerts">
         <strong>{{ missedTasks.length }} missed alert(s)</strong>
@@ -193,6 +273,8 @@
       </label>
     </section>
 
+    <p v-if="searchEmpty" class="search-empty">No child, medication, parent, or emergency contact matches "{{ searchQuery }}".</p>
+
     <section class="alerts-panel">
       <article>
         <p class="eyebrow">Reminder alerts</p>
@@ -210,14 +292,57 @@
       </article>
     </section>
 
+    <section class="operations-row">
+      <article class="progress-panel">
+        <div>
+          <p class="eyebrow">Daily medication progress</p>
+          <h2>{{ medicationProgress.completed }} of {{ medicationProgress.total }} completed</h2>
+        </div>
+        <div class="progress-track" aria-label="Medication completion progress">
+          <span :style="{ width: `${medicationProgress.percent}%` }"></span>
+        </div>
+        <div class="progress-metrics">
+          <span class="taken">{{ medicationProgress.completed }} taken</span>
+          <span class="pending">{{ medicationProgress.pending }} pending/upcoming</span>
+          <span class="missed">{{ medicationProgress.missed }} missed</span>
+        </div>
+      </article>
+
+      <article class="day-timeline-panel">
+        <div class="timeline-section" v-for="section in medicationTimelineSections" :key="section.key">
+          <header>
+            <div>
+              <h3>{{ section.label }}</h3>
+              <p>{{ section.range }}</p>
+            </div>
+            <span>{{ section.tasks.length }}</span>
+          </header>
+          <div class="mini-timeline">
+            <p v-if="section.tasks.length === 0">No medication scheduled.</p>
+            <span
+              v-for="task in section.tasks.slice(0, 4)"
+              :key="`${section.key}-${task.medicationId}`"
+              :class="`status-${task.status.toLowerCase()}`"
+            >
+              {{ task.scheduledTime }} {{ task.medicationName }}
+            </span>
+          </div>
+        </div>
+      </article>
+    </section>
+
     <section class="child-overview">
       <article v-for="child in filteredChildren" :key="child.id">
         <header>
+          <div class="child-heading">
+            <img v-if="child.photo" :src="child.photo" :alt="`${child.name} photo`" />
+            <span v-else>{{ initials(child.name) }}</span>
+          </div>
           <div>
             <p class="eyebrow">{{ child.groupName }}</p>
             <h2>{{ child.name }}</h2>
           </div>
-          <span>{{ child.medications.length }} med(s)</span>
+          <span>{{ (child.medications || []).length }} med(s)</span>
         </header>
         <dl>
           <div>
@@ -242,7 +367,13 @@
 
     <section class="admin-grid">
       <div class="task-stack">
-        <AdminCalendar :tasks="tasks" />
+        <AdminCalendar
+          :tasks="tasks"
+          @day-click="openCalendarTaskModal"
+          @create-task="openCalendarTaskModal"
+          @edit-task="openTaskModal('edit', $event)"
+          @delete-task="deleteTask($event)"
+        />
 
         <MedicationTaskCard
           v-for="task in filteredTasks"
@@ -252,6 +383,7 @@
           @edit="openTaskModal('edit', $event)"
           @delete="deleteTask($event)"
           @toggle-status="toggleTaskStatus"
+          @status-change="changeTaskStatus"
         />
       </div>
 
@@ -304,11 +436,25 @@
 import AdminCalendar from '../components/AdminCalendar.vue';
 import EmergencyContactCard from '../components/EmergencyContactCard.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
+import LiveDashboardBar from '../components/LiveDashboardBar.vue';
+import NotificationCenter from '../components/NotificationCenter.vue';
 import QRMedicationCard from '../components/QRMedicationCard.vue';
 import VerificationHistoryPanel from '../components/VerificationHistoryPanel.vue';
 import L from 'leaflet';
-import { kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication } from '../state/kindercareStore';
-import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
+import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication } from '../state/kindercareStore';
+import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
+import { estimateDriveTimeMinutes, formatDistanceMeters } from '../utils/formatters';
+
+const PHARMACY_IMAGE = 'https://images.unsplash.com/photo-1766258630872-2b1403439fb5?auto=format&fit=crop&q=80&w=300';
+const POLICE_IMAGE = 'https://images.unsplash.com/photo-1693329900318-9686ec84b1cd?auto=format&fit=crop&q=80&w=300';
+const FALLBACK_POLICE_STATION = {
+  id: 'fallback-police-station',
+  name: 'Police Station Alexanderplatz',
+  type: 'police',
+  label: 'Police station',
+  lat: 52.5215,
+  lng: 13.4132
+};
 
 export default {
   name: 'AdminDashboard',
@@ -316,6 +462,8 @@ export default {
     AdminCalendar,
     EmergencyContactCard,
     EmergencyPoiCard,
+    LiveDashboardBar,
+    NotificationCenter,
     QRMedicationCard,
     VerificationHistoryPanel
   },
@@ -324,6 +472,7 @@ export default {
     return {
       groupFilter: 'all',
       childFilter: 'all',
+      searchQuery: '',
       verificationActive: false,
       verificationInput: '',
       verificationTask: null,
@@ -344,9 +493,12 @@ export default {
         childId: null,
         medicationName: '',
         dosage: '',
+        date: this.todayDateKey(),
         time: '',
-        instructions: ''
+        instructions: '',
+        status: 'Pending'
       },
+      statusOptions: MEDICATION_STATUSES,
       taskError: ''
     };
   },
@@ -357,6 +509,78 @@ export default {
     selectedEmergencyChild() {
       return this.children.find((child) => child.id === this.selectedEmergencyChildId) || this.children[0] || null;
     },
+    selectedEmergencyLocation() {
+      const { lat = 52.52, lng = 13.405 } = this.selectedEmergencyChild?.location || {};
+      return {
+        lat,
+        lng
+      };
+    },
+    emergencySupportCards() {
+      const contactsCount = this.selectedEmergencyChild?.emergencyContacts?.length || 0;
+      const hospital = this.supportPoiByType('hospital');
+      const pharmacy = this.supportPoiByType('pharmacy');
+      const police = this.supportPoiByType('police');
+      const contact = this.selectedEmergencyChild?.emergencyContacts?.[0] || null;
+
+      return [
+        {
+          key: 'hospital',
+          icon: 'H',
+          title: 'Hospital',
+          name: hospital?.name || 'Nearest hospital',
+          distance: this.supportDistance(hospital),
+          eta: this.supportEta(hospital),
+          actionLabel: 'Show route',
+          action: () => this.routeToPoiType('hospital')
+        },
+        {
+          key: 'pharmacy',
+          icon: 'Rx',
+          title: 'Pharmacy',
+          name: pharmacy?.name || 'Nearest pharmacy',
+          distance: this.supportDistance(pharmacy),
+          eta: this.supportEta(pharmacy),
+          image: PHARMACY_IMAGE,
+          actionLabel: 'Show route',
+          action: () => this.routeToPoiType('pharmacy')
+        },
+        {
+          key: 'police',
+          icon: 'Police',
+          title: 'Police Station',
+          name: police?.name || 'Nearest police station',
+          distance: this.supportDistance(police),
+          eta: this.supportEta(police),
+          image: POLICE_IMAGE,
+          actionLabel: 'Show route',
+          action: () => this.routeToPoiType('police')
+        },
+        {
+          key: 'contacts',
+          icon: 'Tel',
+          title: 'Emergency contacts',
+          name: contact ? `${contact.name} - ${contact.phone}` : 'No contact saved',
+          distance: contactsCount ? `${contactsCount} contact(s)` : 'Missing',
+          eta: 'Call parent',
+          actionLabel: 'Call',
+          action: this.callParent
+        }
+      ];
+    },
+    displayedEmergencyPOIs() {
+      if (this.poiLoading) {
+        return [];
+      }
+
+      const pois = Array.isArray(this.nearbyPOIs) ? [...this.nearbyPOIs] : [];
+
+      if (!pois.some((poi) => poi.type === 'police')) {
+        pois.push(this.withDistance(FALLBACK_POLICE_STATION));
+      }
+
+      return pois;
+    },
     verificationLogs() {
       return kindercareStore.verificationLogs;
     },
@@ -366,6 +590,8 @@ export default {
     tasks() {
       return kindercareStore.medicationTasks.map((task) => ({
         ...task,
+        scheduledDate: task.scheduledDate || this.todayDateKey(),
+        status: this.statusOptions.includes(task.status) ? task.status : 'Pending',
         reminderDue: taskReminderDue(task)
       }));
     },
@@ -373,27 +599,66 @@ export default {
       return kindercareStore.parentNotes;
     },
     groups() {
-      return [...new Set(this.children.map((child) => child.groupName))];
+      return [...new Set(this.children.map((child) => child.groupName).filter(Boolean))];
+    },
+    normalizedSearchQuery() {
+      return this.searchQuery.trim().toLowerCase();
+    },
+    searchEmpty() {
+      return Boolean(this.normalizedSearchQuery) && this.filteredChildren.length === 0 && this.filteredTasks.length === 0;
     },
     filteredChildren() {
       return this.children.filter((child) => {
         const groupMatches = this.groupFilter === 'all' || child.groupName === this.groupFilter;
         const childMatches = this.childFilter === 'all' || child.name === this.childFilter;
-        return groupMatches && childMatches;
+        const searchMatches = this.matchesChildSearch(child);
+        return groupMatches && childMatches && searchMatches;
       });
     },
     filteredTasks() {
       return this.tasks.filter((task) => {
         const groupMatches = this.groupFilter === 'all' || task.groupName === this.groupFilter;
         const childMatches = this.childFilter === 'all' || task.childName === this.childFilter;
-        return groupMatches && childMatches;
+        const searchMatches = this.matchesTaskSearch(task);
+        return groupMatches && childMatches && searchMatches;
       });
+    },
+    medicationProgress() {
+      const total = this.filteredTasks.length;
+      const completed = this.filteredTasks.filter((task) => task.status === 'Taken').length;
+      const pending = this.filteredTasks.filter((task) => ['Pending', 'Upcoming'].includes(task.status)).length;
+      const missed = this.filteredTasks.filter((task) => task.status === 'Missed').length;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        total,
+        completed,
+        pending,
+        missed,
+        percent
+      };
+    },
+    medicationTimelineSections() {
+      const sections = [
+        { key: 'morning', label: 'Morning', range: 'Before 12:00', tasks: [] },
+        { key: 'afternoon', label: 'Afternoon', range: '12:00 - 17:00', tasks: [] },
+        { key: 'evening', label: 'Evening', range: 'After 17:00', tasks: [] }
+      ];
+
+      this.filteredTasks.forEach((task) => {
+        const hour = Number((task.scheduledTime || '12:00').split(':')[0]);
+        const target = hour < 12 ? sections[0] : hour < 17 ? sections[1] : sections[2];
+        target.tasks.push(task);
+      });
+
+      return sections;
     },
     stats() {
       return this.tasks.reduce((counts, task) => {
-        counts[task.status] += 1;
+        const status = this.statusOptions.includes(task.status) ? task.status : 'Pending';
+        counts[status] += 1;
         return counts;
-      }, { Pending: 0, Taken: 0, Missed: 0 });
+      }, { Pending: 0, Taken: 0, Missed: 0, Upcoming: 0 });
     },
     missedTasks() {
       return this.tasks.filter((task) => task.status === 'Missed');
@@ -406,7 +671,7 @@ export default {
     },
     visibleEmergencyContacts() {
       return this.filteredChildren
-        .flatMap((child) => child.emergencyContacts.map((contact) => ({
+        .flatMap((child) => (child.emergencyContacts || []).map((contact) => ({
           ...contact,
           childName: child.name,
           name: `${contact.name} (${child.name})`
@@ -421,6 +686,111 @@ export default {
     }
   },
   methods: {
+    todayDateKey() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
+    textMatches(values) {
+      if (!this.normalizedSearchQuery) {
+        return true;
+      }
+
+      return values
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(this.normalizedSearchQuery);
+    },
+    matchesChildSearch(child) {
+      return this.textMatches([
+        child?.name,
+        child?.parentName,
+        child?.groupName,
+        ...(child?.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone]),
+        ...(child?.medications || []).flatMap((medication) => [medication.name, medication.medicationId, medication.dosage])
+      ]);
+    },
+    matchesTaskSearch(task) {
+      const child = this.children.find((item) => item.id === task?.childId);
+      return this.textMatches([
+        task?.childName,
+        task?.medicationName,
+        task?.medicationId,
+        task?.dosage,
+        task?.status,
+        child?.parentName,
+        ...(child?.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone])
+      ]);
+    },
+    initials(name) {
+      return (name || '?')
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+    },
+    nearestPoiByType(type) {
+      return this.displayedEmergencyPOIs.find((poi) => poi.type === type) || null;
+    },
+    supportPoiByType(type) {
+      if (this.poiLoading) {
+        return null;
+      }
+
+      return this.nearestPoiByType(type);
+    },
+    supportDistance(poi) {
+      if (this.poiLoading) {
+        return 'Searching...';
+      }
+
+      return Number.isFinite(poi?.distance) ? formatDistanceMeters(poi.distance) : 'Route pending';
+    },
+    supportEta(poi) {
+      if (this.poiLoading) {
+        return 'ETA pending';
+      }
+
+      return Number.isFinite(poi?.distance) ? estimateDriveTimeMinutes(poi.distance) : 'ETA pending';
+    },
+    withDistance(poi) {
+      return {
+        ...poi,
+        distance: Math.round(this.distanceBetweenMeters(this.selectedEmergencyLocation, poi)),
+        icon: 'Police',
+        label: 'Police station'
+      };
+    },
+    distanceBetweenMeters(from, to) {
+      if (!from || !to) {
+        return 0;
+      }
+
+      const toRad = (value) => (value * Math.PI) / 180;
+      const radius = 6371000;
+      const dLat = toRad(to.lat - from.lat);
+      const dLng = toRad(to.lng - from.lng);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+      return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    },
+    routeToPoiType(type) {
+      const poi = this.nearestPoiByType(type);
+
+      if (!poi) {
+        window.alert(`No ${type} route is available yet.`);
+        return;
+      }
+
+      window.open(buildEmergencyRouteLink(this.selectedEmergencyLocation, poi), '_blank', 'noreferrer');
+    },
     confirmMedication(medicationId) {
       markMedicationTaken(medicationId);
     },
@@ -449,6 +819,11 @@ export default {
       } else {
         this.verificationMessage = 'Verification failed — ID or QR did not match.';
         this.verificationState = 'error';
+        addNotification({
+          title: 'Verification failed',
+          message: 'Medication ID or QR payload did not match.',
+          type: 'danger'
+        });
       }
 
       this.verificationLoading = false;
@@ -456,6 +831,11 @@ export default {
     openEmergency() {
       this.selectedEmergencyChildId = this.children?.[0]?.id || null;
       this.emergencyActive = true;
+      addNotification({
+        title: 'Emergency mode activation',
+        message: 'Staff opened Emergency Mode from the admin dashboard.',
+        type: 'danger'
+      });
       this.$nextTick(() => this.initEmergencyModal());
     },
     async initEmergencyModal() {
@@ -464,7 +844,7 @@ export default {
         return;
       }
 
-      const { lat = 52.52, lng = 13.405 } = this.selectedEmergencyChild.location || {};
+      const { lat, lng } = this.selectedEmergencyLocation;
       const mapEl = document.getElementById('emergency-map');
       if (!mapEl) {
         return;
@@ -487,7 +867,7 @@ export default {
         }
 
         this.clearEmergencyMarkers();
-        this.addEmergencyMarker([lat, lng], `${this.selectedEmergencyChild.name} location`);
+        this.addEmergencyMarker([lat, lng], `${this.selectedEmergencyChild.name || 'Child'} location`);
         await this.loadNearbyPois(lat, lng);
       } catch (e) {
         console.warn('Leaflet map init error', e);
@@ -503,7 +883,10 @@ export default {
       });
       this.emergencyMarkers = [];
     },
-    openTaskModal(mode, medicationId = null) {
+    openCalendarTaskModal(date) {
+      this.openTaskModal('add', null, date);
+    },
+    openTaskModal(mode, medicationId = null, selectedDate = null) {
       this.taskModalMode = mode;
       this.taskError = '';
 
@@ -515,8 +898,10 @@ export default {
             childId: task.childId,
             medicationName: task.medicationName,
             dosage: task.dosage,
+            date: task.scheduledDate || this.todayDateKey(),
             time: task.scheduledTime,
-            instructions: task.instructions || ''
+            instructions: task.instructions || '',
+            status: this.statusOptions.includes(task.status) ? task.status : 'Pending'
           };
         }
       } else {
@@ -525,8 +910,10 @@ export default {
           childId: this.children?.[0]?.id || null,
           medicationName: '',
           dosage: '',
-          time: '',
-          instructions: ''
+          date: selectedDate || this.todayDateKey(),
+          time: '12:00',
+          instructions: '',
+          status: 'Pending'
         };
       }
 
@@ -537,7 +924,7 @@ export default {
       this.taskError = '';
     },
     saveTask() {
-      if (!this.taskForm.childId || !this.taskForm.medicationName || !this.taskForm.dosage || !this.taskForm.time) {
+      if (!this.taskForm.childId || !this.taskForm.medicationName || !this.taskForm.dosage || !this.taskForm.date || !this.taskForm.time) {
         this.taskError = 'Please complete all required fields.';
         return;
       }
@@ -547,14 +934,19 @@ export default {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
-          time: this.taskForm.time
+          date: this.taskForm.date,
+          time: this.taskForm.time,
+          status: this.taskForm.status,
+          childId: this.taskForm.childId
         });
       } else {
         addMedication(this.taskForm.childId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
-          time: this.taskForm.time
+          date: this.taskForm.date,
+          time: this.taskForm.time,
+          status: this.taskForm.status
         });
       }
 
@@ -586,10 +978,10 @@ export default {
       this.nearbyPOIs = [];
 
       const pois = await fetchNearbyEmergencyPOIs(lat, lng);
-      this.nearbyPOIs = pois;
+      this.nearbyPOIs = Array.isArray(pois) ? pois : [];
 
-      if (this.emergencyMap && pois.length) {
-        pois.forEach((poi) => {
+      if (this.emergencyMap && this.nearbyPOIs.length) {
+        this.nearbyPOIs.forEach((poi) => {
           const marker = L.marker([poi.lat, poi.lng]).addTo(this.emergencyMap).bindPopup(`${poi.name} — ${poi.type} — ${poi.distance} m`);
           this.emergencyMarkers.push(marker);
         });
@@ -602,7 +994,7 @@ export default {
       this.emergencyMapError = '';
     },
     callParent() {
-      const phone = this.selectedEmergencyChild.emergencyContacts[0]?.phone || 'N/A';
+      const phone = this.selectedEmergencyChild?.emergencyContacts?.[0]?.phone || 'N/A';
       if (phone !== 'N/A') {
         window.open(`tel:${phone}`);
       } else {
@@ -612,22 +1004,26 @@ export default {
     callServices() {
       window.open('tel:112');
     },
-    shareEmergencyInfo() {
-      window.alert('Copied emergency summary to clipboard');
-    },
     toggleTaskStatus(medicationId) {
       const current = this.tasks.find((task) => task.medicationId === medicationId)?.status;
       if (!current) return;
-      const statuses = ['Pending', 'Taken', 'Missed'];
+      const statuses = this.statusOptions;
       const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
       setMedicationStatus(medicationId, next);
     },
+    changeTaskStatus({ medicationId, status }) {
+      if (!medicationId || !this.statusOptions.includes(status)) {
+        return;
+      }
+
+      setMedicationStatus(medicationId, status);
+    },
     meaningfulList(items, fallback) {
-      const values = items.filter((item) => item && !['None', 'None known'].includes(item));
+      const values = (items || []).filter((item) => item && !['None', 'None known'].includes(item));
       return values.length ? values.join(', ') : fallback;
     },
     prescriptionLabel(child) {
-      return child.medications.some((medication) => medication.prescriptionUploaded)
+      return (child.medications || []).some((medication) => medication.prescriptionUploaded)
         ? 'Prescription available'
         : 'No prescription uploaded';
     }
@@ -699,6 +1095,7 @@ h1 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 button,
@@ -717,6 +1114,55 @@ select {
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-md);
+}
+
+.global-search {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: min(320px, 100%);
+}
+
+.global-search span {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.global-search input {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px 14px 10px 38px;
+  background:
+    linear-gradient(90deg, transparent 0 28px, var(--color-border-light) 28px 29px, transparent 29px),
+    var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.global-search::before {
+  position: absolute;
+  left: 13px;
+  bottom: 12px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-text-tertiary);
+  border-radius: 999px;
+  content: '';
+}
+
+.global-search::after {
+  position: absolute;
+  left: 25px;
+  bottom: 10px;
+  width: 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-text-tertiary);
+  content: '';
+  transform: rotate(45deg);
 }
 
 .top-actions button:hover {
@@ -741,6 +1187,7 @@ select {
   justify-content: center;
   z-index: 1200;
   padding: 16px;
+  animation: fade-in 0.18s ease;
 }
 
 .modal {
@@ -754,12 +1201,119 @@ select {
   box-shadow: var(--shadow-xl);
 }
 
+.emergency-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1120px, calc(100vw - 32px));
+  max-height: min(92vh, 880px);
+  overflow: hidden;
+  padding: 0;
+  border-radius: 18px;
+  animation: modal-rise 0.22s ease;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
   margin-bottom: 18px;
+}
+
+.emergency-modal .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin-bottom: 0;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.emergency-modal .modal-header h2 {
+  margin-top: 4px;
+  color: var(--color-text-primary);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.15;
+}
+
+.modal-subtitle {
+  max-width: 560px;
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.modal-close {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  transform: rotate(90deg) scale(1.04);
+  border-color: rgba(229, 62, 62, 0.35);
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+}
+
+.emergency-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 20px;
+  min-height: 0;
+  overflow: auto;
+  padding: 22px 24px 24px;
+  background: linear-gradient(180deg, var(--color-bg-primary), var(--color-bg-secondary));
+}
+
+.emergency-details,
+.emergency-poi-panel {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.emergency-details {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 18px;
+}
+
+.field-label {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.field-label span {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-label select {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .child-summary {
@@ -770,12 +1324,262 @@ select {
   margin-bottom: 18px;
 }
 
+.emergency-modal .child-summary {
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 0;
+  border: 1px solid rgba(229, 62, 62, 0.16);
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(229, 62, 62, 0.08), rgba(49, 130, 206, 0.08));
+}
+
 .child-summary img.child-photo {
   width: 88px;
   height: 88px;
   border-radius: 18px;
   object-fit: cover;
   border: 1px solid var(--color-border);
+}
+
+.emergency-modal .child-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+
+.child-photo.placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+  font-weight: 900;
+}
+
+.child-summary-content {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.child-summary-heading h3,
+.map-card-header h3,
+.panel-header h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.child-summary-heading p {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.child-medical-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.child-medical-grid div {
+  min-width: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.03);
+}
+
+.child-medical-grid dt {
+  color: var(--color-text-tertiary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.child-medical-grid dd {
+  margin: 4px 0 0;
+  color: var(--color-text-primary);
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.support-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 12px;
+  align-items: start;
+  min-height: 150px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.support-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(49, 130, 206, 0.25);
+  box-shadow: var(--shadow-lg);
+}
+
+.support-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.support-photo {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.support-card:hover .support-photo {
+  transform: scale(1.08);
+  filter: brightness(1.05) saturate(1.08);
+}
+
+.support-card strong,
+.support-card small,
+.support-card-copy span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.support-card-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.support-card-copy > span {
+  color: var(--color-text-primary);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.support-card small {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.support-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.support-metrics small {
+  border: 1px solid var(--color-border-light);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: var(--color-bg-secondary);
+}
+
+.support-card > button {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-brand), #256db0);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 10px 18px rgba(49, 130, 206, 0.18);
+}
+
+.support-card > button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(49, 130, 206, 0.24);
+}
+
+.support-card.hospital .support-icon {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+}
+
+.support-card.pharmacy .support-icon {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+}
+
+.support-card.police .support-icon {
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+}
+
+.support-card.police {
+  border-color: color-mix(in srgb, var(--color-upcoming-border) 35%, var(--color-border));
+}
+
+.support-card.hospital {
+  border-color: color-mix(in srgb, var(--color-missed-border) 35%, var(--color-border));
+}
+
+.support-card.pharmacy {
+  border-color: color-mix(in srgb, var(--color-taken-border) 35%, var(--color-border));
+}
+
+.support-card.contacts {
+  border-color: color-mix(in srgb, var(--color-pending-border) 35%, var(--color-border));
+}
+
+.support-card.contacts .support-icon {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+.map-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--color-bg-primary);
+}
+
+.map-card-header,
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.map-card-header span {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .child-summary h3 {
@@ -797,6 +1601,16 @@ select {
   margin-top: 18px;
 }
 
+.emergency-modal .emergency-map {
+  display: grid;
+  min-height: clamp(230px, 32vh, 360px);
+  place-items: center;
+  margin-top: 0;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: 800;
+}
+
 .map-fallback {
   padding: 24px;
   text-align: center;
@@ -814,10 +1628,78 @@ select {
   margin-top: 18px;
 }
 
+.emergency-modal .emergency-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 0;
+}
+
 .emergency-actions .secondary-button {
   min-width: 160px;
   background: rgba(45, 143, 123, 0.12);
   color: var(--color-text-primary);
+}
+
+.emergency-modal .emergency-actions .secondary-button {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-primary);
+  font-weight: 900;
+}
+
+.emergency-poi-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px;
+}
+
+.panel-note {
+  max-width: 190px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.poi-list {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.loading-state {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.loading-state p {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid var(--color-bg-tertiary);
+  border-top-color: var(--color-brand);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
 }
 
 .emergency-actions .secondary-button:hover {
@@ -862,6 +1744,28 @@ select {
 .form-error {
   color: var(--color-danger);
   font-weight: 700;
+}
+
+.success,
+.error {
+  margin-top: 14px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+  animation: modal-rise 0.2s ease;
+}
+
+.success {
+  border: 1px solid var(--color-taken-border);
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+}
+
+.error {
+  border: 1px solid var(--color-missed-border);
+  background: var(--color-missed);
+  color: var(--color-missed-text);
 }
 
 .emergency-map {
@@ -941,12 +1845,36 @@ select {
   color: var(--color-warning);
 }
 
+.stats-row article.pending {
+  border-color: rgba(240, 168, 58, 0.35);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-pending));
+}
+
 .taken span {
   color: var(--color-success);
 }
 
+.stats-row article.taken {
+  border-color: rgba(56, 161, 105, 0.35);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-taken));
+}
+
 .missed span {
   color: var(--color-danger);
+}
+
+.stats-row article.missed {
+  border-color: rgba(229, 62, 62, 0.35);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-missed));
+}
+
+.upcoming span {
+  color: var(--color-info);
+}
+
+.stats-row article.upcoming {
+  border-color: rgba(49, 130, 206, 0.35);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-upcoming));
 }
 
 .alerts strong {
@@ -965,6 +1893,18 @@ select {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-empty {
+  max-width: 1240px;
+  margin: 14px auto 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-weight: 800;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1027,6 +1967,182 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin-top: 20px;
+}
+
+.operations-row {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 16px;
+  max-width: 1240px;
+  margin: 20px auto 0;
+}
+
+.progress-panel,
+.day-timeline-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px;
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.progress-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.progress-panel h2 {
+  margin-top: 6px;
+  color: var(--color-text-primary);
+  font-size: 1.3rem;
+}
+
+.progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-taken-border), var(--color-upcoming-border));
+  transition: width 0.35s ease;
+}
+
+.progress-metrics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.progress-metrics span {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.progress-metrics .taken {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+}
+
+.progress-metrics .pending {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+.progress-metrics .missed {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+}
+
+.day-timeline-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.timeline-section {
+  min-width: 0;
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--color-bg-primary);
+}
+
+.timeline-section header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.timeline-section h3,
+.timeline-section p {
+  margin: 0;
+}
+
+.timeline-section h3 {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.timeline-section p {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.timeline-section header > span {
+  display: grid;
+  min-width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+  font-weight: 900;
+}
+
+.mini-timeline {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mini-timeline > span {
+  border-radius: 999px;
+  padding: 7px 9px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-timeline .status-taken {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+}
+
+.mini-timeline .status-missed {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+}
+
+.mini-timeline .status-pending {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+.mini-timeline .status-upcoming {
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+}
+
+.child-heading {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+}
+
+.child-heading img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .child-overview article {
@@ -1147,11 +2263,60 @@ select {
   font-weight: 600;
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 980px) {
   .stats-row,
   .alerts-panel,
-  .admin-grid {
+  .admin-grid,
+  .operations-row,
+  .day-timeline-panel {
     grid-template-columns: 1fr;
+  }
+
+  .emergency-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .emergency-body {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .emergency-poi-panel {
+    min-height: auto;
+  }
+
+  .poi-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .child-overview {
@@ -1169,6 +2334,11 @@ select {
     flex-direction: column;
   }
 
+  .top-actions,
+  .global-search {
+    width: 100%;
+  }
+
   h1 {
     font-size: 2rem;
   }
@@ -1179,6 +2349,56 @@ select {
 
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .emergency-modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: 14px;
+  }
+
+  .emergency-modal .modal-header {
+    padding: 18px;
+  }
+
+  .emergency-body {
+    padding: 16px;
+  }
+
+  .emergency-modal .child-summary,
+  .child-medical-grid,
+  .support-grid,
+  .emergency-modal .emergency-actions,
+  .map-card-header,
+  .panel-header {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-modal .child-summary {
+    display: grid;
+  }
+
+  .support-card {
+    min-height: 70px;
+  }
+
+  .support-card > button {
+    width: 100%;
+  }
+
+  .panel-note {
+    max-width: none;
+    text-align: left;
+  }
+
+  .map-card-header,
+  .panel-header {
+    flex-direction: column;
   }
 }
 </style>

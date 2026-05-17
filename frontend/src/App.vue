@@ -50,7 +50,10 @@ export default {
   },
   data() {
     return {
-      currentRoute: this.resolveRoute(window.location.pathname),
+      currentRoute: this.resolveRoute(
+        // prefer hash if present, otherwise pathname
+        window.location.hash ? window.location.hash.slice(1) : window.location.pathname
+      ),
       language: 'en',
       isDark: false,
       translations
@@ -87,7 +90,22 @@ export default {
     }
   },
   created() {
+    // support both history and hash navigation
     window.addEventListener('popstate', this.handlePopState);
+    window.addEventListener('hashchange', this.handlePopState);
+
+    // If the user directly loaded a SPA route like `/parent` and the server
+    // didn't rewrite to index.html with a hash, convert the pathname to a
+    // hash URL so the app reliably resolves routes without relying on server
+    // rewrites. This preserves the intended route while ensuring the app
+    // renders correctly in dev environments.
+    const pathname = this.normalizePath(window.location.pathname);
+    if (!window.location.hash && routes[pathname]) {
+      // replace the URL with a hash-based equivalent without creating a new
+      // history entry (so Back still works as expected)
+      window.history.replaceState({}, '', `/#${pathname}`);
+      this.currentRoute = this.resolveRoute(pathname);
+    }
   },
   beforeUnmount() {
     window.removeEventListener('popstate', this.handlePopState);
@@ -104,12 +122,18 @@ export default {
       this.currentRoute = this.resolveRoute(window.location.pathname);
     },
     navigate(path) {
-      if (!routes[path]) {
-        return;
-      }
+      if (!routes[path]) return;
 
-      if (window.location.pathname !== path) {
-        window.history.pushState({}, '', path);
+      // prefer hash navigation to avoid server rewrite issues; keep pathname
+      // navigation where appropriate
+      try {
+        if (window.location.hash !== `#${path}`) {
+          // push a hash entry so direct reloads work in static hosts/dev server
+          window.history.pushState({}, '', `/#${path}`);
+        }
+      } catch (e) {
+        // fallback to history push
+        if (window.location.pathname !== path) window.history.pushState({}, '', path);
       }
 
       this.currentRoute = this.resolveRoute(path);
@@ -124,3 +148,14 @@ export default {
   }
 };
 </script>
+
+<style>
+#app,
+[data-theme] {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+</style>

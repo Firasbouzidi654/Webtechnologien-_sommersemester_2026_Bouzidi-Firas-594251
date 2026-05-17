@@ -3,9 +3,9 @@
     <article v-for="medication in medications" :key="medication.medicationId" class="medication-card">
       <header>
         <div>
-          <span class="med-id">{{ medication.medicationId }}</span>
-          <h3>{{ medication.name }}</h3>
-          <p>{{ medication.activeIngredient }}</p>
+          <span class="med-id">{{ medication.medicationId || 'N/A' }}</span>
+          <h3>{{ medication.name || 'Medication' }}</h3>
+          <p>{{ medication.activeIngredient || 'No active ingredient listed' }}</p>
         </div>
         <span class="upload-badge" :class="{ missing: !medication.prescriptionUploaded }">
           {{ medication.prescriptionUploaded ? 'Prescription uploaded' : 'Upload needed' }}
@@ -15,23 +15,23 @@
       <dl class="schedule-grid">
         <div>
           <dt>Frequency</dt>
-          <dd>{{ medication.schedule.frequency }}</dd>
+          <dd>{{ scheduleFor(medication).frequency }}</dd>
         </div>
         <div>
           <dt>Time</dt>
-          <dd>{{ medication.schedule.specificTime }}</dd>
+          <dd>{{ scheduleFor(medication).specificTime }}</dd>
         </div>
         <div>
           <dt>Dosage</dt>
-          <dd>{{ medication.schedule.dosage }}</dd>
+          <dd>{{ scheduleFor(medication).dosage }}</dd>
         </div>
       </dl>
 
-      <p class="instructions">{{ medication.instructions }}</p>
+      <p class="instructions">{{ medication.instructions || 'No instructions added.' }}</p>
 
       <section class="history">
         <h4>Medication history</h4>
-        <p v-for="log in medication.history" :key="log.id">
+        <p v-for="log in medication.history || []" :key="log.id">
           {{ formatDate(log.loggedAt) }} - {{ log.status }} by {{ log.adminName }}
         </p>
       </section>
@@ -49,6 +49,14 @@ export default {
     }
   },
   methods: {
+    scheduleFor(medication) {
+      return {
+        frequency: 'Daily',
+        specificTime: '--:--',
+        dosage: medication?.dosage || 'Not set',
+        ...(medication?.schedule || {})
+      };
+    },
     formatDate(value) {
       return new Date(value).toLocaleString([], {
         month: 'short',
