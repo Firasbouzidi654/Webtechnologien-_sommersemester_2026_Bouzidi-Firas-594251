@@ -96,11 +96,41 @@ export default {
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(320px, 0.95fr) minmax(320px, 1.05fr);
+  position: relative;
+  overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(228, 91, 91, 0.28), transparent 38%),
-    radial-gradient(circle at right center, rgba(45, 143, 123, 0.24), transparent 32%),
+    radial-gradient(ellipse at top left, rgba(228, 91, 91, 0.26), transparent 42%),
+    radial-gradient(ellipse at right center, rgba(45, 143, 123, 0.22), transparent 38%),
     linear-gradient(135deg, #eef6f3 0%, #fffaf7 100%);
   color: var(--text-main);
+}
+
+.auth-shell::before,
+.auth-shell::after {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.auth-shell::before {
+  background:
+    radial-gradient(ellipse at 20% 25%, rgba(255, 255, 255, 0.56), transparent 28%),
+    radial-gradient(ellipse at 82% 34%, rgba(45, 143, 123, 0.2), transparent 30%),
+    radial-gradient(ellipse at 38% 84%, rgba(228, 91, 91, 0.16), transparent 32%);
+  filter: blur(22px);
+  opacity: 0.85;
+  animation: ambient-shift 18s ease-in-out infinite alternate;
+}
+
+.auth-shell::after {
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.24) 44%, transparent 62%),
+    radial-gradient(ellipse at 70% 72%, rgba(108, 181, 218, 0.13), transparent 34%);
+  filter: blur(30px);
+  opacity: 0.58;
+  animation: soft-sweep 22s ease-in-out infinite;
 }
 
 .dark-mode {
@@ -111,8 +141,8 @@ export default {
   --border: rgba(212, 230, 241, 0.14);
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   background:
-    radial-gradient(circle at top left, rgba(228, 91, 91, 0.16), transparent 38%),
-    radial-gradient(circle at right center, rgba(45, 143, 123, 0.18), transparent 32%),
+    radial-gradient(ellipse at top left, rgba(228, 91, 91, 0.14), transparent 42%),
+    radial-gradient(ellipse at right center, rgba(45, 143, 123, 0.17), transparent 38%),
     linear-gradient(135deg, #0f1820 0%, #16232e 100%);
 }
 
@@ -123,6 +153,7 @@ export default {
   min-height: 100vh;
   padding: 32px 40px 40px 48px;
   overflow: hidden;
+  z-index: 1;
 }
 
 .hero-backdrop,
@@ -135,6 +166,7 @@ export default {
   background-size: cover;
   background-position: center;
   transform: scale(1.04);
+  filter: saturate(1.06) contrast(1.03);
 }
 
 .hero-overlay {
@@ -143,19 +175,44 @@ export default {
     linear-gradient(180deg, rgba(5, 22, 31, 0.12), rgba(5, 22, 31, 0.45));
 }
 
+.hero-panel::after {
+  content: "";
+  position: absolute;
+  inset: 8% -28% 4% 12%;
+  background:
+    linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(ellipse at 48% 46%, rgba(199, 249, 240, 0.18), transparent 48%);
+  filter: blur(28px);
+  opacity: 0.8;
+  transform: translate3d(-6%, -3%, 0);
+  animation: hero-light 13s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
 .hero-card {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 540px;
   padding: 40px;
   border-radius: 32px;
   background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)),
-    rgba(255, 255, 255, 0.08);
+    linear-gradient(150deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08) 58%),
+    rgba(255, 255, 255, 0.1);
   color: #fff;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(14px);
+  box-shadow:
+    0 28px 80px rgba(3, 20, 28, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(22px) saturate(1.22);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow:
+    0 34px 90px rgba(3, 20, 28, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .hero-eyebrow {
@@ -195,6 +252,13 @@ export default {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-highlights li:hover {
+  transform: translateX(3px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 .hero-icon {
@@ -206,6 +270,8 @@ export default {
   align-items: start;
   justify-content: center;
   padding: 32px 24px 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .content-card {
@@ -215,7 +281,14 @@ export default {
   border: 1px solid var(--border);
   border-radius: 32px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px) saturate(1.16);
+  animation: card-arrive 0.46s ease both;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, background 0.24s ease;
+}
+
+.content-card:hover {
+  border-color: rgba(45, 143, 123, 0.18);
+  box-shadow: 0 28px 72px rgba(22, 42, 59, 0.16);
 }
 
 .card-toolbar {
@@ -288,7 +361,7 @@ export default {
   cursor: pointer;
   font: inherit;
   font-weight: 700;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .theme-icon {
@@ -328,6 +401,7 @@ export default {
 .theme-toggle:hover,
 .language-picker select:hover {
   transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(22, 42, 59, 0.1);
 }
 
 .theme-toggle:focus,
@@ -336,9 +410,58 @@ export default {
   outline-offset: 2px;
 }
 
+@keyframes ambient-shift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.04);
+  }
+}
+
+@keyframes soft-sweep {
+  0% {
+    transform: translate3d(-8%, -4%, 0) rotate(0deg);
+    opacity: 0.42;
+  }
+
+  50% {
+    opacity: 0.72;
+  }
+
+  100% {
+    transform: translate3d(8%, 5%, 0) rotate(3deg);
+    opacity: 0.46;
+  }
+}
+
+@keyframes hero-light {
+  from {
+    transform: translate3d(-8%, -4%, 0) scale(0.98);
+  }
+
+  to {
+    transform: translate3d(8%, 5%, 0) scale(1.04);
+  }
+}
+
+@keyframes card-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 980px) {
   .auth-shell {
     grid-template-columns: 1fr;
+    overflow: auto;
   }
 
   .hero-panel {
@@ -352,6 +475,7 @@ export default {
 
   .content-panel {
     padding-top: 20px;
+    align-items: stretch;
   }
 }
 
@@ -388,6 +512,22 @@ export default {
 
   .control-label {
     font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell::before,
+  .auth-shell::after,
+  .hero-panel::after,
+  .content-card {
+    animation: none;
+  }
+
+  .hero-card,
+  .hero-highlights li,
+  .theme-toggle,
+  .language-picker select {
+    transition: none;
   }
 }
 </style>

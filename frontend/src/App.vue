@@ -22,6 +22,7 @@ import ParentDashboard from './views/ParentDashboard.vue';
 import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
+import ForgotPasswordView from './views/ForgotPasswordView.vue';
 import { translations } from './content/siteContent';
 
 const routes = {
@@ -33,6 +34,8 @@ const routes = {
   '/parent/': 'parent',
   '/admin': 'admin',
   '/admin/': 'admin',
+  '/forgot-password': 'forgotPassword',
+  '/forgot-password/': 'forgotPassword',
   '/privacy': 'privacy',
   '/privacy/': 'privacy'
 };
@@ -46,7 +49,8 @@ export default {
     ParentDashboard,
     SignInView,
     SignupView,
-    PrivacyView
+    PrivacyView,
+    ForgotPasswordView
   },
   data() {
     return {
@@ -81,6 +85,10 @@ export default {
         return 'PrivacyView';
       }
 
+      if (this.currentRoute === 'forgotPassword') {
+        return 'ForgotPasswordView';
+      }
+
       return 'SignupView';
     },
 
@@ -109,6 +117,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('popstate', this.handlePopState);
+    window.removeEventListener('hashchange', this.handlePopState);
   },
   methods: {
     normalizePath(pathname) {
@@ -119,7 +128,8 @@ export default {
       return routes[this.normalizePath(pathname)] || 'signup';
     },
     handlePopState() {
-      this.currentRoute = this.resolveRoute(window.location.pathname);
+      const path = window.location.hash ? window.location.hash.slice(1) : window.location.pathname;
+      this.currentRoute = this.resolveRoute(path);
     },
     navigate(path) {
       if (!routes[path]) return;
