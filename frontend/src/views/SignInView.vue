@@ -52,6 +52,7 @@
           :aria-invalid="Boolean(errors.email)"
           aria-describedby="signin-email-error"
           @input="clearFieldError('email')"
+          @blur="validateField('email')"
         />
         <Transition name="field-message">
           <p v-if="errors.email" id="signin-email-error" class="field-error">{{ errors.email }}</p>
@@ -70,9 +71,9 @@
             :aria-invalid="Boolean(errors.password)"
             aria-describedby="signin-password-error signin-caps-warning"
             @input="clearFieldError('password')"
+            @blur="handlePasswordBlur"
             @keydown="updateCapsLock"
             @keyup="updateCapsLock"
-            @blur="capsLockOn = false"
           />
           <button
             class="password-toggle"
@@ -82,13 +83,6 @@
           >
             <span class="eye-icon" :class="{ hidden: showPassword }" aria-hidden="true"></span>
           </button>
-        </div>
-
-        <div class="password-meter" aria-live="polite">
-          <span class="meter-track">
-            <span class="meter-fill" :class="`strength-${passwordStrength.score}`"></span>
-          </span>
-          <span class="meter-label">{{ passwordStrength.label }}</span>
         </div>
 
         <Transition name="field-message">
@@ -109,24 +103,6 @@
           {{ signin.forgotPassword }}
         </button>
       </div>
-
-      <section class="demo-access" :aria-label="signin.demoTitle">
-        <div>
-          <p class="demo-title">{{ signin.demoTitle }}</p>
-          <p class="demo-subtitle">{{ signin.demoSubtitle }}</p>
-        </div>
-        <div class="demo-actions">
-          <button
-            v-for="account in demoAccounts"
-            :key="account.role"
-            class="demo-button"
-            type="button"
-            @click="fillDemo(account)"
-          >
-            {{ account.label }}
-          </button>
-        </div>
-      </section>
 
       <Transition name="form-feedback">
         <p v-if="feedback" class="feedback" :class="feedbackType" :role="feedbackType === 'error' ? 'alert' : 'status'">
@@ -192,6 +168,7 @@ const fallbackContent = {
     alternateAction: 'Create an account',
     successMessage: 'Sign-in verified. Opening your dashboard.',
     invalidCredentials: 'We could not sign you in. Please check your email and password.',
+    validationError: 'Please review the highlighted sign-in details.',
     emailRequired: 'Enter the email linked to your account.',
     emailInvalid: 'Enter a valid email address.',
     passwordRequired: 'Enter your password.',
@@ -204,17 +181,8 @@ const fallbackContent = {
     parentRoleDescription: 'Family dashboard',
     staffRole: 'Staff',
     staffRoleDescription: 'Care team workspace',
-    demoTitle: 'Demo access',
-    demoSubtitle: 'Quick-fill safe sample credentials.',
-    demoParent: 'Try Demo Parent Account',
-    demoStaff: 'Try Demo Staff Account',
     securityTitle: 'Security indicators',
-    securityBadges: ['GDPR compliant', 'Encrypted medical data', 'Trusted childcare communication'],
-    strengthEmpty: 'Password strength',
-    strengthWeak: 'Weak',
-    strengthFair: 'Fair',
-    strengthGood: 'Good',
-    strengthStrong: 'Strong'
+    securityBadges: ['GDPR compliant', 'Encrypted medical data', 'Trusted childcare communication']
   },
   features: {
     title: 'Key features',
@@ -295,47 +263,8 @@ export default {
         }
       ];
     },
-    demoAccounts() {
-      return [
-        {
-          role: 'parent',
-          label: this.signin.demoParent,
-          email: 'parent.demo@kindercare.test',
-          password: 'ParentCare2026'
-        },
-        {
-          role: 'admin',
-          label: this.signin.demoStaff,
-          email: 'staff.demo@kindercare.test',
-          password: 'StaffCare2026'
-        }
-      ];
-    },
     securityBadges() {
       return Array.isArray(this.signin.securityBadges) ? this.signin.securityBadges : fallbackContent.signin.securityBadges;
-    },
-    passwordStrength() {
-      const password = this.form.password || '';
-
-      if (!password) {
-        return { score: 0, label: this.signin.strengthEmpty };
-      }
-
-      let score = 0;
-      if (password.length >= 8) score += 1;
-      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-      if (/\d/.test(password)) score += 1;
-      if (/[^A-Za-z0-9]/.test(password) || password.length >= 14) score += 1;
-
-      const labels = [
-        this.signin.strengthEmpty,
-        this.signin.strengthWeak,
-        this.signin.strengthFair,
-        this.signin.strengthGood,
-        this.signin.strengthStrong
-      ];
-
-      return { score, label: labels[score] || this.signin.strengthStrong };
     },
     submitButtonLabel() {
       if (this.isLoading) return this.signin.loadingButton;
@@ -352,14 +281,6 @@ export default {
       this.role = role;
       this.clearFeedback();
     },
-    fillDemo(account) {
-      this.role = account.role;
-      this.form.email = account.email;
-      this.form.password = account.password;
-      this.form.rememberMe = true;
-      this.errors = {};
-      this.clearFeedback();
-    },
     clearFieldError(field) {
       if (this.errors[field]) {
         this.errors = { ...this.errors, [field]: '' };
@@ -374,25 +295,39 @@ export default {
     updateCapsLock(event) {
       this.capsLockOn = Boolean(event.getModifierState && event.getModifierState('CapsLock'));
     },
-    validateForm() {
-      const nextErrors = {};
+    getFieldError(field) {
       const email = this.form.email || '';
       const password = this.form.password || '';
 
-      if (!email) {
-        nextErrors.email = this.signin.emailRequired;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        nextErrors.email = this.signin.emailInvalid;
+      if (field === 'email') {
+        if (!email) return this.signin.emailRequired;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return this.signin.emailInvalid;
       }
 
-      if (!password) {
-        nextErrors.password = this.signin.passwordRequired;
-      } else if (password.length < 8) {
-        nextErrors.password = this.signin.passwordTooShort;
+      if (field === 'password') {
+        if (!password) return this.signin.passwordRequired;
+        if (password.length < 8) return this.signin.passwordTooShort;
       }
+
+      return '';
+    },
+    validateField(field) {
+      const message = this.getFieldError(field);
+      this.errors = { ...this.errors, [field]: message };
+      return !message;
+    },
+    handlePasswordBlur() {
+      this.capsLockOn = false;
+      this.validateField('password');
+    },
+    validateForm() {
+      const nextErrors = {
+        email: this.getFieldError('email'),
+        password: this.getFieldError('password')
+      };
 
       this.errors = nextErrors;
-      return Object.keys(nextErrors).length === 0;
+      return !nextErrors.email && !nextErrors.password;
     },
     rejectForm(message) {
       window.clearTimeout(this.rejectionTimer);
@@ -409,9 +344,8 @@ export default {
     credentialsLookInvalid() {
       const email = (this.form.email || '').toLowerCase();
       const password = (this.form.password || '').toLowerCase();
-      const selectedDemo = this.demoAccounts.find((account) => account.email === email);
 
-      return password === 'invalid' || (selectedDemo && selectedDemo.role !== this.role);
+      return email.includes('invalid') || password === 'invalid' || password === 'password';
     },
     submitForm() {
       if (this.isLoading) return;
@@ -419,7 +353,7 @@ export default {
       this.clearFeedback();
 
       if (!this.validateForm()) {
-        this.rejectForm(this.signin.invalidCredentials);
+        this.rejectForm(this.signin.validationError || this.signin.invalidCredentials);
         return;
       }
 
@@ -486,8 +420,7 @@ export default {
 }
 
 .field label,
-.role-label,
-.demo-title {
+.role-label {
   margin: 0;
   font-size: 0.92rem;
   font-weight: 800;
@@ -603,7 +536,6 @@ export default {
 }
 
 .role-card:focus-visible,
-.demo-button:focus-visible,
 .text-link:focus-visible,
 .primary-button:focus-visible,
 .password-toggle:focus-visible {
@@ -635,8 +567,7 @@ export default {
   font-weight: 850;
 }
 
-.role-description,
-.demo-subtitle {
+.role-description {
   color: rgba(91, 107, 123, 1);
   font-size: 0.84rem;
   line-height: 1.35;
@@ -703,58 +634,6 @@ export default {
   transform: rotate(-35deg);
 }
 
-.password-meter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.meter-track {
-  position: relative;
-  flex: 1;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(34, 62, 79, 0.1);
-}
-
-.meter-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0%;
-  border-radius: inherit;
-  background: #d7dde2;
-  transition: width 0.24s ease, background 0.24s ease;
-}
-
-.meter-fill.strength-1 {
-  width: 25%;
-  background: #e45b5b;
-}
-
-.meter-fill.strength-2 {
-  width: 50%;
-  background: #d69e2e;
-}
-
-.meter-fill.strength-3 {
-  width: 75%;
-  background: #3b82c4;
-}
-
-.meter-fill.strength-4 {
-  width: 100%;
-  background: #2d8f7b;
-}
-
-.meter-label {
-  min-width: 94px;
-  color: rgba(91, 107, 123, 1);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-align: right;
-}
-
 .signin-row {
   display: flex;
   justify-content: space-between;
@@ -789,52 +668,6 @@ export default {
 
 .text-link:hover {
   color: #246f60;
-  transform: translateY(-1px);
-}
-
-.demo-access {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid rgba(34, 62, 79, 0.1);
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(45, 143, 123, 0.1), rgba(108, 181, 218, 0.08));
-}
-
-.demo-title,
-.demo-subtitle {
-  margin: 0;
-}
-
-.demo-subtitle {
-  margin-top: 4px;
-}
-
-.demo-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: end;
-}
-
-.demo-button {
-  border: 1px solid rgba(45, 143, 123, 0.2);
-  border-radius: 999px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.76);
-  color: #246f60;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 850;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.demo-button:hover {
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 18px rgba(22, 42, 59, 0.09);
   transform: translateY(-1px);
 }
 
@@ -935,7 +768,7 @@ export default {
   padding: 8px 10px;
   background: rgba(255, 255, 255, 0.58);
   color: rgba(68, 82, 95, 0.95);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
@@ -1017,14 +850,12 @@ export default {
 :global(.dark-mode) .checkbox,
 :global(.dark-mode) .auth-footer,
 :global(.dark-mode) .role-description,
-:global(.dark-mode) .demo-subtitle,
-:global(.dark-mode) .meter-label {
+:global(.dark-mode) .security-badges li {
   color: #b6c3ce;
 }
 
 :global(.dark-mode) .field label,
-:global(.dark-mode) .role-label,
-:global(.dark-mode) .demo-title {
+:global(.dark-mode) .role-label {
   color: #edf4f8;
 }
 
@@ -1060,8 +891,7 @@ export default {
   background: linear-gradient(135deg, rgba(45, 143, 123, 0.38), rgba(108, 181, 218, 0.22));
 }
 
-:global(.dark-mode) .password-toggle,
-:global(.dark-mode) .demo-access {
+:global(.dark-mode) .password-toggle {
   background: rgba(45, 143, 123, 0.16);
   border-color: rgba(212, 230, 241, 0.12);
 }
@@ -1075,7 +905,6 @@ export default {
   background: #9ee3d1;
 }
 
-:global(.dark-mode) .demo-button,
 :global(.dark-mode) .security-badges li {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(212, 230, 241, 0.13);
@@ -1101,17 +930,8 @@ export default {
 }
 
 @media (max-width: 760px) {
-  .role-cards,
-  .demo-access {
+  .role-cards {
     grid-template-columns: 1fr;
-  }
-
-  .demo-actions {
-    justify-content: stretch;
-  }
-
-  .demo-button {
-    flex: 1 1 180px;
   }
 }
 
@@ -1133,22 +953,6 @@ export default {
     min-height: 72px;
   }
 
-  .password-meter {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  .meter-track {
-    width: 100%;
-    flex: none;
-  }
-
-  .meter-label {
-    min-width: 0;
-    text-align: left;
-  }
-
   .security-badges {
     justify-content: flex-start;
   }
@@ -1166,10 +970,9 @@ export default {
   .field input,
   .role-card,
   .password-toggle,
-  .demo-button,
   .text-link,
   .primary-button,
-  .meter-fill {
+  .security-badges li {
     transition: none;
   }
 }
