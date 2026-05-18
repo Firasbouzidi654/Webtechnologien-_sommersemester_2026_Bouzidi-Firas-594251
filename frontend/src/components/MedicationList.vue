@@ -58,7 +58,7 @@ export default {
       };
     },
     formatDate(value) {
-      return new Date(value).toLocaleString([], {
+      return new Date(value).toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',

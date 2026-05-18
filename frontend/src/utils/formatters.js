@@ -20,7 +20,7 @@ export function formatDateTime(value) {
     return value;
   }
 
-  return date.toLocaleString('en-GB', {
+  return date.toLocaleString('en-US', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

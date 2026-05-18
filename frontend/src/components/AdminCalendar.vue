@@ -71,13 +71,13 @@ export default {
       return new Date();
     },
     monthLabel() {
-      return this.calendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' });
+      return this.calendarCursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     },
     todayLabel() {
-      return this.today.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
+      return this.today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
     },
     selectedDateLabel() {
-      return new Date(`${this.selectedDate}T12:00:00`).toLocaleDateString([], {
+      return new Date(`${this.selectedDate}T12:00:00`).toLocaleDateString('en-US', {
         weekday: 'long',
         month: 'short',
         day: 'numeric'

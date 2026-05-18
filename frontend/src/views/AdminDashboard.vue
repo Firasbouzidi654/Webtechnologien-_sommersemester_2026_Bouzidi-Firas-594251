@@ -18,7 +18,9 @@
       </div>
     </nav>
 
-    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team" />
+    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team">
+      <WeatherHealthCard compact />
+    </LiveDashboardBar>
 
     <section class="hero-strip">
       <div>
@@ -388,6 +390,8 @@
       </div>
 
       <aside class="control-stack">
+        <MedicationAssistant compact />
+
         <section class="panel">
           <header>
             <h2>Parent notes</h2>
@@ -437,9 +441,11 @@ import AdminCalendar from '../components/AdminCalendar.vue';
 import EmergencyContactCard from '../components/EmergencyContactCard.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import LiveDashboardBar from '../components/LiveDashboardBar.vue';
+import MedicationAssistant from '../components/MedicationAssistant.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import QRMedicationCard from '../components/QRMedicationCard.vue';
 import VerificationHistoryPanel from '../components/VerificationHistoryPanel.vue';
+import WeatherHealthCard from '../components/WeatherHealthCard.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication } from '../state/kindercareStore';
 import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
@@ -463,9 +469,11 @@ export default {
     EmergencyContactCard,
     EmergencyPoiCard,
     LiveDashboardBar,
+    MedicationAssistant,
     NotificationCenter,
     QRMedicationCard,
-    VerificationHistoryPanel
+    VerificationHistoryPanel,
+    WeatherHealthCard
   },
   emits: ['navigate'],
   data() {
@@ -1064,6 +1072,14 @@ export default {
   box-shadow: var(--shadow-md);
   margin-bottom: 20px;
   backdrop-filter: blur(10px);
+}
+
+.admin-dashboard :deep(.live-dashboard-bar) {
+  gap: 8px;
+}
+
+.admin-dashboard :deep(.live-dashboard-bar > .weather-health-card) {
+  min-width: 0;
 }
 
 .eyebrow,
@@ -1779,20 +1795,20 @@ select {
 .hero-strip {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 12px;
   align-items: center;
-  margin-top: 24px;
+  margin-top: 16px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 18px 20px;
   background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
 }
 
 .hero-strip h2 {
-  margin: 8px 0 12px;
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  margin: 6px 0 8px;
+  font-size: clamp(1.25rem, 2vw, 1.85rem);
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -1805,9 +1821,9 @@ select {
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .stats-row article {
@@ -1817,8 +1833,8 @@ select {
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 110px;
-  padding: 20px;
+  min-height: 96px;
+  padding: 16px;
   text-align: center;
 }
 
@@ -1831,9 +1847,9 @@ select {
 
 .stats-row span {
   display: block;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .stats-row p {
@@ -1935,8 +1951,8 @@ select {
 .alerts-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .alerts-panel article {
@@ -1972,9 +1988,9 @@ select {
 .operations-row {
   display: grid;
   grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
-  gap: 16px;
+  gap: 12px;
   max-width: 1240px;
-  margin: 20px auto 0;
+  margin: 16px auto 0;
 }
 
 .progress-panel,
@@ -2199,9 +2215,9 @@ select {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 16px;
+  margin-top: 16px;
   align-items: start;
 }
 
@@ -2213,7 +2229,7 @@ select {
 }
 
 .panel {
-  padding: 20px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-bg-secondary);

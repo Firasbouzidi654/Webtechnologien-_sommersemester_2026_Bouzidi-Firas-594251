@@ -30,7 +30,9 @@
       </div>
     </nav>
 
-    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent care view" />
+    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent view">
+      <WeatherHealthCard compact />
+    </LiveDashboardBar>
 
     <section class="welcome-panel">
       <div class="welcome-copy">
@@ -435,6 +437,7 @@
 import heroImage from '../assets/hero.png';
 import LiveDashboardBar from '../components/LiveDashboardBar.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
+import WeatherHealthCard from '../components/WeatherHealthCard.vue';
 import {
   MEDICATION_STATUSES,
   addAllergy as storeAddAllergy,
@@ -460,7 +463,8 @@ export default {
   name: 'ParentDashboard',
   components: {
     LiveDashboardBar,
-    NotificationCenter
+    NotificationCenter,
+    WeatherHealthCard
   },
   emits: ['navigate', 'toggle-theme'],
   data() {
@@ -937,7 +941,7 @@ export default {
       return Array.from({ length: 36 }, (_, index) => index + seed);
     },
     formatTime(value) {
-      return new Date(value).toLocaleTimeString([], {
+      return new Date(value).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
@@ -1120,22 +1124,22 @@ h1 {
 .welcome-panel {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 12px;
   align-items: center;
-  margin-top: 24px;
+  margin-top: 16px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 18px 20px;
   background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
 }
 
 .welcome-copy h2 {
   max-width: 700px;
   margin-top: 8px;
-  font-size: clamp(1.875rem, 4vw, 2.5rem);
-  line-height: 1.1;
+  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  line-height: 1.15;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -1153,10 +1157,10 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: end;
-  margin-top: 20px;
+  margin-top: 16px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   background: var(--color-bg-secondary);
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
@@ -1210,16 +1214,16 @@ textarea {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .quick-actions button {
   display: grid;
   gap: 8px;
   justify-items: center;
-  min-height: 80px;
+  min-height: 70px;
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
@@ -1247,10 +1251,10 @@ textarea {
 
 .care-cues {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
   max-width: 1240px;
-  margin: 20px auto 0;
+  margin: 16px auto 0;
 }
 
 .care-cues article {
@@ -1260,7 +1264,7 @@ textarea {
   align-items: start;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   background: var(--color-bg-secondary);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
@@ -1290,9 +1294,9 @@ textarea {
 
 .health-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .health-summary article,
@@ -1312,9 +1316,9 @@ textarea {
 
 .health-summary article {
   display: grid;
-  gap: 8px;
-  min-height: 130px;
-  padding: 20px;
+  gap: 6px;
+  min-height: 108px;
+  padding: 16px;
   text-align: center;
 }
 
@@ -1324,7 +1328,7 @@ textarea {
 }
 
 .health-summary strong {
-  font-size: 1.75rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: var(--color-text-primary);
 }
@@ -1337,8 +1341,8 @@ textarea {
 .manage-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .compact-list header button {
@@ -1384,14 +1388,14 @@ textarea {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  margin-top: 16px;
   align-items: start;
 }
 
 .panel {
-  padding: 20px;
+  padding: 16px;
 }
 
 .panel header {
@@ -1583,7 +1587,7 @@ textarea {
 
 .side-stack {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .update-card h2 {

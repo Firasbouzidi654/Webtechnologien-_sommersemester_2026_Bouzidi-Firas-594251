@@ -85,7 +85,7 @@ export default {
     },
     formatTime(value) {
       const date = value ? new Date(value) : new Date();
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
   }
 };
