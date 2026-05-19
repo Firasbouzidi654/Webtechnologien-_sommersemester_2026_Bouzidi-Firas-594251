@@ -88,11 +88,11 @@ h2 {
   min-height: 76px;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(32, 48, 63, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
-  background: #fff;
-  color: #20303f;
+  background: var(--bg-card);
+  color: var(--text-primary);
   text-align: left;
   cursor: pointer;
 }
@@ -121,6 +121,6 @@ small {
 
 small {
   margin-top: 3px;
-  color: #637486;
+  color: var(--text-secondary);
 }
 </style>

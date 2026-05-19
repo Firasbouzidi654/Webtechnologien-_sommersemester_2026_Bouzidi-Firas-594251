@@ -86,10 +86,10 @@ export default {
 <style scoped>
 .auth-shell {
   --surface: rgba(255, 255, 255, 0.88);
-  --surface-strong: #ffffff;
-  --text-main: #20303f;
-  --text-soft: #5b6b7b;
-  --border: rgba(34, 62, 79, 0.12);
+  --surface-strong: var(--bg-card);
+  --text-main: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --border: var(--border-color);
   --accent-red: #e45b5b;
   --accent-green: #2d8f7b;
   --shadow: 0 24px 60px rgba(22, 42, 59, 0.12);
@@ -101,8 +101,21 @@ export default {
   background:
     radial-gradient(ellipse at top left, rgba(228, 91, 91, 0.26), transparent 42%),
     radial-gradient(ellipse at right center, rgba(45, 143, 123, 0.22), transparent 38%),
-    linear-gradient(135deg, #eef6f3 0%, #fffaf7 100%);
+    linear-gradient(135deg, var(--color-bg-tertiary) 0%, var(--bg-primary) 100%);
   color: var(--text-main);
+}
+
+:global(.dark-mode) .auth-shell,
+:global([data-theme="dark"]) .auth-shell {
+  --surface: rgba(17, 24, 39, 0.88);
+  --surface-strong: var(--bg-card);
+  --text-main: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --border: var(--border-color);
+  background:
+    radial-gradient(ellipse at top left, rgba(20, 83, 45, 0.34), transparent 42%),
+    radial-gradient(ellipse at right center, rgba(30, 58, 138, 0.28), transparent 38%),
+    linear-gradient(180deg, #0f172a 0%, #111827 100%);
 }
 
 .auth-shell::before,
@@ -134,16 +147,18 @@ export default {
 }
 
 .dark-mode {
-  --surface: rgba(18, 26, 34, 0.9);
-  --surface-strong: #15202b;
-  --text-main: #edf4f8;
-  --text-soft: #b6c3ce;
-  --border: rgba(212, 230, 241, 0.14);
+  --surface: rgba(17, 24, 39, 0.9);
+  --surface-strong: #111827;
+  --text-main: #f8fafc;
+  --text-soft: #cbd5e1;
+  --border: rgba(255, 255, 255, 0.08);
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   background:
-    radial-gradient(ellipse at top left, rgba(228, 91, 91, 0.14), transparent 42%),
-    radial-gradient(ellipse at right center, rgba(45, 143, 123, 0.17), transparent 38%),
-    linear-gradient(135deg, #0f1820 0%, #16232e 100%);
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    );
 }
 
 .hero-panel {

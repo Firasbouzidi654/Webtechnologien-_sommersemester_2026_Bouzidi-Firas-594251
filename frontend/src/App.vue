@@ -1,5 +1,5 @@
 <template>
-  <div :data-theme="isDark ? 'dark' : 'light'">
+  <div :data-theme="isDark ? 'dark' : 'light'" :class="{ 'dark-mode': isDark }">
     <component
       :is="currentView"
       :is-dark="isDark"
@@ -9,7 +9,7 @@
       @toggle-theme="toggleTheme"
       @update-language="updateLanguage"
     />
-    <ExampleEntities v-if="showExampleEntities" />
+    <ExampleEntities v-if="showExampleEntities" :is-dark="isDark" />
     <!-- Affiche le composant ExampleEntities si showExampleEntities est vrai -->
   </div>
 </template>
@@ -164,8 +164,8 @@ export default {
 [data-theme] {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 </style>

@@ -475,64 +475,50 @@ export default {
 
 .role-select {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .role-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 6px;
+  min-height: 52px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
 }
 
 .role-card {
   position: relative;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
-  min-height: 78px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(34, 62, 79, 0.14);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.76)),
-    rgba(255, 255, 255, 0.9);
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
   overflow: hidden;
-  text-align: left;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-}
-
-.role-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 1px solid transparent;
-  background: linear-gradient(135deg, rgba(45, 143, 123, 0.5), rgba(108, 181, 218, 0.34)) border-box;
-  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
+  text-align: center;
+  transition: all 0.25s ease;
 }
 
 .role-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(22, 42, 59, 0.1);
+  transform: translateY(-1px);
+  background: rgba(14, 165, 233, 0.08);
 }
 
 .role-card.active {
-  border-color: rgba(45, 143, 123, 0.38);
-  box-shadow: 0 16px 34px rgba(45, 143, 123, 0.2);
-  transform: translateY(-2px);
-  background:
-    linear-gradient(135deg, rgba(238, 255, 251, 0.98), rgba(255, 255, 255, 0.86)),
-    rgba(255, 255, 255, 0.95);
-}
-
-.role-card.active::after {
-  opacity: 1;
+  border-color: transparent;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25);
+  transform: translateY(-1px);
 }
 
 .role-card:focus-visible,
@@ -545,32 +531,29 @@ export default {
 
 .role-icon {
   flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(135deg, #c7f9f0, #dbeafe);
-  color: #246f60;
+  background: rgba(14, 165, 233, 0.12);
+  color: currentColor;
+  font-size: 0.76rem;
   font-weight: 900;
-  box-shadow: inset 0 0 0 1px rgba(45, 143, 123, 0.16);
 }
 
 .role-copy {
   min-width: 0;
-  display: grid;
-  gap: 3px;
+  display: block;
 }
 
 .role-title {
-  color: #243447;
+  color: currentColor;
   font-weight: 850;
 }
 
 .role-description {
-  color: rgba(91, 107, 123, 1);
-  font-size: 0.84rem;
-  line-height: 1.35;
+  display: none;
 }
 
 .password-control {
@@ -870,25 +853,25 @@ export default {
 }
 
 :global(.dark-mode) .role-card {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04)),
-    rgba(255, 255, 255, 0.04);
-  border-color: rgba(212, 230, 241, 0.13);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
 }
 
 :global(.dark-mode) .role-card.active {
-  background:
-    linear-gradient(135deg, rgba(45, 143, 123, 0.18), rgba(108, 181, 218, 0.09)),
-    rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25);
 }
 
 :global(.dark-mode) .role-title,
 :global(.dark-mode) .role-icon {
-  color: #edf4f8;
+  color: currentColor;
 }
 
 :global(.dark-mode) .role-icon {
-  background: linear-gradient(135deg, rgba(45, 143, 123, 0.38), rgba(108, 181, 218, 0.22));
+  background: rgba(255, 255, 255, 0.12);
 }
 
 :global(.dark-mode) .password-toggle {

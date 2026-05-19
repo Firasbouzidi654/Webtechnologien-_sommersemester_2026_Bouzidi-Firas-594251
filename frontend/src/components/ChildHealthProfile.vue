@@ -100,7 +100,20 @@ export default {
   border: 1px solid rgba(32, 48, 63, 0.12);
   border-radius: 8px;
   padding: 18px;
-  background: #fff;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .health-profile {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+  color: #f8fafc;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 header {
@@ -195,8 +208,33 @@ button {
 }
 
 .placeholder-grid button {
-  background: #edf2f7;
-  color: #405265;
+  background: var(--color-bg-tertiary);
+  color: var(--text-secondary);
+}
+
+:global([data-theme="dark"]) .health-profile h2,
+:global([data-theme="dark"]) .health-profile label,
+:global([data-theme="dark"]) .health-profile p {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .health-profile header p,
+:global([data-theme="dark"]) .health-profile .eyebrow {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .health-profile input,
+:global([data-theme="dark"]) .health-profile textarea,
+:global([data-theme="dark"]) .health-profile .feedback,
+:global([data-theme="dark"]) .health-profile .placeholder-grid button {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .health-profile .badge {
+  background: rgba(34, 197, 94, 0.22);
+  color: #bbf7d0;
 }
 
 @media (max-width: 720px) {

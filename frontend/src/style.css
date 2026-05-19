@@ -1,12 +1,27 @@
 :root {
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --gradient-live-card: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  --gradient-weather-card: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  --gradient-today-card: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  --gradient-staff-card: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  --gradient-children-card: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+
+  --dark-bg: #0f172a;
+  --dark-card: #111827;
+  --dark-border: rgba(255, 255, 255, 0.06);
+
   /* Light mode colors */
-  --color-bg-primary: #f8f9fa;
-  --color-bg-secondary: #ffffff;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-card);
   --color-bg-tertiary: #f3f7f5;
-  --color-text-primary: #1a202c;
-  --color-text-secondary: #4a5568;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: #718096;
-  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border: var(--border-color);
   --color-border-light: rgba(0, 0, 0, 0.05);
 
   /* Accent colors */
@@ -55,15 +70,29 @@
 }
 
 /* Dark mode */
+.dark-mode,
 [data-theme="dark"] {
-  --color-bg-primary: #0b1220;
-  --color-bg-secondary: #172033;
-  --color-bg-tertiary: #243149;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #d7e1ef;
-  --color-text-tertiary: #aebdd0;
-  --color-border: rgba(226, 232, 240, 0.2);
-  --color-border-light: rgba(226, 232, 240, 0.11);
+  --bg-primary: #0f172a;
+  --bg-card: #111827;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --gradient-live-card: linear-gradient(135deg, #052e16 0%, #14532d 100%);
+  --gradient-weather-card: linear-gradient(135deg, #172554 0%, #1e3a8a 100%);
+  --gradient-today-card: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%);
+  --gradient-staff-card: linear-gradient(135deg, #312e81 0%, #4338ca 100%);
+  --gradient-children-card: linear-gradient(135deg, #78350f 0%, #b45309 100%);
+  --dark-bg: #0f172a;
+  --dark-card: #111827;
+  --dark-border: rgba(255, 255, 255, 0.06);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-card);
+  --color-bg-tertiary: #1f2937;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: #94a3b8;
+  --color-border: var(--border-color);
+  --color-border-light: rgba(255, 255, 255, 0.05);
 
   --color-upcoming: #17375f;
   --color-upcoming-text: #a8d0ff;
@@ -88,6 +117,261 @@
   --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.34);
   --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.38);
   --shadow-xl: 0 24px 52px rgba(0, 0, 0, 0.44);
+}
+
+.dark-mode,
+[data-theme="dark"] {
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    );
+}
+
+.panel-dark {
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] :is(
+  .panel,
+  .calendar-panel,
+  .verification-history-panel,
+  .medication-assistant,
+  .medication-result-card,
+  .task-card,
+  .qr-card,
+  .notification-bell,
+  .notification-dropdown,
+  .notification-item,
+  .toast,
+  .modal,
+  .contact-card,
+  .health-profile,
+  .child-card,
+  .medication-card
+) {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    ) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] :is(
+  .calendar-actions span,
+  .calendar-actions button,
+  .day-plan-header button,
+  .task-actions button,
+  .day-cell,
+  .verification-item,
+  .instructions,
+  .status-option,
+  .secondary-button,
+  .delete-button,
+  .toggle-button,
+  .notification-dropdown header button,
+  .qr-code,
+  .qr-display,
+  .assistant-message,
+  .assistant-disclaimer,
+  .assistant-inline-search input,
+  .medication-search input,
+  .weather-state
+) {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] :is(
+  .panel h2,
+  .calendar-panel h2,
+  .calendar-panel h3,
+  .verification-history-panel h2,
+  .medication-assistant h2,
+  .medication-assistant h3,
+  .task-card h3,
+  .task-card dd,
+  .qr-card h3,
+  .notification-item strong,
+  .toast strong,
+  .contact-card h3,
+  .contact-card dd,
+  .health-profile h2
+) {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] :is(
+  .panel span,
+  .calendar-actions span,
+  .verification-details,
+  .medication-assistant p,
+  .assistant-summary,
+  .assistant-disclaimer,
+  .task-card p,
+  .task-card dt,
+  .task-card small,
+  .qr-card dt,
+  .notification-item p,
+  .notification-item time,
+  .toast p,
+  .contact-card p,
+  .contact-card dt,
+  .health-profile header p
+) {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] :is(.empty-state, .empty-note, .payload-info, .eyebrow) {
+  color: #94a3b8 !important;
+}
+
+.dark-mode :is(.auth-shell, .login-page),
+[data-theme="dark"] :is(.auth-shell, .login-page) {
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    ) !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode :is(.auth-shell .content-card, .login-panel, .visual-panel),
+[data-theme="dark"] :is(.auth-shell .content-card, .login-panel, .visual-panel) {
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode :is(.auth-shell h1, .auth-shell h2, .auth-shell h3, .auth-shell label, .login-page h1, .login-page h2, .login-page label, .login-page .role-label, .login-page .role-card),
+[data-theme="dark"] :is(.auth-shell h1, .auth-shell h2, .auth-shell h3, .auth-shell label, .login-page h1, .login-page h2, .login-page label, .login-page .role-label, .login-page .role-card) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+.dark-mode :is(.auth-shell p, .auth-shell .brand-tagline, .auth-shell .role-description, .auth-shell .checkbox, .auth-shell .auth-footer, .login-page p, .login-page ul),
+[data-theme="dark"] :is(.auth-shell p, .auth-shell .brand-tagline, .auth-shell .role-description, .auth-shell .checkbox, .auth-shell .auth-footer, .login-page p, .login-page ul) {
+  color: #cbd5e1 !important;
+}
+
+.dark-mode :is(.auth-shell .brand-kicker, .auth-shell .control-label, .auth-shell .meter-label, .auth-shell .password-helper li, .login-page .eyebrow),
+[data-theme="dark"] :is(.auth-shell .brand-kicker, .auth-shell .control-label, .auth-shell .meter-label, .auth-shell .password-helper li, .login-page .eyebrow) {
+  color: #94a3b8 !important;
+}
+
+.dark-mode :is(.auth-shell input, .auth-shell select, .auth-shell textarea, .login-page input, .login-page select),
+[data-theme="dark"] :is(.auth-shell input, .auth-shell select, .auth-shell textarea, .login-page input, .login-page select) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.dark-mode :is(.auth-shell input, .auth-shell textarea, .login-page input)::placeholder,
+[data-theme="dark"] :is(.auth-shell input, .auth-shell textarea, .login-page input)::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-mode :is(.auth-shell input, .auth-shell select, .auth-shell textarea, .login-page input, .login-page select):focus,
+[data-theme="dark"] :is(.auth-shell input, .auth-shell select, .auth-shell textarea, .login-page input, .login-page select):focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
+}
+
+.dark-mode :is(.auth-shell .primary-button, .login-page .primary),
+[data-theme="dark"] :is(.auth-shell .primary-button, .login-page .primary) {
+  background:
+    linear-gradient(
+      135deg,
+      #0ea5e9 0%,
+      #14b8a6 100%
+    ) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(14, 165, 233, 0.22) !important;
+}
+
+.dark-mode :is(.auth-shell .primary-button, .login-page .primary):hover:not(:disabled),
+[data-theme="dark"] :is(.auth-shell .primary-button, .login-page .primary):hover:not(:disabled) {
+  filter: brightness(1.08) !important;
+  transform: translateY(-1px) !important;
+}
+
+.dark-mode :is(.auth-shell .theme-toggle, .auth-shell .language-picker, .auth-shell .language-picker select),
+[data-theme="dark"] :is(.auth-shell .theme-toggle, .auth-shell .language-picker, .auth-shell .language-picker select) {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode :is(.auth-shell .password-helper, .auth-shell .helper-panel, .auth-shell .password-helper li, .auth-shell .auth-footer, .auth-shell .security-badges li, .auth-shell .secondary-button, .auth-shell .password-toggle),
+[data-theme="dark"] :is(.auth-shell .password-helper, .auth-shell .helper-panel, .auth-shell .password-helper li, .auth-shell .auth-footer, .auth-shell .security-badges li, .auth-shell .secondary-button, .auth-shell .password-toggle) {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode :is(.auth-shell .role-cards, .login-page .role-cards),
+[data-theme="dark"] :is(.auth-shell .role-cards, .login-page .role-cards) {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark-mode :is(.auth-shell .role-card, .login-page .role-card),
+[data-theme="dark"] :is(.auth-shell .role-card, .login-page .role-card) {
+  min-height: 44px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.dark-mode :is(.auth-shell .role-card.active, .login-page .role-card.active),
+[data-theme="dark"] :is(.auth-shell .role-card.active, .login-page .role-card.active) {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25) !important;
+}
+
+.dark-mode :is(.auth-shell .secondary-button, .auth-shell .password-toggle):hover,
+[data-theme="dark"] :is(.auth-shell .secondary-button, .auth-shell .password-toggle):hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark-mode .auth-shell .hero-overlay,
+[data-theme="dark"] .auth-shell .hero-overlay {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(12px);
+}
+
+.dark-mode .auth-shell .hero-card,
+[data-theme="dark"] .auth-shell .hero-card {
+  background:
+    linear-gradient(150deg, rgba(15, 23, 42, 0.42), rgba(17, 24, 39, 0.22) 58%),
+    rgba(15, 23, 42, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 * {
@@ -132,4 +416,55 @@ textarea:focus {
 
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+iframe,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+body {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 1440px) {
+  html {
+    font-size: 15.5px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  html {
+    font-size: 12px;
+  }
 }

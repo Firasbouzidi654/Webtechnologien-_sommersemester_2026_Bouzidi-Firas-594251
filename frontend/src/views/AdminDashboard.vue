@@ -1,6 +1,6 @@
 <template>
   <main class="dashboard admin-dashboard">
-    <nav class="topbar">
+    <nav class="topbar" :class="{ 'panel-dark': isDark }">
       <div>
         <p class="eyebrow">Admin control center</p>
         <h1>Medication tasks today</h1>
@@ -10,19 +10,23 @@
           <span>Search</span>
           <input v-model.trim="searchQuery" type="search" placeholder="Child, medication, parent, contact..." />
         </label>
-        <NotificationCenter />
-        <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
-        <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
-        <button type="button" @click="openTaskModal('add')">Add medication</button>
-        <button type="button" @click="$emit('navigate', '/')">Log out</button>
+        <div class="top-action-buttons">
+          <NotificationCenter />
+          <button class="primary-action" type="button" @click="openTaskModal('add')">Add medication</button>
+          <div class="control-actions" aria-label="Dashboard controls">
+            <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
+            <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
+            <button class="logout-button" type="button" @click="$emit('navigate', '/')">Log out</button>
+          </div>
+        </div>
       </div>
     </nav>
 
-    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team">
-      <WeatherHealthCard compact />
+    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team" :is-dark="isDark">
+      <WeatherHealthCard compact :is-dark="isDark" />
     </LiveDashboardBar>
 
-    <section class="hero-strip">
+    <section class="hero-strip" :class="{ 'panel-dark': isDark }">
       <div>
         <p class="eyebrow">Live care operations</p>
         <h2>Clear schedule, quick confirmations, safer handovers</h2>
@@ -236,29 +240,29 @@
     </section>
 
     <section class="stats-row">
-      <article class="pending">
+      <article class="pending" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Pending }}</span>
         <p>Pending medications</p>
       </article>
-      <article class="taken">
+      <article class="taken" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Taken }}</span>
         <p>Taken today</p>
       </article>
-      <article class="missed">
+      <article class="missed" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Missed }}</span>
         <p>Missed today</p>
       </article>
-      <article class="upcoming">
+      <article class="upcoming" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Upcoming }}</span>
         <p>Upcoming</p>
       </article>
-      <article class="alerts">
+      <article class="alerts" :class="{ 'panel-dark': isDark }">
         <strong>{{ missedTasks.length }} missed alert(s)</strong>
         <p>Follow up with emergency contacts if needed.</p>
       </article>
     </section>
 
-    <section class="filters">
+    <section class="filters" :class="{ 'panel-dark': isDark }">
       <label>
         <span>Filter by group</span>
         <select v-model="groupFilter">
@@ -278,14 +282,14 @@
     <p v-if="searchEmpty" class="search-empty">No child, medication, parent, or emergency contact matches "{{ searchQuery }}".</p>
 
     <section class="alerts-panel">
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p class="eyebrow">Reminder alerts</p>
         <h2>{{ reminderTasks.length ? `${reminderTasks.length} medication time(s) arrived` : 'No medication reminder due now' }}</h2>
         <p v-for="task in reminderTasks" :key="task.taskId">
           {{ task.scheduledTime }} - {{ task.childName }} needs {{ task.medicationName }}
         </p>
       </article>
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p class="eyebrow">Missed medication alerts</p>
         <h2>{{ missedTasks.length ? `${missedTasks.length} missed medication(s)` : 'No missed medication alerts' }}</h2>
         <p v-for="task in missedTasks" :key="task.taskId">
@@ -406,30 +410,62 @@
 
         <section class="panel">
           <header>
-            <h2>QR verification</h2>
-            <span>Unique medication IDs</span>
+            <div class="panel-header-group">
+              <div>
+                <h2>QR verification</h2>
+                <span>Unique medication IDs</span>
+              </div>
+              <button
+                class="panel-toggle"
+                type="button"
+                :disabled="filteredTasks.length === 0"
+                @click="toggleShowAllQrCodes"
+                :aria-label="qrSectionButtonText"
+              >
+                {{ qrSectionButtonText }}
+              </button>
+            </div>
           </header>
-          <QRMedicationCard
-            v-for="task in filteredTasks"
-            :key="task.medicationId"
-            :medication-id="task.medicationId"
-            :medication-name="`${task.childName} - ${task.medicationName}`"
-            :qr-payload="task.qrPayload"
-          />
+          <div class="panel-card-list" :class="{ centered: !showAllQrCodes }">
+            <QRMedicationCard
+              v-for="task in displayedQrTasks"
+              :key="task.medicationId"
+              :medication-id="task.medicationId"
+              :medication-name="`${task.childName} - ${task.medicationName}`"
+              :qr-payload="task.qrPayload"
+              :compact="!showAllQrCodes"
+            />
+          </div>
         </section>
 
         <VerificationHistoryPanel :logs="verificationLogs" />
 
         <section class="panel">
           <header>
-            <h2>Emergency contacts</h2>
-            <span>Visible to staff</span>
+            <div class="panel-header-group">
+              <div>
+                <h2>Emergency contacts</h2>
+                <span>Visible to staff</span>
+              </div>
+              <button
+                class="panel-toggle"
+                type="button"
+                :disabled="visibleEmergencyContacts.length === 0"
+                @click="toggleShowAllContacts"
+                :aria-label="emergencySectionButtonText"
+              >
+                {{ emergencySectionButtonText }}
+              </button>
+            </div>
           </header>
-          <EmergencyContactCard
-            v-for="contact in visibleEmergencyContacts"
-            :key="`${contact.childName}-${contact.id}`"
-            :contact="contact"
-          />
+          <div class="panel-card-list" :class="{ centered: !showAllContacts }">
+            <EmergencyContactCard
+              v-for="contact in displayedEmergencyContacts"
+              :key="`${contact.childName}-${contact.id}`"
+              :contact="contact"
+              :compact="!showAllContacts"
+            />
+          </div>
         </section>
       </aside>
     </section>
@@ -475,6 +511,12 @@ export default {
     VerificationHistoryPanel,
     WeatherHealthCard
   },
+  props: {
+    isDark: {
+      type: Boolean,
+      default: false
+    }
+  },
   emits: ['navigate'],
   data() {
     return {
@@ -507,11 +549,25 @@ export default {
         status: 'Pending'
       },
       statusOptions: MEDICATION_STATUSES,
-      taskError: ''
+      taskError: '',
+      showAllQrCodes: false,
+      showAllContacts: false,
+      emergencyExpandedIds: [],
+      emergencyCollapsedIds: [],
+      qrExpandedIds: [],
+      qrCollapsedIds: [],
+      mobileCompactMode: false
     };
   },
   created() {
     // noop
+  },
+  mounted() {
+    this.updateCompactMode();
+    window.addEventListener('resize', this.updateCompactMode);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateCompactMode);
   },
   computed: {
     selectedEmergencyChild() {
@@ -684,6 +740,18 @@ export default {
           childName: child.name,
           name: `${contact.name} (${child.name})`
         })));
+    },
+    displayedQrTasks() {
+      return this.showAllQrCodes ? this.filteredTasks : this.filteredTasks.slice(0, 1);
+    },
+    displayedEmergencyContacts() {
+      return this.showAllContacts ? this.visibleEmergencyContacts : this.visibleEmergencyContacts.slice(0, 1);
+    },
+    emergencySectionButtonText() {
+      return this.showAllContacts ? 'Hide Contacts' : 'Show All Contacts';
+    },
+    qrSectionButtonText() {
+      return this.showAllQrCodes ? 'Hide QR Codes' : 'Show All QR Codes';
     }
   },
   watch: {
@@ -1030,6 +1098,55 @@ export default {
       const values = (items || []).filter((item) => item && !['None', 'None known'].includes(item));
       return values.length ? values.join(', ') : fallback;
     },
+    updateCompactMode() {
+      this.mobileCompactMode = window.innerWidth <= 768;
+    },
+    getEmergencyIds() {
+      return this.visibleEmergencyContacts.map((contact) => contact.id);
+    },
+    getQrIds() {
+      return this.filteredTasks.map((task) => task.medicationId);
+    },
+    toggleShowAllContacts() {
+      this.showAllContacts = !this.showAllContacts;
+    },
+    toggleShowAllQrCodes() {
+      this.showAllQrCodes = !this.showAllQrCodes;
+    },
+    toggleEmergencyContact(contactId) {
+      if (this.mobileCompactMode) {
+        const index = this.emergencyExpandedIds.indexOf(contactId);
+        if (index === -1) {
+          this.emergencyExpandedIds.push(contactId);
+        } else {
+          this.emergencyExpandedIds.splice(index, 1);
+        }
+      } else {
+        const index = this.emergencyCollapsedIds.indexOf(contactId);
+        if (index === -1) {
+          this.emergencyCollapsedIds.push(contactId);
+        } else {
+          this.emergencyCollapsedIds.splice(index, 1);
+        }
+      }
+    },
+    toggleQrCard(taskId) {
+      if (this.mobileCompactMode) {
+        const index = this.qrExpandedIds.indexOf(taskId);
+        if (index === -1) {
+          this.qrExpandedIds.push(taskId);
+        } else {
+          this.qrExpandedIds.splice(index, 1);
+        }
+      } else {
+        const index = this.qrCollapsedIds.indexOf(taskId);
+        if (index === -1) {
+          this.qrCollapsedIds.push(taskId);
+        } else {
+          this.qrCollapsedIds.splice(index, 1);
+        }
+      }
+    },
     prescriptionLabel(child) {
       return (child.medications || []).some((medication) => medication.prescriptionUploaded)
         ? 'Prescription available'
@@ -1042,11 +1159,21 @@ export default {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  padding: 28px;
+  padding: 24px;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:global([data-theme="dark"]) .dashboard {
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    );
+  color: #f8fafc;
 }
 
 .topbar,
@@ -1061,17 +1188,27 @@ export default {
 }
 
 .topbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(210px, auto) minmax(0, 1fr);
+  gap: 14px;
   align-items: center;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: var(--shadow-md);
-  margin-bottom: 20px;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  margin-bottom: 10px;
   backdrop-filter: blur(10px);
+}
+
+:global([data-theme="dark"]) .topbar {
+  background: rgba(17, 24, 39, 0.92);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+}
+
+.topbar > div:first-child {
+  min-width: 0;
 }
 
 .admin-dashboard :deep(.live-dashboard-bar) {
@@ -1091,52 +1228,81 @@ p {
 
 .eyebrow {
   color: var(--color-brand);
-  font-size: 0.875rem;
+  font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 h1 {
-  margin-top: 4px;
-  font-size: 2.5rem;
+  margin-top: 2px;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
   font-weight: 800;
+  line-height: 1.12;
   background: linear-gradient(135deg, var(--color-brand), var(--color-brand-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+:global([data-theme="dark"]) .admin-dashboard h1 {
+  background: none;
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
+}
+
 .top-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.top-action-buttons,
+.control-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.top-action-buttons {
+  justify-content: flex-end;
+}
+
+.control-actions {
+  padding-left: 8px;
+  border-left: 1px solid var(--color-border);
 }
 
 button,
 select {
   font: inherit;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .top-actions button {
-  min-height: 44px;
+  min-height: 42px;
   border: none;
-  border-radius: 10px;
-  padding: 12px 18px;
+  border-radius: 14px;
+  padding: 10px 15px;
   background: linear-gradient(135deg, var(--color-brand-dark), #1a202c);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  white-space: nowrap;
 }
 
 .global-search {
   position: relative;
   display: grid;
   gap: 4px;
-  min-width: min(320px, 100%);
+  flex: 1 1 280px;
+  min-width: min(300px, 100%);
+  max-width: 360px;
 }
 
 .global-search span {
@@ -1147,10 +1313,10 @@ select {
 }
 
 .global-search input {
-  min-height: 44px;
+  min-height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  padding: 10px 14px 10px 38px;
+  padding: 9px 14px 9px 38px;
   background:
     linear-gradient(90deg, transparent 0 28px, var(--color-border-light) 28px 29px, transparent 29px),
     var(--color-bg-primary);
@@ -1161,7 +1327,7 @@ select {
 .global-search::before {
   position: absolute;
   left: 13px;
-  bottom: 12px;
+  bottom: 11px;
   width: 12px;
   height: 12px;
   border: 2px solid var(--color-text-tertiary);
@@ -1172,7 +1338,7 @@ select {
 .global-search::after {
   position: absolute;
   left: 25px;
-  bottom: 10px;
+  bottom: 9px;
   width: 7px;
   height: 2px;
   border-radius: 999px;
@@ -1182,8 +1348,17 @@ select {
 }
 
 .top-actions button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(45, 55, 72, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
+
+.top-actions .theme-button {
+  background: linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%);
+  color: #312e81;
+}
+
+.top-actions .primary-action {
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-dark));
 }
 
 .top-actions .emergency {
@@ -1192,6 +1367,12 @@ select {
 
 .top-actions .emergency:hover {
   box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+}
+
+.top-actions .logout-button {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #334155;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .modal-backdrop {
@@ -1795,28 +1976,46 @@ select {
 .hero-strip {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
-  margin-top: 16px;
-  border: 1px solid var(--color-border);
+  margin-top: 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 18px 20px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
+  padding: 16px 18px;
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--color-bg-primary) 100%);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .hero-strip h2 {
-  margin: 6px 0 8px;
-  font-size: clamp(1.25rem, 2vw, 1.85rem);
+  margin: 4px 0 6px;
+  font-size: clamp(1.1rem, 1.6vw, 1.45rem);
   font-weight: 700;
-  color: var(--color-text-primary);
+  line-height: 1.2;
+  color: #111827;
 }
 
 .hero-strip p:not(.eyebrow) {
   max-width: 720px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+:global([data-theme="dark"]) .hero-strip {
+  border-color: rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(17, 24, 39, 0.96) 100%);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+
+:global([data-theme="dark"]) .hero-strip h2,
+:global([data-theme="dark"]) .panel header h2 {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .hero-strip p:not(.eyebrow),
+:global([data-theme="dark"]) .panel header span {
+  color: #cbd5e1;
 }
 
 .stats-row {
@@ -1829,13 +2028,19 @@ select {
 .stats-row article {
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: var(--color-bg-secondary);
+  background: linear-gradient(135deg, #f8fafc 0%, #eef6ff 100%);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 96px;
   padding: 16px;
   text-align: center;
+}
+
+:global([data-theme="dark"]) .stats-row article {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .stats-row article:hover,
@@ -2243,6 +2448,53 @@ select {
   gap: 12px;
   align-items: center;
   margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.panel-header-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.panel-card-list {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+
+.panel-card-list.centered {
+  justify-items: center;
+}
+
+.panel-card-list > * {
+  width: 100%;
+}
+
+.panel-toggle {
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.panel-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-brand);
+  background: rgba(49, 130, 206, 0.12);
+}
+
+.panel-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .panel header h2 {
@@ -2279,6 +2531,96 @@ select {
   font-weight: 600;
 }
 
+:global([data-theme="dark"]) .admin-dashboard .hero-strip,
+:global([data-theme="dark"]) .admin-dashboard .filters,
+:global([data-theme="dark"]) .admin-dashboard .search-empty,
+:global([data-theme="dark"]) .admin-dashboard .alerts-panel article,
+:global([data-theme="dark"]) .admin-dashboard .progress-panel,
+:global([data-theme="dark"]) .admin-dashboard .day-timeline-panel,
+:global([data-theme="dark"]) .admin-dashboard .timeline-section,
+:global([data-theme="dark"]) .admin-dashboard .child-overview article,
+:global([data-theme="dark"]) .admin-dashboard .panel,
+:global([data-theme="dark"]) .admin-dashboard .modal,
+:global([data-theme="dark"]) .admin-dashboard :deep(.contact-card),
+:global([data-theme="dark"]) .admin-dashboard :deep(.qr-card),
+:global([data-theme="dark"]) .admin-dashboard :deep(.verification-history),
+:global([data-theme="dark"]) .admin-dashboard :deep(.calendar-card),
+:global([data-theme="dark"]) .admin-dashboard :deep(.medication-card) {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .hero-strip {
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+}
+
+:global([data-theme="dark"]) .admin-dashboard h1,
+:global([data-theme="dark"]) .admin-dashboard h2,
+:global([data-theme="dark"]) .admin-dashboard h3,
+:global([data-theme="dark"]) .admin-dashboard strong,
+:global([data-theme="dark"]) .admin-dashboard label,
+:global([data-theme="dark"]) .admin-dashboard dt,
+:global([data-theme="dark"]) .admin-dashboard dd {
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .admin-dashboard p,
+:global([data-theme="dark"]) .admin-dashboard span,
+:global([data-theme="dark"]) .admin-dashboard small,
+:global([data-theme="dark"]) .admin-dashboard .hero-strip p:not(.eyebrow),
+:global([data-theme="dark"]) .admin-dashboard .alerts-panel article p:not(.eyebrow),
+:global([data-theme="dark"]) .admin-dashboard .panel header span,
+:global([data-theme="dark"]) .admin-dashboard .note-item p,
+:global([data-theme="dark"]) .admin-dashboard .timeline-section p {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .admin-dashboard .eyebrow,
+:global([data-theme="dark"]) .admin-dashboard .empty-state,
+:global([data-theme="dark"]) .admin-dashboard .search-empty,
+:global([data-theme="dark"]) .admin-dashboard .date-widget small {
+  color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .admin-dashboard select,
+:global([data-theme="dark"]) .admin-dashboard input,
+:global([data-theme="dark"]) .admin-dashboard textarea,
+:global([data-theme="dark"]) .admin-dashboard .global-search input,
+:global([data-theme="dark"]) .admin-dashboard .filters select,
+:global([data-theme="dark"]) .admin-dashboard .timeline-section,
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline > span,
+:global([data-theme="dark"]) .admin-dashboard .empty-state {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .admin-dashboard .panel-toggle,
+:global([data-theme="dark"]) .admin-dashboard .secondary-button,
+:global([data-theme="dark"]) .admin-dashboard :deep(.toggle-button) {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .admin-dashboard .panel-toggle:hover:not(:disabled),
+:global([data-theme="dark"]) .admin-dashboard .secondary-button:hover,
+:global([data-theme="dark"]) .admin-dashboard :deep(.toggle-button:hover) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -2308,6 +2650,19 @@ select {
 }
 
 @media (max-width: 980px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .top-actions {
+    justify-content: flex-start;
+  }
+
+  .global-search {
+    max-width: none;
+  }
+
   .stats-row,
   .alerts-panel,
   .admin-grid,
@@ -2348,15 +2703,33 @@ select {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+    padding: 14px;
   }
 
   .top-actions,
+  .top-action-buttons,
   .global-search {
     width: 100%;
   }
 
+  .top-action-buttons {
+    justify-content: flex-start;
+  }
+
+  .control-actions {
+    width: 100%;
+    padding-top: 8px;
+    padding-left: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+
+  .control-actions button {
+    flex: 1 1 120px;
+  }
+
   h1 {
-    font-size: 2rem;
+    font-size: 1.65rem;
   }
 
   .stats-row {

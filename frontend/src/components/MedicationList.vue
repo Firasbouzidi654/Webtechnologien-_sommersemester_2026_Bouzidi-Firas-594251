@@ -78,10 +78,11 @@ export default {
 .medication-card {
   display: grid;
   gap: 14px;
-  border: 1px solid rgba(32, 48, 63, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 16px;
-  background: #fff;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 header {
@@ -112,7 +113,7 @@ header {
 }
 
 .upload-badge.missing {
-  background: #fff1d6;
+  background: var(--color-pending);
   color: #8a5b00;
 }
 

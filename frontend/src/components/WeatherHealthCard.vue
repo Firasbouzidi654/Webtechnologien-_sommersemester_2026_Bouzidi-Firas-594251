@@ -1,5 +1,5 @@
 <template>
-  <section class="weather-health-card" :class="{ compact }">
+  <section class="weather-card weather-health-card" :class="{ compact, 'dark-mode': isDark }">
     <header>
       <div>
         <p class="eyebrow">Weather Health</p>
@@ -35,7 +35,7 @@
 
     <template v-else>
       <div class="weather-main">
-        <div class="weather-icon-wrap" aria-hidden="true">
+        <div class="weather-icon weather-icon-wrap" :class="{ 'dark-mode': isDark }" aria-hidden="true">
           <svg v-if="compact" class="weather-svg" viewBox="0 0 24 24">
             <path class="sun" d="M6.5 7.5a4 4 0 1 1 6.9 2.7" />
             <path class="sun-rays" d="M10.5 1.8v1.7M4.1 4.1l1.2 1.2M1.8 10.5h1.7M16.9 4.1l-1.2 1.2" />
@@ -83,6 +83,10 @@ export default {
   name: 'WeatherHealthCard',
   props: {
     compact: {
+      type: Boolean,
+      default: false
+    },
+    isDark: {
       type: Boolean,
       default: false
     }
@@ -177,33 +181,31 @@ export default {
 <style scoped>
 .weather-health-card {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 18px;
-  background:
-    linear-gradient(135deg, rgba(49, 130, 206, 0.16), rgba(56, 161, 105, 0.12)),
-    var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  color: var(--color-text-primary);
-  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--gradient-weather-card) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  color: #111827;
+  transition: all 0.25s ease;
 }
 
 .weather-health-card.compact {
-  min-height: 110px;
-  max-height: 110px;
-  height: 110px;
-  grid-template-columns: minmax(0, 1.1fr) minmax(86px, 0.9fr);
-  gap: 10px;
+  min-height: 90px;
+  max-height: 90px;
+  height: 90px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(76px, 0.92fr);
+  gap: 8px;
   align-items: center;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 14px 16px;
-  border-color: color-mix(in srgb, #67c7dd 32%, var(--color-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #d9f7fb 78%, var(--color-bg-secondary)), var(--color-bg-secondary)),
-    var(--color-bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: var(--gradient-weather-card) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  color: #111827;
 }
 
 .weather-health-card.compact header {
@@ -211,9 +213,9 @@ export default {
 }
 
 .weather-health-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   border-color: rgba(49, 130, 206, 0.28);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
 .weather-health-card header {
@@ -262,35 +264,35 @@ export default {
 }
 
 .weather-health-card.compact .weather-main {
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
   min-width: 0;
 }
 
 .weather-health-card.compact .weather-icon-wrap {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
-  color: #1d7188;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 8px 16px rgba(15, 23, 42, 0.08);
+  border-radius: 50%;
+  color: #1e3a8a;
+  background: rgba(59, 130, 246, 0.18) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8), 0 6px 12px rgba(15, 23, 42, 0.07);
   animation: none;
 }
 
 .weather-health-card.compact .weather-icon-wrap img {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
 }
 
 .weather-health-card.compact .weather-main strong {
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   line-height: 1;
 }
 
 .weather-health-card.compact .weather-main span {
   overflow: hidden;
-  margin-top: 4px;
-  font-size: 0.74rem;
+  margin-top: 3px;
+  font-size: 0.7rem;
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -379,17 +381,17 @@ export default {
 
 .weather-health-card.compact .weather-metrics {
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 
 .weather-health-card.compact .weather-metrics div {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 5px 7px;
 }
 
 .weather-health-card.compact .weather-metrics div:first-child {
@@ -401,20 +403,20 @@ export default {
 }
 
 .weather-health-card.compact .weather-metrics dt {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   line-height: 1.1;
 }
 
 .weather-health-card.compact .weather-metrics dd {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   line-height: 1.1;
 }
 
 .weather-health-card.compact .weather-state {
   grid-column: 1 / -1;
-  min-height: 70px;
-  padding: 10px;
+  min-height: 62px;
+  padding: 8px;
 }
 
 .weather-health-card.compact .weather-state p {
@@ -541,6 +543,50 @@ export default {
   color: var(--color-missed-text);
 }
 
+:global([data-theme="dark"]) .weather-card,
+.weather-card.dark-mode {
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--gradient-weather-card) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .weather-card:hover,
+.weather-card.dark-mode:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="dark"]) .weather-card .weather-icon,
+.weather-card .weather-icon.dark-mode {
+  background: rgba(59, 130, 246, 0.22) !important;
+  color: #bfdbfe !important;
+}
+
+:global([data-theme="dark"]) .weather-card h2,
+:global([data-theme="dark"]) .weather-card strong,
+:global([data-theme="dark"]) .weather-card dd,
+.weather-card.dark-mode h2,
+.weather-card.dark-mode strong,
+.weather-card.dark-mode dd {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .weather-card p,
+:global([data-theme="dark"]) .weather-card span,
+:global([data-theme="dark"]) .weather-card dt,
+.weather-card.dark-mode p,
+.weather-card.dark-mode span,
+.weather-card.dark-mode dt {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .weather-card small,
+.weather-card.dark-mode small {
+  color: #94a3b8;
+}
+
 .weather-spinner {
   width: 16px;
   height: 16px;
@@ -592,7 +638,7 @@ export default {
   }
 
   .weather-health-card.compact .weather-main {
-    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-columns: 34px minmax(0, 1fr);
   }
 
   .weather-health-card.compact .weather-metrics {

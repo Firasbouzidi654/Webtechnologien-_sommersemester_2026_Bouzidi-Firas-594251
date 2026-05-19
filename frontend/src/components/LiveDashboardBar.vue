@@ -1,7 +1,7 @@
 <template>
   <section class="live-dashboard-bar" aria-label="Live dashboard information">
-    <article class="widget-live">
-      <span class="info-icon live-icon" aria-hidden="true">
+    <article class="live-time-card widget-live" :class="{ 'dark-mode': isDark }">
+      <span class="info-icon live-time-icon live-icon" :class="{ 'dark-mode': isDark }" aria-hidden="true">
         <svg viewBox="0 0 24 24">
           <path d="M12 7v5l3 2" />
           <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -13,8 +13,8 @@
       </div>
     </article>
     <slot></slot>
-    <article class="date-widget widget-today">
-      <span class="info-icon" aria-hidden="true">
+    <article class="today-card date-widget widget-today" :class="{ 'dark-mode': isDark }">
+      <span class="info-icon today-icon" :class="{ 'dark-mode': isDark }" aria-hidden="true">
         <svg viewBox="0 0 24 24">
           <path d="M8 2v4" />
           <path d="M16 2v4" />
@@ -28,8 +28,8 @@
         <small>{{ compactDate }}</small>
       </div>
     </article>
-    <article class="widget-shift">
-      <span class="info-icon" aria-hidden="true">
+    <article class="staff-card widget-shift" :class="{ 'dark-mode': isDark }">
+      <span class="info-icon staff-icon" :class="{ 'dark-mode': isDark }" aria-hidden="true">
         <svg viewBox="0 0 24 24">
           <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
           <path d="M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -39,11 +39,11 @@
       </span>
       <div>
         <p>Active staff shift</p>
-        <strong>{{ shiftLabel }}</strong>
+        <strong>{{ activeShiftLabel }}</strong>
       </div>
     </article>
-    <article class="widget-children">
-      <span class="info-icon" aria-hidden="true">
+    <article class="children-card widget-children" :class="{ 'dark-mode': isDark }">
+      <span class="info-icon children-icon" :class="{ 'dark-mode': isDark }" aria-hidden="true">
         <svg viewBox="0 0 24 24">
           <path d="M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" />
           <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
@@ -69,6 +69,10 @@ export default {
     shiftLabel: {
       type: String,
       default: 'Morning care team'
+    },
+    isDark: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -100,6 +104,19 @@ export default {
     },
     presentLabel() {
       return `${this.childrenCount} checked in`;
+    },
+    activeShiftLabel() {
+      const hour = this.now.getHours();
+
+      if (hour >= 6 && hour < 12) {
+        return 'Morning care team';
+      }
+
+      if (hour >= 12 && hour < 18) {
+        return 'Afternoon care team';
+      }
+
+      return 'Night support team';
     }
   },
   mounted() {
@@ -116,66 +133,59 @@ export default {
 <style scoped>
 .live-dashboard-bar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 10px;
   max-width: 1240px;
-  margin: 12px auto 0;
+  margin: 10px auto 0;
   align-items: stretch;
 }
 
 .live-dashboard-bar article {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   justify-content: flex-start;
+  position: relative;
   min-width: 0;
-  min-height: 110px;
-  max-height: 110px;
+  min-height: 90px;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
   padding: 14px 16px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  background: transparent;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transition: all 0.25s ease;
 }
 
 .live-dashboard-bar article:hover {
-  transform: translateY(-3px);
-  border-color: rgba(49, 130, 206, 0.28);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
-.widget-live {
-  border-color: transparent;
-  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.24), transparent 34%),
-    linear-gradient(135deg, #2563eb 0%, #14b8a6 55%, #0ea5e9 100%);
-  color: #ffffff;
-  box-shadow: 0 24px 42px rgba(16, 185, 129, 0.22);
+.live-dashboard-bar .live-time-card {
+  background: var(--gradient-live-card) !important;
+  color: #111827;
 }
 
-.widget-live p,
-.widget-live strong,
-.widget-live small {
-  color: #f8fafc;
+.live-dashboard-bar .live-time-card p,
+.live-dashboard-bar .live-time-card strong,
+.live-dashboard-bar .live-time-card small {
+  color: #111827;
 }
 
-.widget-today {
-  border-color: color-mix(in srgb, #9f7aea 28%, var(--color-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #ede9fe 74%, var(--color-bg-secondary)), var(--color-bg-secondary));
+.live-dashboard-bar .today-card {
+  background: var(--gradient-today-card) !important;
+  color: #111827;
 }
 
-.widget-shift {
-  border-color: color-mix(in srgb, #7bb7ec 30%, var(--color-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #e7f4ff 76%, var(--color-bg-secondary)), var(--color-bg-secondary));
+.live-dashboard-bar .staff-card {
+  background: var(--gradient-staff-card) !important;
+  color: #111827;
 }
 
-.widget-children {
-  border-color: color-mix(in srgb, var(--color-pending-border) 30%, var(--color-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-pending) 82%, #fff), var(--color-bg-secondary));
+.live-dashboard-bar .children-card {
+  background: var(--gradient-children-card) !important;
+  color: #111827;
 }
 
 .info-icon {
@@ -184,33 +194,37 @@ export default {
   width: 36px;
   height: 36px;
   place-items: center;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.74);
-  color: var(--color-upcoming-text);
-  font-size: 0.72rem;
-  font-weight: 900;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 8px 16px rgba(15, 23, 42, 0.08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.74), 0 6px 12px rgba(15, 23, 42, 0.07);
 }
 
-.widget-live .info-icon {
-  color: var(--color-taken-text);
+.live-dashboard-bar .live-time-icon {
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #166534;
 }
 
-.widget-today .info-icon {
+.live-dashboard-bar .today-icon {
+  background: rgba(139, 92, 246, 0.18) !important;
   color: #5b46a4;
 }
 
-.widget-shift .info-icon {
-  color: #22639d;
+.live-dashboard-bar .staff-icon {
+  background: rgba(99, 102, 241, 0.18) !important;
+  color: #3730a3;
 }
 
-.widget-children .info-icon {
-  color: var(--color-pending-text);
+.live-dashboard-bar .children-icon {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #92400e;
 }
 
 .info-icon svg {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -220,16 +234,16 @@ export default {
 
 .live-icon {
   position: relative;
-  background: var(--color-taken) !important;
-  color: var(--color-taken-text);
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #166534 !important;
 }
 
 .live-icon::after {
   position: absolute;
-  right: 6px;
-  top: 6px;
-  width: 11px;
-  height: 11px;
+  right: 5px;
+  top: 5px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
   background: var(--color-taken-border);
   content: '';
@@ -243,17 +257,17 @@ export default {
 }
 
 .live-dashboard-bar p {
-  color: var(--color-text-secondary);
-  font-size: 0.7rem;
-  font-weight: 800;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
   text-transform: uppercase;
   line-height: 1.2;
 }
 
 .live-dashboard-bar strong {
   display: block;
-  margin-top: 3px;
-  color: var(--color-text-primary);
+  margin-top: 4px;
+  color: #111827;
   font-size: 0.95rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -267,10 +281,87 @@ export default {
   display: block;
   margin-top: 2px;
   color: var(--color-text-tertiary);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   line-height: 1.15;
   text-transform: uppercase;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar article,
+.live-dashboard-bar article.dark-mode {
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar article:hover,
+.live-dashboard-bar article.dark-mode:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .live-time-card,
+.live-dashboard-bar .live-time-card.dark-mode {
+  background: var(--gradient-live-card) !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .today-card,
+.live-dashboard-bar .today-card.dark-mode {
+  background: var(--gradient-today-card) !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .staff-card,
+.live-dashboard-bar .staff-card.dark-mode {
+  background: var(--gradient-staff-card) !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .children-card,
+.live-dashboard-bar .children-card.dark-mode {
+  background: var(--gradient-children-card) !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar p,
+:global([data-theme="dark"]) .live-dashboard-bar strong,
+:global([data-theme="dark"]) .live-dashboard-bar small,
+.live-dashboard-bar article.dark-mode p,
+.live-dashboard-bar article.dark-mode strong,
+.live-dashboard-bar article.dark-mode small {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar p,
+.live-dashboard-bar article.dark-mode p {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .date-widget small,
+.live-dashboard-bar article.dark-mode small {
+  color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .live-time-icon,
+.live-dashboard-bar .live-time-icon.dark-mode {
+  background: rgba(34, 197, 94, 0.22) !important;
+  color: #bbf7d0 !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .today-icon,
+.live-dashboard-bar .today-icon.dark-mode {
+  background: rgba(139, 92, 246, 0.22) !important;
+  color: #ddd6fe !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .staff-icon,
+.live-dashboard-bar .staff-icon.dark-mode {
+  background: rgba(99, 102, 241, 0.22) !important;
+  color: #c7d2fe !important;
+}
+
+:global([data-theme="dark"]) .live-dashboard-bar .children-icon,
+.live-dashboard-bar .children-icon.dark-mode {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fde68a !important;
 }
 
 @keyframes pulse-live {
@@ -288,7 +379,7 @@ export default {
 
 @media (max-width: 980px) {
   .live-dashboard-bar {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   }
 }
 

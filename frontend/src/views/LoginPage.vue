@@ -179,7 +179,7 @@ form {
 }
 
 .role-select {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .role-label {
@@ -189,36 +189,55 @@ form {
 }
 
 .role-cards {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 52px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
 }
 
 .role-card {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 2px solid rgba(0,0,0,0.06);
-  background: #fff;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: all 0.25s ease;
 }
 
 .role-card .icon {
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(135deg,#fef3c7,#c7f9f0);
-  font-size: 1.1rem;
+  background: rgba(14, 165, 233, 0.12);
+  color: currentColor;
+  font-size: 0.9rem;
 }
 
 .role-card.active {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(45,55,72,0.12);
-  border-color: rgba(45,143,123,0.18);
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25);
+}
+
+.role-card:hover {
+  transform: translateY(-1px);
+}
+
+.role-card .text {
+  font-weight: 850;
 }
 
 .actions {
@@ -240,18 +259,18 @@ form {
 label {
   display: grid;
   gap: 8px;
-  color: #2d3748;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 input,
 select {
   width: 100%;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border-color);
   border-radius: 10px;
   padding: 14px 16px;
-  background: #fff;
-  color: #1a202c;
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-weight: 500;
   transition: border-color 0.3s ease;
 }

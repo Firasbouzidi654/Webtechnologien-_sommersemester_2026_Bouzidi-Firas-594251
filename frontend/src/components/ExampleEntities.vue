@@ -1,5 +1,5 @@
 <template>
-  <section class="example-entities" aria-labelledby="example-entities-title">
+  <section class="live-kindergarten-overview example-entities" :class="{ 'dark-mode': isDark }" aria-labelledby="example-entities-title">
     <div class="example-entities-header">
       <p class="eyebrow">Live Kindergarten Overview</p>
       <h2 id="example-entities-title">Live Kindergarten Overview</h2>
@@ -7,7 +7,7 @@
 
     <!-- Section;Style CSS appliqué via la classe .entity-card -->
     <ul class="entity-list">
-      <li v-for="child in children" :key="child.id" class="entity-card">
+      <li v-for="child in children" :key="child.id" class="overview-card entity-card" :class="{ 'dark-mode': isDark }">
         <div class="entity-card-header">
           <span class="entity-id">#{{ child.id }}</span>
           <h3>{{ child.name }}</h3>
@@ -39,6 +39,12 @@
 <script>
 export default {
   name: 'ExampleEntities',
+  props: {
+    isDark: {
+      type: Boolean,
+      default: false
+    }
+  },
 
   data() {
     return {
@@ -134,6 +140,28 @@ export default {
   padding: 32px 24px 48px;
 }
 
+:global(.dark-mode) .live-kindergarten-overview,
+:global([data-theme="dark"]) .live-kindergarten-overview,
+.live-kindergarten-overview.dark-mode {
+  max-width: none;
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    ) !important;
+}
+
+:global([data-theme="dark"]) .example-entities {
+  max-width: none;
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    );
+}
+
 .example-entities-header {
   margin-bottom: 18px;
 }
@@ -165,10 +193,53 @@ export default {
 .entity-card {
   min-width: 0;
   padding: 18px;
-  border: 1px solid rgba(34, 62, 79, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--bg-card);
+  color: var(--text-primary);
   box-shadow: 0 14px 30px rgba(32, 48, 63, 0.08);
+}
+
+:global(.dark-mode) .live-kindergarten-overview .overview-card,
+:global([data-theme="dark"]) .live-kindergarten-overview .overview-card,
+.live-kindergarten-overview .overview-card.dark-mode {
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .example-entities h2,
+:global([data-theme="dark"]) .entity-card h3,
+:global([data-theme="dark"]) .entity-card dd,
+:global([data-theme="dark"]) .extra-info strong {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .example-entities .eyebrow,
+:global([data-theme="dark"]) .entity-card dt,
+:global([data-theme="dark"]) .extra-info p {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .entity-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .extra-info {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .entity-card-header {
@@ -191,7 +262,7 @@ export default {
 .entity-card h3 {
   min-width: 0;
   margin: 0;
-  color: #20303f;
+  color: var(--text-primary);
   font-size: 1.08rem;
 }
 
@@ -202,14 +273,14 @@ export default {
 }
 
 .entity-card dt {
-  color: rgba(91, 107, 123, 1);
+  color: var(--text-secondary);
   font-size: 0.82rem;
   font-weight: 800;
 }
 
 .entity-card dd {
   margin: 3px 0 0;
-  color: #20303f;
+  color: var(--text-primary);
   font-weight: 600;
 }
 

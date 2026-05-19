@@ -3,13 +3,13 @@
     <div v-if="componentError" class="error-banner" role="alert">
       <strong>Component error:</strong> {{ componentError }}
     </div>
-    <nav class="topbar">
-      <div style="display:flex;gap:12px;align-items:center;">
-        <div class="parent-avatar" style="display:flex;align-items:center;gap:10px;">
+    <nav class="topbar" :class="{ 'panel-dark': isDark }">
+      <div class="parent-heading">
+        <div class="parent-avatar">
           <div v-if="kindercareStore.parentAvatar">
-            <img :src="kindercareStore.parentAvatar" alt="Parent avatar" style="width:56px;height:56px;border-radius:999px;object-fit:cover;" />
+            <img :src="kindercareStore.parentAvatar" alt="Parent avatar" class="parent-avatar-image" />
           </div>
-          <div v-else class="initials" style="width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,#fef3c7,#c7f9f0);display:grid;place-items:center;font-weight:800;color:#1f2937;">
+          <div v-else class="initials">
             {{ parentInitials }}
           </div>
           <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleParentAvatar" />
@@ -30,11 +30,11 @@
       </div>
     </nav>
 
-    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent view">
-      <WeatherHealthCard compact />
+    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent view" :is-dark="isDark">
+      <WeatherHealthCard compact :is-dark="isDark" />
     </LiveDashboardBar>
 
-    <section class="welcome-panel">
+    <section class="welcome-panel" :class="{ 'panel-dark': isDark }">
       <div class="welcome-copy">
         <p class="eyebrow">Welcome back, Sara</p>
         <h2>Here is {{ firstName(selectedChild.name) }}'s health overview for today.</h2>
@@ -46,7 +46,7 @@
 
     <p v-if="parentSearchEmpty" class="search-empty">No health record matches "{{ searchQuery }}".</p>
 
-    <section class="child-toolbar">
+    <section class="child-toolbar" :class="{ 'panel-dark': isDark }">
       <label>
         <span>Selected child</span>
         <select v-model.number="selectedChildId">
@@ -81,22 +81,22 @@
     </section>
 
     <section class="health-summary">
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p>Allergies</p>
         <strong>{{ meaningfulItems(selectedChild.allergies).length }}</strong>
         <span>{{ allergySummary }}</span>
       </article>
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p>Chronic diseases</p>
         <strong>{{ meaningfulItems(selectedChild.chronicDiseases).length }}</strong>
         <span>{{ chronicDiseaseSummary }}</span>
       </article>
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p>Emergency contacts</p>
         <strong>{{ (selectedChild.emergencyContacts || []).length }}</strong>
         <span>{{ emergencyContactSummary }}</span>
       </article>
-      <article>
+      <article :class="{ 'panel-dark': isDark }">
         <p>Prescription status</p>
         <strong>{{ prescriptionStatus.label }}</strong>
         <span>{{ prescriptionStatus.detail }}</span>
@@ -465,6 +465,12 @@ export default {
     LiveDashboardBar,
     NotificationCenter,
     WeatherHealthCard
+  },
+  props: {
+    isDark: {
+      type: Boolean,
+      default: false
+    }
   },
   emits: ['navigate', 'toggle-theme'],
   data() {
@@ -964,6 +970,16 @@ export default {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+:global([data-theme="dark"]) .parent-dashboard {
+  background:
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #111827 100%
+    );
+  color: #f8fafc;
+}
+
 .topbar,
 .welcome-panel,
 .child-toolbar,
@@ -987,6 +1003,36 @@ export default {
   margin-bottom: 20px;
   border: 1px solid var(--color-border);
   backdrop-filter: blur(10px);
+}
+
+.parent-heading,
+.parent-avatar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.parent-avatar {
+  gap: 10px;
+}
+
+.parent-avatar-image,
+.initials {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+}
+
+.parent-avatar-image {
+  object-fit: cover;
+}
+
+.initials {
+  display: grid;
+  place-items: center;
+  background: var(--color-care-bg);
+  color: #1f2937;
+  font-weight: 800;
 }
 
 .parent-top-actions {
@@ -1124,15 +1170,14 @@ h1 {
 .welcome-panel {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   margin-top: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 18px 20px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px 22px;
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--color-bg-primary) 100%);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .welcome-copy h2 {
@@ -1141,14 +1186,14 @@ h1 {
   font-size: clamp(1.35rem, 2.4vw, 1.9rem);
   line-height: 1.15;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: #111827;
 }
 
 .welcome-copy p:not(.eyebrow) {
   max-width: 660px;
   margin-top: 12px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+  color: #64748b;
+  line-height: 1.7;
   font-weight: 500;
 }
 
@@ -1249,6 +1294,36 @@ textarea {
   font-weight: 700;
 }
 
+.quick-actions button:nth-child(1) span,
+.care-cues article:nth-child(1) span {
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+}
+
+.quick-actions button:nth-child(2) span,
+.care-cues article:nth-child(2) span {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1e3a8a;
+}
+
+.quick-actions button:nth-child(3) span,
+.care-cues article:nth-child(3) span {
+  background: rgba(139, 92, 246, 0.18);
+  color: #5b21b6;
+}
+
+.quick-actions button:nth-child(4) span {
+  background: rgba(99, 102, 241, 0.18);
+  color: #3730a3;
+}
+
+.quick-actions button:nth-child(5) span,
+.quick-actions button:nth-child(6) span,
+.quick-actions button:nth-child(7) span {
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+}
+
 .care-cues {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1320,6 +1395,22 @@ textarea {
   min-height: 108px;
   padding: 16px;
   text-align: center;
+}
+
+.health-summary article:nth-child(1) {
+  background: var(--gradient-live-card);
+}
+
+.health-summary article:nth-child(2) {
+  background: var(--gradient-weather-card);
+}
+
+.health-summary article:nth-child(3) {
+  background: var(--gradient-today-card);
+}
+
+.health-summary article:nth-child(4) {
+  background: var(--gradient-children-card);
 }
 
 .health-summary p {
@@ -1777,6 +1868,118 @@ textarea {
 
 .secondary-button:hover {
   background: var(--color-border);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .topbar,
+:global([data-theme="dark"]) .parent-dashboard .welcome-panel,
+:global([data-theme="dark"]) .parent-dashboard .child-toolbar,
+:global([data-theme="dark"]) .parent-dashboard .search-empty,
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button,
+:global([data-theme="dark"]) .parent-dashboard .care-cues article,
+:global([data-theme="dark"]) .parent-dashboard .health-summary article,
+:global([data-theme="dark"]) .parent-dashboard .panel,
+:global([data-theme="dark"]) .parent-dashboard .timeline-item,
+:global([data-theme="dark"]) .parent-dashboard .modal {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .welcome-copy h2,
+:global([data-theme="dark"]) .parent-dashboard h1,
+:global([data-theme="dark"]) .parent-dashboard h2,
+:global([data-theme="dark"]) .parent-dashboard h3,
+:global([data-theme="dark"]) .parent-dashboard strong,
+:global([data-theme="dark"]) .parent-dashboard label,
+:global([data-theme="dark"]) .parent-dashboard time {
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .parent-dashboard p,
+:global([data-theme="dark"]) .parent-dashboard span,
+:global([data-theme="dark"]) .parent-dashboard small,
+:global([data-theme="dark"]) .parent-dashboard .welcome-copy p:not(.eyebrow),
+:global([data-theme="dark"]) .parent-dashboard .panel header span,
+:global([data-theme="dark"]) .parent-dashboard .timeline-item p,
+:global([data-theme="dark"]) .parent-dashboard .timeline-item small,
+:global([data-theme="dark"]) .parent-dashboard .health-summary p {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .eyebrow,
+:global([data-theme="dark"]) .parent-dashboard .health-summary span,
+:global([data-theme="dark"]) .parent-dashboard .payload-info,
+:global([data-theme="dark"]) .parent-dashboard .medication-id-box .label {
+  color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .parent-dashboard select,
+:global([data-theme="dark"]) .parent-dashboard input,
+:global([data-theme="dark"]) .parent-dashboard textarea,
+:global([data-theme="dark"]) .parent-dashboard .global-search input,
+:global([data-theme="dark"]) .parent-dashboard .medication-progress,
+:global([data-theme="dark"]) .parent-dashboard .daily-periods article,
+:global([data-theme="dark"]) .parent-dashboard .status-explainer,
+:global([data-theme="dark"]) .parent-dashboard .saved-note,
+:global([data-theme="dark"]) .parent-dashboard .qr-display,
+:global([data-theme="dark"]) .parent-dashboard .medication-id-box,
+:global([data-theme="dark"]) .parent-dashboard .mock-qr {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .logout-button.secondary,
+:global([data-theme="dark"]) .parent-dashboard .compact-list header button,
+:global([data-theme="dark"]) .parent-dashboard .item-actions button,
+:global([data-theme="dark"]) .parent-dashboard .inline-actions button,
+:global([data-theme="dark"]) .parent-dashboard .secondary-button,
+:global([data-theme="dark"]) .parent-dashboard .modal header button {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .logout-button.secondary:hover,
+:global([data-theme="dark"]) .parent-dashboard .compact-list header button:hover,
+:global([data-theme="dark"]) .parent-dashboard .item-actions button:hover,
+:global([data-theme="dark"]) .parent-dashboard .inline-actions button:hover,
+:global([data-theme="dark"]) .parent-dashboard .secondary-button:hover,
+:global([data-theme="dark"]) .parent-dashboard .modal header button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .quick-actions span,
+:global([data-theme="dark"]) .parent-dashboard .care-cues span,
+:global([data-theme="dark"]) .parent-dashboard .initials {
+  background: rgba(59, 130, 246, 0.22) !important;
+  color: #bfdbfe !important;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(1) span,
+:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(1) {
+  background: var(--gradient-live-card);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(2) span,
+:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(2) {
+  background: var(--gradient-weather-card);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(3) span,
+:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(3) {
+  background: var(--gradient-today-card);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(4) span,
+:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(4) {
+  background: var(--gradient-children-card);
 }
 
 @media (max-width: 980px) {
