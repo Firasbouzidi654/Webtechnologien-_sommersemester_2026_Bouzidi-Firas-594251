@@ -6,6 +6,30 @@
     </div>
 
     <!-- Section;Style CSS appliqué via la classe .entity-card -->
+    <form class="create-child-form" @submit.prevent="createChild">
+      <label>
+        <span>Name</span>
+        <input v-model.trim="newChild.name" type="text" required />
+      </label>
+      <label>
+        <span>Date of birth</span>
+        <input v-model="newChild.dateOfBirth" type="date" required />
+      </label>
+      <label>
+        <span>Allergies</span>
+        <input v-model.trim="newChild.allergies" type="text" />
+      </label>
+      <button class="create-child-button" type="submit" :disabled="isSavingChild">
+        {{ isSavingChild ? 'Saving...' : 'Save child to database' }}
+      </button>
+    </form>
+    <p v-if="createChildMessage" class="create-child-status success" role="status">
+      {{ createChildMessage }}
+    </p>
+    <p v-if="createChildError" class="create-child-status error" role="alert">
+      {{ createChildError }}
+    </p>
+
     <ul class="entity-list">
       <li v-for="child in children" :key="child.id" class="overview-card entity-card" :class="{ 'dark-mode': isDark }">
         <div class="entity-card-header">
@@ -49,6 +73,14 @@ export default {
   data() {
     return {
       openChildId: null,
+      isSavingChild: false,
+      createChildMessage: '',
+      createChildError: '',
+      newChild: {
+        name: 'Emma',
+        dateOfBirth: '2020-05-10',
+        allergies: 'Peanuts'
+      },
 
       children: [
         {
@@ -122,6 +154,37 @@ export default {
   },
 
   methods: {
+    async createChild() {
+      this.isSavingChild = true;
+      this.createChildMessage = '';
+      this.createChildError = '';
+
+      try {
+        const response = await fetch('https://kindercare-backend.onrender.com/api/children', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: this.newChild.name,
+            dateOfBirth: this.newChild.dateOfBirth,
+            allergies: this.newChild.allergies
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const savedChild = await response.json();
+        this.createChildMessage = `Saved ${savedChild.name || this.newChild.name} to the database.`;
+      } catch (error) {
+        this.createChildError = error.message || 'Could not save child.';
+      } finally {
+        this.isSavingChild = false;
+      }
+    },
+
     toggleInfo(id) {
       if (this.openChildId === id) {
         this.openChildId = null;
@@ -164,6 +227,69 @@ export default {
 
 .example-entities-header {
   margin-bottom: 18px;
+}
+
+.create-child-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin: 0 0 14px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+
+.create-child-form label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.create-child-form span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.create-child-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.create-child-button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #ffffff;
+  background: #2d8f7b;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.create-child-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.create-child-status {
+  margin: 0 0 14px;
+  font-weight: 700;
+}
+
+.create-child-status.success {
+  color: #176044;
+}
+
+.create-child-status.error {
+  color: #9f2f2f;
 }
 
 .eyebrow {
@@ -285,6 +411,10 @@ export default {
 }
 
 @media (max-width: 820px) {
+  .create-child-form {
+    grid-template-columns: 1fr;
+  }
+
   .entity-list {
     grid-template-columns: 1fr;
   }
