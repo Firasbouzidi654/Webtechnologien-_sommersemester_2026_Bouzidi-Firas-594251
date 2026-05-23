@@ -20,6 +20,18 @@ public class EmergencyContactEntity {
     private String email;
     private int priority;
 
+    public EmergencyContactEntity() {
+    }
+
+    public EmergencyContactEntity(Long childId, String name, String relationship, String phone, String email, int priority) {
+        this.childId = childId;
+        this.name = name;
+        this.relationship = relationship;
+        this.phone = phone;
+        this.email = email;
+        this.priority = priority;
+    }
+
     public Long getId() {
         return id;
     }

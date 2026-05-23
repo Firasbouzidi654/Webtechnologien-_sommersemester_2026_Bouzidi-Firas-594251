@@ -6,6 +6,7 @@
       :language="language"
       :translations="translations"
       @navigate="navigate"
+      @logout="handleLogout"
       @toggle-theme="toggleTheme"
       @update-language="updateLanguage"
     />
@@ -24,6 +25,7 @@ import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
 import ForgotPasswordView from './views/ForgotPasswordView.vue';
 import { translations } from './content/siteContent';
+import { isAuthenticated, clearAuth } from './state/authStore';
 
 const routes = {
   '/': 'signin',
@@ -125,14 +127,28 @@ export default {
       return clean === '' ? '/' : clean;
     },
     resolveRoute(pathname) {
-      return routes[this.normalizePath(pathname)] || 'signup';
+      const resolved = routes[this.normalizePath(pathname)] || 'signup';
+      if ((resolved === 'parent' || resolved === 'admin') && !isAuthenticated()) {
+        return 'signin';
+      }
+      return resolved;
     },
     handlePopState() {
       const path = window.location.hash ? window.location.hash.slice(1) : window.location.pathname;
       this.currentRoute = this.resolveRoute(path);
     },
+    handleLogout() {
+      clearAuth();
+      this.navigate('/signin');
+    },
     navigate(path) {
       if (!routes[path]) return;
+
+      const destination = routes[path];
+      if ((destination === 'parent' || destination === 'admin') && !isAuthenticated()) {
+        this.navigate('/signin');
+        return;
+      }
 
       // prefer hash navigation to avoid server rewrite issues; keep pathname
       // navigation where appropriate

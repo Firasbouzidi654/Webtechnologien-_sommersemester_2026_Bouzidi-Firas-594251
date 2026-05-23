@@ -14,6 +14,7 @@ public record MedicationResponse(
     MedicationScheduleResponse schedule,
     List<MedicationLogResponse> history,
     String qrPayload,
-    boolean prescriptionUploaded
+    boolean prescriptionUploaded,
+    String todayStatus
 ) {
 }

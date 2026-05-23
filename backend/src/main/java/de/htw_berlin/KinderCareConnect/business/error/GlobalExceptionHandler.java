@@ -17,7 +17,37 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
             "timestamp", Instant.now().toString(),
             "status", HttpStatus.NOT_FOUND.value(),
-            "error", HttpStatus.NOT_FOUND.getReasonPhrase(),
+            "error", "Not Found",
+            "message", exception.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailExists(EmailAlreadyExistsException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.CONFLICT.value(),
+            "error", "Conflict",
+            "message", exception.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.UNAUTHORIZED.value(),
+            "error", "Unauthorized",
+            "message", exception.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(IllegalArgumentException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.BAD_REQUEST.value(),
+            "error", "Bad Request",
             "message", exception.getMessage()
         ));
     }

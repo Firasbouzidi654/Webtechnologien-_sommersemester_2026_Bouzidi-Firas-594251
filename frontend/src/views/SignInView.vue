@@ -135,6 +135,7 @@
 <script>
 import AuthShell from '../components/AuthShell.vue';
 import FeaturesList from '../components/FeaturesList.vue';
+import { login } from '../state/authStore';
 
 const fallbackContent = {
   common: {
@@ -341,13 +342,7 @@ export default {
         }, 420);
       });
     },
-    credentialsLookInvalid() {
-      const email = (this.form.email || '').toLowerCase();
-      const password = (this.form.password || '').toLowerCase();
-
-      return email.includes('invalid') || password === 'invalid' || password === 'password';
-    },
-    submitForm() {
+    async submitForm() {
       if (this.isLoading) return;
 
       this.clearFeedback();
@@ -359,23 +354,24 @@ export default {
 
       this.isLoading = true;
 
-      window.setTimeout(() => {
-        this.isLoading = false;
-
-        if (this.credentialsLookInvalid()) {
-          this.rejectForm(this.signin.invalidCredentials);
-          return;
-        }
+      try {
+        const user = await login(this.form.email, this.form.password);
 
         this.isSuccess = true;
         this.feedback = this.signin.successMessage;
         this.feedbackType = 'success';
-        console.log('Sign in form ready:', { role: this.role, ...this.form });
+
+        const role = (user.role || '').toUpperCase();
+        const destination = (role === 'ADMIN' || role === 'STAFF') ? '/admin' : '/parent';
 
         this.redirectTimer = window.setTimeout(() => {
-          this.$emit('navigate', this.role === 'admin' ? '/admin' : '/parent');
+          this.$emit('navigate', destination);
         }, 650);
-      }, 850);
+      } catch (err) {
+        this.rejectForm(err.message || this.signin.invalidCredentials);
+      } finally {
+        this.isLoading = false;
+      }
     }
   }
 };

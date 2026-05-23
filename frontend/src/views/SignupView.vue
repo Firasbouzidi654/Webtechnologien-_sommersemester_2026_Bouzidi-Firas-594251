@@ -21,6 +21,25 @@
       :aria-busy="isLoading ? 'true' : 'false'"
       @submit.prevent="submitForm"
     >
+      <div class="role-select" role="group" aria-label="Register as">
+        <p class="role-label">Register as</p>
+        <div class="role-cards">
+          <button
+            v-for="option in roleOptions"
+            :key="option.value"
+            type="button"
+            :class="['role-card', { active: role === option.value }]"
+            :aria-pressed="role === option.value"
+            @click="setRole(option.value)"
+          >
+            <span class="role-icon" aria-hidden="true">{{ option.initial }}</span>
+            <span class="role-copy">
+              <span class="role-title">{{ option.label }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
       <div class="form-grid">
         <div class="field" :class="fieldClass('fullName')">
           <label for="signup-full-name">{{ signup.fullNameLabel }}</label>
@@ -214,6 +233,7 @@
 <script>
 import AuthShell from '../components/AuthShell.vue';
 import FeaturesList from '../components/FeaturesList.vue';
+import { signup } from '../state/authStore';
 
 const fallbackSignup = {
   badge: 'Create account',
@@ -287,6 +307,7 @@ export default {
   emits: ['navigate', 'toggle-theme', 'update-language'],
   data() {
     return {
+      role: 'PARENT',
       form: {
         fullName: '',
         email: '',
@@ -306,7 +327,8 @@ export default {
       showConfirmPassword: false,
       capsLockOn: false,
       rejectionTimer: null,
-      successTimer: null
+      successTimer: null,
+      redirectTimer: null
     };
   },
   computed: {
@@ -361,11 +383,18 @@ export default {
       if (this.isLoading) return this.signup.loadingButton;
       if (this.isSuccess) return this.signup.successButton;
       return this.signup.submitButton;
+    },
+    roleOptions() {
+      return [
+        { value: 'PARENT', initial: 'P', label: 'Parent', description: 'Family dashboard' },
+        { value: 'STAFF', initial: 'S', label: 'Staff', description: 'Care team workspace' }
+      ];
     }
   },
   beforeUnmount() {
     window.clearTimeout(this.rejectionTimer);
     window.clearTimeout(this.successTimer);
+    window.clearTimeout(this.redirectTimer);
   },
   methods: {
     fieldClass(field) {
@@ -468,7 +497,11 @@ export default {
         }, 420);
       });
     },
-    submitForm() {
+    setRole(role) {
+      this.role = role;
+      this.clearFeedback();
+    },
+    async submitForm() {
       if (this.isLoading) return;
 
       this.clearFeedback();
@@ -480,17 +513,30 @@ export default {
 
       this.isLoading = true;
 
-      window.setTimeout(() => {
-        this.isLoading = false;
+      try {
+        const user = await signup(
+          this.form.fullName,
+          this.form.email,
+          this.form.password,
+          this.role,
+          this.form.phoneNumber
+        );
+
         this.isSuccess = true;
         this.feedback = this.signup.successMessage;
         this.feedbackType = 'success';
-        console.log('Sign up form ready:', { ...this.form });
 
-        this.successTimer = window.setTimeout(() => {
-          this.isSuccess = false;
-        }, 1400);
-      }, 700);
+        const role = (user.role || '').toUpperCase();
+        const destination = (role === 'ADMIN' || role === 'STAFF') ? '/admin' : '/parent';
+
+        this.redirectTimer = window.setTimeout(() => {
+          this.$emit('navigate', destination);
+        }, 650);
+      } catch (err) {
+        this.rejectForm(err.message || this.signup.validationError);
+      } finally {
+        this.isLoading = false;
+      }
     }
   }
 };
@@ -525,6 +571,82 @@ export default {
   display: grid;
   gap: 18px;
   animation: fade-up 0.52s ease both;
+}
+
+.role-select {
+  display: grid;
+  gap: 8px;
+}
+
+.role-label {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 52px;
+  padding: 4px;
+  border: 1px solid rgba(34, 62, 79, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.role-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.role-card:hover {
+  transform: translateY(-1px);
+  background: rgba(45, 143, 123, 0.08);
+}
+
+.role-card.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, #2d8f7b, #246f60);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(45, 143, 123, 0.25);
+  transform: translateY(-1px);
+}
+
+.role-icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(45, 143, 123, 0.12);
+  color: currentColor;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.role-copy {
+  min-width: 0;
+  display: block;
+}
+
+.role-title {
+  color: currentColor;
+  font-weight: 850;
 }
 
 .auth-form.form-rejected {
@@ -1046,7 +1168,8 @@ export default {
 
 :global(.dark-mode) .field input,
 :global(.dark-mode) .password-helper,
-:global(.dark-mode) .helper-panel {
+:global(.dark-mode) .helper-panel,
+:global(.dark-mode) .role-cards {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(212, 230, 241, 0.12);
 }

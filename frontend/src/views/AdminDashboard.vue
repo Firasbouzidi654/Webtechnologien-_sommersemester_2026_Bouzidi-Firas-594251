@@ -16,7 +16,7 @@
           <div class="control-actions" aria-label="Dashboard controls">
             <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
             <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
-            <button class="logout-button" type="button" @click="$emit('navigate', '/')">Log out</button>
+            <button class="logout-button" type="button" @click="$emit('logout')">Log out</button>
           </div>
         </div>
       </div>
@@ -483,7 +483,7 @@ import QRMedicationCard from '../components/QRMedicationCard.vue';
 import VerificationHistoryPanel from '../components/VerificationHistoryPanel.vue';
 import WeatherHealthCard from '../components/WeatherHealthCard.vue';
 import L from 'leaflet';
-import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication } from '../state/kindercareStore';
+import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
 import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 import { estimateDriveTimeMinutes, formatDistanceMeters } from '../utils/formatters';
 
@@ -517,7 +517,7 @@ export default {
       default: false
     }
   },
-  emits: ['navigate'],
+  emits: ['navigate', 'logout'],
   data() {
     return {
       groupFilter: 'all',
@@ -562,9 +562,13 @@ export default {
   created() {
     // noop
   },
-  mounted() {
+  async mounted() {
     this.updateCompactMode();
     window.addEventListener('resize', this.updateCompactMode);
+    await Promise.all([loadChildren(), loadMedicationTasks()]);
+    if (!this.selectedEmergencyChildId && this.children.length > 0) {
+      this.selectedEmergencyChildId = this.children[0].id;
+    }
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateCompactMode);
@@ -867,8 +871,8 @@ export default {
 
       window.open(buildEmergencyRouteLink(this.selectedEmergencyLocation, poi), '_blank', 'noreferrer');
     },
-    confirmMedication(medicationId) {
-      markMedicationTaken(medicationId);
+    async confirmMedication(medicationId) {
+      await markMedicationTaken(medicationId);
     },
     openVerificationModal(medicationId) {
       this.verificationTask = this.tasks.find((t) => t.medicationId === medicationId) || null;
@@ -889,7 +893,7 @@ export default {
 
       if (ok) {
         addVerificationLog({ medicationId: this.verificationTask.medicationId, method: input === this.verificationTask.medicationId ? 'ID' : 'QR', admin: 'Staff Demo', time: new Date().toISOString() });
-        markMedicationTaken(this.verificationTask.medicationId);
+        await markMedicationTaken(this.verificationTask.medicationId);
         this.verificationMessage = 'Verification successful — medication confirmed.';
         this.verificationState = 'success';
       } else {
@@ -999,14 +1003,16 @@ export default {
       this.taskModalActive = false;
       this.taskError = '';
     },
-    saveTask() {
+    async saveTask() {
       if (!this.taskForm.childId || !this.taskForm.medicationName || !this.taskForm.dosage || !this.taskForm.date || !this.taskForm.time) {
         this.taskError = 'Please complete all required fields.';
         return;
       }
 
+      this.closeTaskModal();
+
       if (this.taskModalMode === 'edit' && this.taskForm.medicationId) {
-        editMedication(this.taskForm.childId, this.taskForm.medicationId, {
+        await editMedication(this.taskForm.childId, this.taskForm.medicationId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
@@ -1016,7 +1022,7 @@ export default {
           childId: this.taskForm.childId
         });
       } else {
-        addMedication(this.taskForm.childId, {
+        await addMedication(this.taskForm.childId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
@@ -1025,10 +1031,8 @@ export default {
           status: this.taskForm.status
         });
       }
-
-      this.closeTaskModal();
     },
-    deleteTask(medicationId) {
+    async deleteTask(medicationId) {
       const task = this.tasks.find((item) => item.medicationId === medicationId);
       if (!task) {
         return;
@@ -1038,7 +1042,7 @@ export default {
         return;
       }
 
-      removeMedication(task.childId, medicationId);
+      await removeMedication(task.childId, medicationId);
     },
     addEmergencyMarker(position, label) {
       if (!this.emergencyMap) {
@@ -1080,19 +1084,19 @@ export default {
     callServices() {
       window.open('tel:112');
     },
-    toggleTaskStatus(medicationId) {
+    async toggleTaskStatus(medicationId) {
       const current = this.tasks.find((task) => task.medicationId === medicationId)?.status;
       if (!current) return;
       const statuses = this.statusOptions;
       const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
-      setMedicationStatus(medicationId, next);
+      await setMedicationStatus(medicationId, next);
     },
-    changeTaskStatus({ medicationId, status }) {
+    async changeTaskStatus({ medicationId, status }) {
       if (!medicationId || !this.statusOptions.includes(status)) {
         return;
       }
 
-      setMedicationStatus(medicationId, status);
+      await setMedicationStatus(medicationId, status);
     },
     meaningfulList(items, fallback) {
       const values = (items || []).filter((item) => item && !['None', 'None known'].includes(item));

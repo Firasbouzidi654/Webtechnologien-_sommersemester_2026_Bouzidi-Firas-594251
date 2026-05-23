@@ -20,30 +20,42 @@ public class SampleDataConfig {
             }
 
             childRepository.saveAll(List.of(
-                    new ChildEntity(
-                            "Anna Schmidt",
-                            LocalDate.of(2020, 3, 15),
-                            "Peanuts, Milk",
-                            "Mild Asthma",
-                            "None",
-                            "Parents: +49-123-456789"
-                    ),
-                    new ChildEntity(
-                            "Max Weber",
-                            LocalDate.of(2019, 7, 22),
-                            "Nuts",
-                            "Diabetes Type 1",
-                            "ADHD",
-                            "Parents: +49-987-654321"
-                    ),
-                    new ChildEntity(
-                            "Emma Fischer",
-                            LocalDate.of(2021, 1, 10),
-                            "Lactose",
-                            "None",
-                            "Autism",
-                            "Parents: +49-555-888444"
-                    )
+                new ChildEntity(
+                    "Adam Schneider",
+                    LocalDate.of(2021, 3, 15),
+                    "Peanuts",
+                    "Mild asthma",
+                    "",
+                    "Sara Schneider: +49 151 123456",
+                    "Sunflowers",
+                    "Sara Schneider",
+                    "sara.schneider@example.com",
+                    "Needs inhaler available during outdoor play."
+                ),
+                new ChildEntity(
+                    "Noah Becker",
+                    LocalDate.of(2020, 7, 22),
+                    "None known",
+                    "Asthma",
+                    "",
+                    "Jonas Becker: +49 152 987654",
+                    "Sunflowers",
+                    "Jonas Becker",
+                    "jonas.becker@example.com",
+                    "Observe breathing after sports activities."
+                ),
+                new ChildEntity(
+                    "Lina Wagner",
+                    LocalDate.of(2021, 1, 10),
+                    "Bee stings",
+                    "None",
+                    "",
+                    "Amira Wagner: +49 176 456789",
+                    "Rainbows",
+                    "Amira Wagner",
+                    "amira.wagner@example.com",
+                    "Emergency spray is stored in the office cabinet."
+                )
             ));
         };
     }

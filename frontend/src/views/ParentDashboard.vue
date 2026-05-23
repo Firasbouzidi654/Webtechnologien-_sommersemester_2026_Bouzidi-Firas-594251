@@ -26,7 +26,7 @@
         </label>
         <NotificationCenter />
         <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
-        <button class="logout-button" type="button" @click="$emit('navigate', '/')">Log out</button>
+        <button class="logout-button" type="button" @click="$emit('logout')">Log out</button>
       </div>
     </nav>
 
@@ -45,6 +45,8 @@
     </section>
 
     <p v-if="parentSearchEmpty" class="search-empty">No health record matches "{{ searchQuery }}".</p>
+
+    <p v-if="kindercareStore.loading" style="text-align:center;padding:1rem;opacity:.6;">Loading children…</p>
 
     <section class="child-toolbar" :class="{ 'panel-dark': isDark }">
       <label>
@@ -447,6 +449,7 @@ import {
   addMedication as storeAddMedication,
   editAllergy as storeEditAllergy,
   editDisease as storeEditDisease,
+  loadChildren,
   editMedication as storeEditMedication,
   kindercareStore,
   markMedicationTaken,
@@ -472,7 +475,7 @@ export default {
       default: false
     }
   },
-  emits: ['navigate', 'toggle-theme'],
+  emits: ['navigate', 'logout', 'toggle-theme'],
   data() {
     return {
       heroImage,
@@ -688,6 +691,12 @@ export default {
       ];
     }
   },
+  async mounted() {
+    await loadChildren();
+    if (!this.selectedChildId && this.parentChildren.length > 0) {
+      this.selectedChildId = this.parentChildren[0].id;
+    }
+  },
   watch: {
     selectedChildId: {
       immediate: true,
@@ -801,49 +810,36 @@ export default {
     closeDialog() {
       this.activeDialog = '';
     },
-    submitDialog() {
-      if (this.activeDialog === 'child') {
-        this.addChild();
-      }
-
-      if (this.activeDialog === 'allergy') {
-        this.addAllergy();
-      }
-
-      if (this.activeDialog === 'disease') {
-        this.addDisease();
-      }
-
-      if (this.activeDialog === 'medication') {
-        this.saveMedication();
-      }
-
-      if (this.activeDialog === 'emergency') {
-        this.addEmergencyContact();
-      }
-
+    async submitDialog() {
+      const dialog = this.activeDialog;
       this.closeDialog();
+
+      if (dialog === 'child') await this.addChild();
+      if (dialog === 'allergy') await this.addAllergy();
+      if (dialog === 'disease') await this.addDisease();
+      if (dialog === 'medication') await this.saveMedication();
+      if (dialog === 'emergency') await this.addEmergencyContact();
     },
-    addChild() {
-      const newChild = storeAddChild({
+    async addChild() {
+      const newChild = await storeAddChild({
         name: this.forms.child.name,
         groupName: this.forms.child.groupName,
         dateOfBirth: this.forms.child.dateOfBirth,
         photo: this.forms.child.photo || null
       });
 
-      this.selectedChildId = newChild.id;
+      if (newChild) this.selectedChildId = newChild.id;
     },
-    addAllergy() {
-      storeAddAllergy(this.selectedChildId, this.forms.allergy.name);
+    async addAllergy() {
+      await storeAddAllergy(this.selectedChildId, this.forms.allergy.name);
     },
-    addDisease() {
-      storeAddDisease(this.selectedChildId, this.forms.disease.name);
+    async addDisease() {
+      await storeAddDisease(this.selectedChildId, this.forms.disease.name);
     },
-    addEmergencyContact() {
-      storeAddEmergencyContact(this.selectedChildId, this.forms.emergency);
+    async addEmergencyContact() {
+      await storeAddEmergencyContact(this.selectedChildId, this.forms.emergency);
     },
-    saveMedication() {
+    async saveMedication() {
       const medicationData = {
         name: this.forms.medication.name,
         dosage: this.forms.medication.dosage,
@@ -852,11 +848,11 @@ export default {
       };
 
       if (this.editingMedicationId) {
-        storeEditMedication(this.selectedChildId, this.editingMedicationId, medicationData);
+        await storeEditMedication(this.selectedChildId, this.editingMedicationId, medicationData);
         return;
       }
 
-      storeAddMedication(this.selectedChildId, medicationData);
+      await storeAddMedication(this.selectedChildId, medicationData);
     },
     handlePrescriptionFile(event) {
       const [file] = event.target.files;
@@ -875,29 +871,30 @@ export default {
         this.$refs.noteTextarea?.focus();
       });
     },
-    saveParentNote() {
-      storeSaveParentNote(this.selectedChildId, this.parentNoteDraft);
-      this.noteFeedback = 'Note saved locally for the prototype.';
+    async saveParentNote() {
+      this.noteFeedback = 'Saving...';
+      await storeSaveParentNote(this.selectedChildId, this.parentNoteDraft);
+      this.noteFeedback = 'Note sent to staff.';
     },
-    editAllergyItem(index, allergy) {
+    async editAllergyItem(index, allergy) {
       const nextValue = window.prompt('Edit allergy', allergy);
 
       if (nextValue) {
-        storeEditAllergy(this.selectedChildId, index, nextValue);
+        await storeEditAllergy(this.selectedChildId, index, nextValue);
       }
     },
-    removeAllergyItem(index) {
-      storeRemoveAllergy(this.selectedChildId, index);
+    async removeAllergyItem(index) {
+      await storeRemoveAllergy(this.selectedChildId, index);
     },
-    editDiseaseItem(index, disease) {
+    async editDiseaseItem(index, disease) {
       const nextValue = window.prompt('Edit chronic disease', disease);
 
       if (nextValue) {
-        storeEditDisease(this.selectedChildId, index, nextValue);
+        await storeEditDisease(this.selectedChildId, index, nextValue);
       }
     },
-    removeDiseaseItem(index) {
-      storeRemoveDisease(this.selectedChildId, index);
+    async removeDiseaseItem(index) {
+      await storeRemoveDisease(this.selectedChildId, index);
     },
     editMedicationItem(medication) {
       this.forms = this.emptyForms();
@@ -911,8 +908,8 @@ export default {
       this.editingMedicationId = medication.medicationId;
       this.activeDialog = 'medication';
     },
-    removeMedicationItem(medicationId) {
-      storeRemoveMedication(this.selectedChildId, medicationId);
+    async removeMedicationItem(medicationId) {
+      await storeRemoveMedication(this.selectedChildId, medicationId);
     },
     toggleQr(medicationId) {
       this.selectedQrId = this.selectedQrId === medicationId ? '' : medicationId;

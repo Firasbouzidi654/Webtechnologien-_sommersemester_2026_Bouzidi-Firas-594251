@@ -172,7 +172,8 @@ public class HealthPrototypeRepository {
                 medication.schedule(),
                 List.copyOf(updatedHistory),
                 medication.qrPayload(),
-                medication.prescriptionUploaded()
+                medication.prescriptionUploaded(),
+                medication.todayStatus()
             ));
         }
 
@@ -280,7 +281,8 @@ public class HealthPrototypeRepository {
                 "Sample previous-day log"
             )),
             "kindercare-connect:medication:" + medicationId,
-            prescriptionUploaded
+            prescriptionUploaded,
+            PENDING
         );
     }
 

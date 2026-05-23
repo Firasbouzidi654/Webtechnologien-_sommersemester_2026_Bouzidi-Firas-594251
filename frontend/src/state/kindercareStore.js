@@ -1,17 +1,18 @@
 import { reactive } from 'vue';
-import { children, cloneMockData, medicationTasks } from '../data/kindercareMockData';
+import { api } from '../services/api';
 
 export const MEDICATION_STATUSES = ['Pending', 'Taken', 'Missed', 'Upcoming'];
 
 export const kindercareStore = reactive({
-  children: cloneMockData(children),
-  medicationTasks: cloneMockData(medicationTasks),
-  parentChildIds: [1, 3],
+  children: [],
+  medicationTasks: [],
+  parentChildIds: [],
   parentNotes: {},
   parentAvatar: null,
   verificationLogs: [],
   notifications: [],
-  toasts: []
+  toasts: [],
+  loading: false
 });
 
 function findChild(childId) {
@@ -47,6 +48,45 @@ function statusNotificationType(status) {
   return 'info';
 }
 
+function mergeChildrenFromApi(apiChildren) {
+  const existing = {};
+  kindercareStore.children.forEach((c) => { existing[c.id] = c; });
+
+  kindercareStore.children = apiChildren.map((apiChild) => ({
+    photo: existing[apiChild.id]?.photo || null,
+    prescriptionFileName: existing[apiChild.id]?.prescriptionFileName || null,
+    ...apiChild
+  }));
+}
+
+// ─── Data loading ────────────────────────────────────────────────────────────
+
+export async function loadChildren() {
+  kindercareStore.loading = true;
+  try {
+    const children = await api.getChildren();
+    mergeChildrenFromApi(children);
+    if (kindercareStore.parentChildIds.length === 0 && children.length > 0) {
+      kindercareStore.parentChildIds = children.map((c) => c.id);
+    }
+  } catch (err) {
+    addNotification({ title: 'Load failed', message: 'Could not load children from the server.', type: 'danger' });
+  } finally {
+    kindercareStore.loading = false;
+  }
+}
+
+export async function loadMedicationTasks() {
+  try {
+    const tasks = await api.getTodayTasks();
+    kindercareStore.medicationTasks = Array.isArray(tasks) ? tasks : [];
+  } catch (err) {
+    addNotification({ title: 'Load failed', message: 'Could not load medication tasks.', type: 'danger' });
+  }
+}
+
+// ─── Notifications & toasts ──────────────────────────────────────────────────
+
 export function addNotification({ title, message, type = 'info', toast = true }) {
   const notification = {
     id: Date.now() + Math.random(),
@@ -78,6 +118,8 @@ export function markNotificationsRead() {
   });
 }
 
+// ─── Utility ─────────────────────────────────────────────────────────────────
+
 export function nextMedicationId() {
   const highestNumber = kindercareStore.children
     .flatMap((child) => child.medications || [])
@@ -101,27 +143,7 @@ export function parentChildren() {
   return kindercareStore.children.filter((child) => kindercareStore.parentChildIds.includes(child.id));
 }
 
-export function addChild(data) {
-  const child = {
-    id: nextId(kindercareStore.children),
-    name: data.name,
-    groupName: data.groupName,
-    dateOfBirth: data.dateOfBirth,
-    parentName: 'Sara Schneider',
-    photo: data.photo || null,
-    parentEmail: 'sara.schneider@example.com',
-    photo: null,
-    allergies: [],
-    chronicDiseases: [],
-    healthNotes: '',
-    medications: [],
-    emergencyContacts: []
-  };
-
-  kindercareStore.children.push(child);
-  kindercareStore.parentChildIds.push(child.id);
-  return child;
-}
+// ─── UI-only state setters ───────────────────────────────────────────────────
 
 export function setParentAvatar(dataUrl) {
   kindercareStore.parentAvatar = dataUrl;
@@ -129,203 +151,126 @@ export function setParentAvatar(dataUrl) {
 
 export function setChildPhoto(childId, dataUrl) {
   const child = findChild(childId);
-
-  if (child) {
-    child.photo = dataUrl;
-  }
+  if (child) child.photo = dataUrl;
 }
 
 export function addVerificationLog(entry) {
   kindercareStore.verificationLogs.unshift({ id: Date.now(), ...entry });
 }
 
-export function addAllergy(childId, name) {
-  const child = findChild(childId);
-  if (!child) return null;
-  child.allergies = [...(child.allergies || []).filter((item) => item !== 'None known'), name];
+// ─── Children CRUD ───────────────────────────────────────────────────────────
+
+export async function addChild(data) {
+  const child = await api.createChild({
+    name: data.name,
+    groupName: data.groupName || '',
+    dateOfBirth: data.dateOfBirth || null,
+    parentName: 'Sara Schneider',
+    parentEmail: 'sara.schneider@example.com',
+    allergies: [],
+    chronicDiseases: [],
+    healthNotes: ''
+  });
+
+  child.photo = data.photo || null;
+  child.prescriptionFileName = null;
+  kindercareStore.children.push(child);
+  kindercareStore.parentChildIds.push(child.id);
+  return child;
 }
 
-export function editAllergy(childId, index, name) {
+// ─── Allergies ───────────────────────────────────────────────────────────────
+
+export async function addAllergy(childId, name) {
+  const child = findChild(childId);
+  if (!child) return null;
+  const updated = [...(child.allergies || []).filter((item) => item !== 'None known'), name];
+  child.allergies = updated;
+  try {
+    await api.updateChild(childId, { allergies: updated });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not save allergy. Changes may not persist.', type: 'danger' });
+  }
+}
+
+export async function editAllergy(childId, index, name) {
   const child = findChild(childId);
   if (!child) return;
   child.allergies ||= [];
   child.allergies.splice(index, 1, name);
+  try {
+    await api.updateChild(childId, { allergies: child.allergies });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not update allergy.', type: 'danger' });
+  }
 }
 
-export function removeAllergy(childId, index) {
-  findChild(childId)?.allergies.splice(index, 1);
+export async function removeAllergy(childId, index) {
+  const child = findChild(childId);
+  if (!child) return;
+  child.allergies.splice(index, 1);
+  try {
+    await api.updateChild(childId, { allergies: child.allergies });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not remove allergy.', type: 'danger' });
+  }
 }
 
-export function addDisease(childId, name) {
+// ─── Chronic diseases ────────────────────────────────────────────────────────
+
+export async function addDisease(childId, name) {
   const child = findChild(childId);
   if (!child) return null;
-  child.chronicDiseases = [...(child.chronicDiseases || []).filter((item) => item !== 'None'), name];
+  const updated = [...(child.chronicDiseases || []).filter((item) => item !== 'None'), name];
+  child.chronicDiseases = updated;
+  try {
+    await api.updateChild(childId, { chronicDiseases: updated });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not save chronic disease.', type: 'danger' });
+  }
 }
 
-export function editDisease(childId, index, name) {
+export async function editDisease(childId, index, name) {
   const child = findChild(childId);
   if (!child) return;
   child.chronicDiseases ||= [];
   child.chronicDiseases.splice(index, 1, name);
+  try {
+    await api.updateChild(childId, { chronicDiseases: child.chronicDiseases });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not update chronic disease.', type: 'danger' });
+  }
 }
 
-export function removeDisease(childId, index) {
-  findChild(childId)?.chronicDiseases.splice(index, 1);
+export async function removeDisease(childId, index) {
+  const child = findChild(childId);
+  if (!child) return;
+  child.chronicDiseases.splice(index, 1);
+  try {
+    await api.updateChild(childId, { chronicDiseases: child.chronicDiseases });
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not remove chronic disease.', type: 'danger' });
+  }
 }
 
-export function addEmergencyContact(childId, data) {
+// ─── Emergency contacts ──────────────────────────────────────────────────────
+
+export async function addEmergencyContact(childId, data) {
   const child = findChild(childId);
   if (!child) return null;
-  child.emergencyContacts ||= [];
-  const contact = {
-    id: nextId(child.emergencyContacts),
-    name: data.name,
-    relationship: data.relationship,
-    phone: data.phone,
-    email: data.email,
-    priority: Number(data.priority) || child.emergencyContacts.length + 1
-  };
-
-  child.emergencyContacts.push(contact);
-  child.emergencyContacts.sort((first, second) => first.priority - second.priority);
-  return contact;
-}
-
-export function addMedication(childId, data) {
-  const child = findChild(childId);
-  if (!child) {
+  try {
+    const contact = await api.addEmergencyContact(childId, data);
+    child.emergencyContacts ||= [];
+    child.emergencyContacts.push(contact);
+    child.emergencyContacts.sort((a, b) => a.priority - b.priority);
+    return contact;
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not add emergency contact.', type: 'danger' });
     return null;
   }
-
-  child.medications ||= [];
-  const medicationId = nextMedicationId();
-  const status = safeStatus(data.status);
-  const date = data.date || todayDateKey();
-  const time = data.time || '12:00';
-  const instructions = data.instructions || data.notes || '';
-  const medication = {
-    id: Date.now(),
-    medicationId,
-    childId,
-    childName: child.name,
-    name: data.name,
-    activeIngredient: '',
-    dosage: data.dosage || '',
-    instructions,
-    prescriptionUploaded: false,
-    todayStatus: status,
-    qrPayload: `kindercare-connect:medication:${medicationId}`,
-    schedule: {
-      frequency: 'Daily',
-      dayPart: 'Specific time',
-      specificTime: time,
-      date,
-      dosage: data.dosage || '',
-      instructions
-    },
-    history: []
-  };
-
-  child.medications.push(medication);
-  kindercareStore.medicationTasks.push({
-    taskId: `TASK-${String(kindercareStore.medicationTasks.length + 1).padStart(3, '0')}`,
-    medicationId,
-    childId,
-    childName: child.name,
-    groupName: child.groupName,
-    medicationName: data.name,
-    dosage: data.dosage || '',
-    scheduledTime: time,
-    scheduledDate: date,
-    instructions,
-    status,
-    reminderDue: false,
-    qrPayload: medication.qrPayload
-  });
-
-  addNotification({
-    title: 'New medication added',
-    message: `${data.name || 'Medication'} was added for ${child.name}.`,
-    type: 'info'
-  });
-
-  return medication;
 }
 
-export function editMedication(childId, medicationId, data) {
-  const currentChild = findMedicationOwner(medicationId) || findChild(childId);
-  const nextChild = findChild(data.childId ?? childId) || currentChild;
-  const medication = currentChild?.medications?.find((item) => item.medicationId === medicationId);
-  const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
-
-  if (!currentChild || !nextChild || !medication) {
-    return null;
-  }
-
-  const status = safeStatus(data.status, task?.status || medication.todayStatus || 'Pending');
-  const date = data.date || medication.schedule?.date || task?.scheduledDate || todayDateKey();
-  const time = data.time || medication.schedule?.specificTime || task?.scheduledTime || '12:00';
-  const instructions = data.instructions || data.notes || '';
-
-  if (currentChild.id !== nextChild.id) {
-    currentChild.medications = currentChild.medications.filter((item) => item.medicationId !== medicationId);
-    nextChild.medications ||= [];
-    nextChild.medications.push(medication);
-  }
-
-  Object.assign(medication, {
-    childId: nextChild.id,
-    childName: nextChild.name,
-    name: data.name,
-    dosage: data.dosage,
-    instructions,
-    todayStatus: status,
-    schedule: {
-      ...medication.schedule,
-      specificTime: time,
-      date,
-      dosage: data.dosage,
-      instructions
-    }
-  });
-
-  if (task) {
-    Object.assign(task, {
-      childId: nextChild.id,
-      childName: nextChild.name,
-      groupName: nextChild.groupName,
-      medicationName: data.name,
-      dosage: data.dosage,
-      scheduledTime: time,
-      scheduledDate: date,
-      instructions,
-      status,
-      reminderDue: false
-    });
-  }
-
-  if (status === 'Taken' && medication.history?.[0]?.status !== 'Taken') {
-    medication.history.unshift({
-      id: Date.now(),
-      status: 'Taken',
-      adminName: 'Ms. Mueller',
-      loggedAt: new Date().toISOString(),
-      note: 'Status updated by staff'
-    });
-  }
-
-  return medication;
-}
-
-export function removeMedication(childId, medicationId) {
-  const child = findMedicationOwner(medicationId) || findChild(childId);
-  if (!child) {
-    return;
-  }
-
-  child.medications = child.medications.filter((medication) => medication.medicationId !== medicationId);
-  kindercareStore.medicationTasks = kindercareStore.medicationTasks.filter((task) => task.medicationId !== medicationId);
-}
+// ─── Prescriptions (UI-only) ──────────────────────────────────────────────────
 
 export function uploadPrescription(childId, fileName) {
   const child = findChild(childId);
@@ -337,53 +282,169 @@ export function uploadPrescription(childId, fileName) {
   }));
 }
 
-export function saveParentNote(childId, note) {
+// ─── Parent notes ─────────────────────────────────────────────────────────────
+
+export async function saveParentNote(childId, note) {
   kindercareStore.parentNotes[childId] = note;
   const child = findChild(childId);
-
-  addNotification({
-    title: 'New parent note',
-    message: `${child?.parentName || 'A parent'} updated the note for ${child?.name || 'a child'}.`,
-    type: 'info'
-  });
+  try {
+    await api.saveParentNote(childId, note);
+    addNotification({
+      title: 'Note saved',
+      message: `Note for ${child?.name || 'child'} was sent to staff.`,
+      type: 'success'
+    });
+  } catch {
+    addNotification({
+      title: 'Note not saved',
+      message: 'Could not send note to server. Please try again.',
+      type: 'danger'
+    });
+  }
 }
 
-export function markMedicationTaken(medicationId) {
-  const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
+// ─── Medications ─────────────────────────────────────────────────────────────
 
-  if (!task) {
-    return;
+export async function addMedication(childId, data) {
+  const child = findChild(childId);
+  if (!child) return null;
+
+  try {
+    const saved = await api.createMedication(childId, {
+      name: data.name,
+      dosage: data.dosage || '',
+      instructions: data.instructions || data.notes || '',
+      scheduledTime: data.time || '12:00',
+      frequency: 'Daily',
+      dayPart: 'Specific time'
+    });
+
+    child.medications ||= [];
+    child.medications.push(saved);
+
+    kindercareStore.medicationTasks.push({
+      taskId: `TASK-${saved.medicationId}`,
+      medicationId: saved.medicationId,
+      childId,
+      childName: child.name,
+      groupName: child.groupName,
+      medicationName: data.name,
+      dosage: data.dosage || '',
+      scheduledTime: data.time || '12:00',
+      scheduledDate: data.date || todayDateKey(),
+      instructions: data.instructions || data.notes || '',
+      status: 'Pending',
+      reminderDue: false,
+      qrPayload: saved.qrPayload
+    });
+
+    addNotification({
+      title: 'Medication added',
+      message: `${data.name} was added for ${child.name}.`,
+      type: 'info'
+    });
+
+    await loadMedicationTasks();
+    return saved;
+  } catch (err) {
+    addNotification({ title: 'Save failed', message: 'Could not add medication.', type: 'danger' });
+    return null;
+  }
+}
+
+export async function editMedication(childId, medicationId, data) {
+  const currentChild = findMedicationOwner(medicationId) || findChild(childId);
+  const medication = currentChild?.medications?.find((item) => item.medicationId === medicationId);
+  if (!medication) return null;
+
+  const updates = {
+    name: data.name,
+    dosage: data.dosage,
+    instructions: data.instructions || data.notes || '',
+    scheduledTime: data.time || medication.schedule?.specificTime || '12:00',
+    frequency: medication.schedule?.frequency || 'Daily',
+    dayPart: medication.schedule?.dayPart || 'Specific time'
+  };
+
+  Object.assign(medication, {
+    name: updates.name,
+    dosage: updates.dosage,
+    instructions: updates.instructions,
+    schedule: { ...medication.schedule, specificTime: updates.scheduledTime, dosage: updates.dosage, instructions: updates.instructions }
+  });
+
+  const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
+  if (task) {
+    Object.assign(task, {
+      medicationName: data.name,
+      dosage: data.dosage,
+      scheduledTime: updates.scheduledTime,
+      instructions: updates.instructions
+    });
   }
 
-  task.status = 'Taken';
-  task.reminderDue = false;
+  try {
+    await api.updateMedication(medicationId, updates);
+    await loadMedicationTasks();
+    return medication;
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not update medication.', type: 'danger' });
+    return medication;
+  }
+}
 
-  const child = findChild(task.childId);
+export async function removeMedication(childId, medicationId) {
+  const child = findMedicationOwner(medicationId) || findChild(childId);
+  if (child) {
+    child.medications = child.medications.filter((m) => m.medicationId !== medicationId);
+  }
+  kindercareStore.medicationTasks = kindercareStore.medicationTasks.filter((t) => t.medicationId !== medicationId);
+  try {
+    await api.deleteMedication(medicationId);
+  } catch {
+    addNotification({ title: 'Delete failed', message: 'Could not remove medication from server.', type: 'danger' });
+  }
+  await loadMedicationTasks();
+}
+
+export async function markMedicationTaken(medicationId) {
+  const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
+  if (task) {
+    task.status = 'Taken';
+    task.reminderDue = false;
+  }
+
+  const child = findChild(task?.childId);
   const medication = child?.medications?.find((item) => item.medicationId === medicationId);
-
   if (medication) {
     medication.todayStatus = 'Taken';
+    medication.history ||= [];
     medication.history.unshift({
       id: Date.now(),
       status: 'Taken',
-      adminName: 'Ms. Mueller',
+      adminName: 'Admin',
       loggedAt: new Date().toISOString(),
-      note: 'Confirmed by staff from admin dashboard'
+      note: 'Confirmed by staff'
     });
   }
 
   addNotification({
     title: 'Medication taken',
-    message: `${task.medicationName || 'Medication'} confirmed for ${task.childName || 'child'}.`,
+    message: `${task?.medicationName || 'Medication'} confirmed for ${task?.childName || 'child'}.`,
     type: 'success'
   });
+
+  try {
+    await api.markMedicationTaken(medicationId);
+    await loadMedicationTasks();
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not confirm medication on server.', type: 'danger' });
+  }
 }
 
-export function setMedicationStatus(medicationId, status) {
+export async function setMedicationStatus(medicationId, status) {
   const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
-  if (!task) {
-    return;
-  }
+  if (!task) return;
 
   const nextStatus = safeStatus(status, task.status || 'Pending');
   const previousStatus = task.status;
@@ -392,21 +453,8 @@ export function setMedicationStatus(medicationId, status) {
 
   const child = findChild(task.childId);
   const medication = child?.medications?.find((item) => item.medicationId === medicationId);
-
-  if (!medication) {
-    return;
-  }
-
-  medication.todayStatus = nextStatus;
-
-  if (nextStatus === 'Taken' && previousStatus !== 'Taken') {
-    medication.history.unshift({
-      id: Date.now(),
-      status: nextStatus,
-      adminName: 'Ms. Mueller',
-      loggedAt: new Date().toISOString(),
-      note: 'Status updated by staff'
-    });
+  if (medication) {
+    medication.todayStatus = nextStatus;
   }
 
   if (previousStatus !== nextStatus && ['Taken', 'Missed'].includes(nextStatus)) {
@@ -415,5 +463,12 @@ export function setMedicationStatus(medicationId, status) {
       message: `${task.medicationName || 'Medication'} for ${task.childName || 'child'} marked ${nextStatus}.`,
       type: statusNotificationType(nextStatus)
     });
+  }
+
+  try {
+    await api.updateMedicationStatus(medicationId, nextStatus);
+    await loadMedicationTasks();
+  } catch {
+    addNotification({ title: 'Save failed', message: 'Could not update status on server.', type: 'danger' });
   }
 }
