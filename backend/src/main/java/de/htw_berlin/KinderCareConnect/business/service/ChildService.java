@@ -69,8 +69,22 @@ public class ChildService {
         if (child.getDateOfBirth().isAfter(java.time.LocalDate.now())) {
             throw new IllegalArgumentException("Date of birth cannot be in the future");
         }
+        validatePhotoUrl(child.getPhotoUrl());
         ChildEntity saved = childRepository.save(child);
         return toHealthResponse(saved);
+    }
+
+    private void validatePhotoUrl(String url) {
+        if (url == null || url.isBlank()) return;
+        if (url.startsWith("data:")) {
+            throw new IllegalArgumentException(
+                "Photo must be an https:// URL, not a Base64 image. " +
+                "Upload your image to an image host and paste the link instead.");
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            throw new IllegalArgumentException(
+                "Photo URL must start with http:// or https://");
+        }
     }
 
     @Transactional
@@ -106,7 +120,9 @@ public class ChildService {
             }
         }
         if (fields.containsKey("photoUrl")) {
-            child.setPhotoUrl((String) fields.get("photoUrl"));
+            String url = (String) fields.get("photoUrl");
+            validatePhotoUrl(url);
+            child.setPhotoUrl(url);
         }
 
         return toHealthResponse(childRepository.save(child));

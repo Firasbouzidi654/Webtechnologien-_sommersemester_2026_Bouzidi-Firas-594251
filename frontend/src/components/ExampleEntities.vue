@@ -19,6 +19,10 @@
         <span>Allergies</span>
         <input v-model.trim="newChild.allergies" type="text" placeholder="e.g. Peanuts, Gluten" />
       </label>
+      <label>
+        <span>Photo URL (optional)</span>
+        <input v-model.trim="newChild.photoUrl" type="url" placeholder="https://example.com/photo.jpg" />
+      </label>
       <button class="create-child-button" type="submit" :disabled="isSavingChild">
         {{ isSavingChild ? 'Saving...' : 'Save child to database' }}
       </button>
@@ -106,7 +110,8 @@ export default {
       newChild: {
         name: '',
         dateOfBirth: '',
-        allergies: ''
+        allergies: '',
+        photoUrl: ''
       },
       children: []
     };
@@ -143,7 +148,8 @@ export default {
           body: JSON.stringify({
             name: this.newChild.name,
             dateOfBirth: this.newChild.dateOfBirth || null,
-            allergies: this.newChild.allergies || null
+            allergies: this.newChild.allergies || null,
+            photoUrl: this.newChild.photoUrl || null
           })
         });
 
@@ -154,7 +160,7 @@ export default {
 
         const saved = await response.json();
         this.createChildMessage = `"${saved.name}" was saved to the database.`;
-        this.newChild = { name: '', dateOfBirth: '', allergies: '' };
+        this.newChild = { name: '', dateOfBirth: '', allergies: '', photoUrl: '' };
         await this.fetchChildren();
       } catch (error) {
         this.createChildError = error.message || 'Could not save child.';
@@ -205,7 +211,7 @@ export default {
 
 .create-child-form {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
   margin: 0 0 14px;

@@ -364,11 +364,15 @@
             <input v-model="forms.child.dateOfBirth" type="date" required />
           </label>
           <label>
-            <span>Child photo (optional)</span>
-            <input type="file" accept="image/*" class="photo-file-input" @change="handleChildPhotoInForm" />
+            <span>Photo URL (optional)</span>
+            <input
+              v-model.trim="forms.child.photoUrl"
+              type="url"
+              placeholder="https://example.com/photo.jpg"
+            />
           </label>
           <div v-if="forms.child.photoUrl" class="photo-preview-wrapper">
-            <img :src="forms.child.photoUrl" alt="Photo preview" class="photo-preview" />
+            <img :src="forms.child.photoUrl" alt="Photo preview" class="photo-preview" @error="forms.child.photoUrl = ''" />
             <button type="button" class="remove-photo-btn" @click="forms.child.photoUrl = ''">Remove</button>
           </div>
         </template>
@@ -885,13 +889,6 @@ export default {
       await storeDeleteChild(idToDelete);
       this.selectedChildId = this.parentChildren[0]?.id || null;
     },
-    handleChildPhotoInForm(event) {
-      const [file] = event.target.files;
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => { this.forms.child.photoUrl = e.target.result; };
-      reader.readAsDataURL(file);
-    },
     async addAllergy() {
       await storeAddAllergy(this.selectedChildId, this.forms.allergy.name);
     },
@@ -989,18 +986,6 @@ export default {
       reader.readAsDataURL(file);
     },
 
-    handleChildPhotoUpload(event) {
-      const [file] = event.target.files;
-
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // attach temporarily to forms for new child
-        this.forms.child.photo = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    },
     qrCells(medicationId) {
       const seed = String(medicationId || '').split('').reduce((total, character) => total + character.charCodeAt(0), 0);
       return Array.from({ length: 36 }, (_, index) => index + seed);

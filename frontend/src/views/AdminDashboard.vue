@@ -131,7 +131,7 @@
 
             <template v-if="selectedEmergencyChild">
               <section class="child-summary" aria-label="Selected child summary">
-                <img v-if="selectedEmergencyChild.photo" :src="selectedEmergencyChild.photo" class="child-photo" alt="Selected child photo" />
+                <img v-if="selectedEmergencyChild.photo || selectedEmergencyChild.photoUrl" :src="selectedEmergencyChild.photo || selectedEmergencyChild.photoUrl" class="child-photo" alt="Selected child photo" />
                 <span v-else class="child-photo placeholder">{{ initials(selectedEmergencyChild.name) }}</span>
                 <div class="child-summary-content">
                   <div class="child-summary-heading">
@@ -341,7 +341,7 @@
       <article v-for="child in filteredChildren" :key="child.id">
         <header>
           <div class="child-heading">
-            <img v-if="child.photo" :src="child.photo" :alt="`${child.name} photo`" />
+            <img v-if="child.photo || child.photoUrl" :src="child.photo || child.photoUrl" :alt="`${child.name} photo`" />
             <span v-else>{{ initials(child.name) }}</span>
           </div>
           <div>
