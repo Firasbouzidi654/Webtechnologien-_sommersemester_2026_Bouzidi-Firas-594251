@@ -5,11 +5,11 @@
       <h2 id="example-entities-title">Live Kindergarten Overview</h2>
     </div>
 
-    <!-- Section;Style CSS appliqué via la classe .entity-card -->
+    <!-- Create child form -->
     <form class="create-child-form" @submit.prevent="createChild">
       <label>
         <span>Name</span>
-        <input v-model.trim="newChild.name" type="text" required />
+        <input v-model.trim="newChild.name" type="text" required placeholder="e.g. Emma Müller" />
       </label>
       <label>
         <span>Date of birth</span>
@@ -17,12 +17,13 @@
       </label>
       <label>
         <span>Allergies</span>
-        <input v-model.trim="newChild.allergies" type="text" />
+        <input v-model.trim="newChild.allergies" type="text" placeholder="e.g. Peanuts, Gluten" />
       </label>
       <button class="create-child-button" type="submit" :disabled="isSavingChild">
         {{ isSavingChild ? 'Saving...' : 'Save child to database' }}
       </button>
     </form>
+
     <p v-if="createChildMessage" class="create-child-status success" role="status">
       {{ createChildMessage }}
     </p>
@@ -30,37 +31,60 @@
       {{ createChildError }}
     </p>
 
-    <ul class="entity-list">
-      <li v-for="child in children" :key="child.id" class="overview-card entity-card" :class="{ 'dark-mode': isDark }">
+    <!-- Loading state -->
+    <p v-if="isLoadingChildren" class="loading-msg" role="status">Loading children from database…</p>
+    <p v-if="loadError" class="create-child-status error" role="alert">{{ loadError }}</p>
+
+    <!-- Children list from PostgreSQL -->
+    <ul v-if="!isLoadingChildren" class="entity-list">
+      <li
+        v-for="child in children"
+        :key="child.id"
+        class="overview-card entity-card"
+        :class="{ 'dark-mode': isDark }"
+      >
         <div class="entity-card-header">
           <span class="entity-id">#{{ child.id }}</span>
           <h3>{{ child.name }}</h3>
-          <button class="info-btn" @click="toggleInfo(child.id)">ℹ️</button>
+          <button class="info-btn" type="button" @click="toggleInfo(child.id)">ℹ️</button>
         </div>
 
         <dl>
           <div>
             <dt>Allergies</dt>
-            <dd>{{ child.allergies }}</dd>
+            <dd>{{ child.allergies && child.allergies.length ? child.allergies.join(', ') : 'None known' }}</dd>
           </div>
           <div>
-            <dt>Emergency contact</dt>
-            <dd>{{ child.emergencyContact }}</dd>
+            <dt>Group</dt>
+            <dd>{{ child.groupName || '—' }}</dd>
           </div>
         </dl>
-          <div v-if="openChildId === child.id" class="extra-info">
-            <p><strong>Age:</strong> {{ child.age }}</p>
-            <p><strong>Parent Email:</strong> {{ child.parentEmail }}</p>
-            <p><strong>Siblings:</strong> {{ child.siblings }}</p>
-            <p><strong>Hobbies:</strong> {{ child.hobbies }}</p>
-            <p><strong>Notes:</strong> {{ child.notes }}</p>
+
+        <div v-if="openChildId === child.id" class="extra-info">
+          <p><strong>Date of birth:</strong> {{ child.dateOfBirth || '—' }}</p>
+          <p><strong>Parent:</strong> {{ child.parentName || '—' }}</p>
+          <p><strong>Parent email:</strong> {{ child.parentEmail || '—' }}</p>
+          <p v-if="child.chronicDiseases && child.chronicDiseases.length">
+            <strong>Chronic diseases:</strong> {{ child.chronicDiseases.join(', ') }}
+          </p>
+          <p v-if="child.healthNotes"><strong>Health notes:</strong> {{ child.healthNotes }}</p>
+          <p v-if="child.emergencyContacts && child.emergencyContacts.length">
+            <strong>Emergency contact:</strong>
+            {{ child.emergencyContacts[0].name }} — {{ child.emergencyContacts[0].phone }}
+          </p>
         </div>
+      </li>
+
+      <li v-if="children.length === 0 && !isLoadingChildren && !loadError" class="entity-card empty-state">
+        No children in the database yet. Use the form above to add the first one.
       </li>
     </ul>
   </section>
 </template>
 
 <script>
+import { apiBaseUrl } from '../services/api.js';
+
 export default {
   name: 'ExampleEntities',
   props: {
@@ -74,110 +98,63 @@ export default {
     return {
       openChildId: null,
       isSavingChild: false,
+      isLoadingChildren: false,
       createChildMessage: '',
       createChildError: '',
+      loadError: '',
       newChild: {
-        name: 'Emma',
-        dateOfBirth: '2020-05-10',
-        allergies: 'Peanuts'
+        name: '',
+        dateOfBirth: '',
+        allergies: ''
       },
-
-      children: [
-        {
-          id: 1,
-          name: 'Mila Schneider',
-          allergies: 'Peanuts',
-          emergencyContact: 'Sara Schneider, +49 151 123456',
-          age: 4,
-          parentEmail: 'sara@email.de',
-          siblings: '1 brother',
-          hobbies: 'Painting',
-          notes: 'Carry allergy pen'
-        },
-        {
-          id: 2,
-          name: 'Noah Becker',
-          allergies: 'None known',
-          emergencyContact: 'Jonas Becker, +49 152 987654',
-          age: 5,
-          parentEmail: 'jonas@email.de',
-          siblings: 'No siblings',
-          hobbies: 'Football',
-          notes: 'Needs inhaler'
-        },
-        {
-          id: 3,
-          name: 'Lina Wagner',
-          allergies: 'Bee stings',
-          emergencyContact: 'Amira Wagner, +49 176 456789',
-          age: 4,
-          parentEmail: 'amira@email.de',
-          siblings: '1 sister',
-          hobbies: 'Music',
-          notes: 'Bee allergy spray'
-        },
-        {
-          id: 4,
-          name: 'Liam Müller',
-          allergies: 'Shellfish',
-          emergencyContact: 'Anna Müller, +49 153 345678',
-          age: 5,
-          parentEmail: 'anna@email.de',
-          siblings: '2 sisters',
-          hobbies: 'Cars',
-          notes: 'Avoid seafood'
-        },
-        {
-          id: 5,
-          name: 'Emma Fischer',
-          allergies: 'Gluten',
-          emergencyContact: 'Markus Fischer, +49 154 234567',
-          age: 4,
-          parentEmail: 'markus@email.de',
-          siblings: '1 brother',
-          hobbies: 'Reading',
-          notes: 'Needs gluten-free snacks'
-        },
-        {
-          id: 6,
-          name: 'Ben Hoffmann',
-          allergies: 'None known',
-          emergencyContact: 'Laura Hoffmann, +49 155 678901',
-          age: 5,
-          parentEmail: 'laura@email.de',
-          siblings: '1 sister',
-          hobbies: 'Gaming',
-          notes: 'Prefers quiet activities'
-        }
-      ]
+      children: []
     };
   },
 
+  mounted() {
+    this.fetchChildren();
+  },
+
   methods: {
+    async fetchChildren() {
+      this.isLoadingChildren = true;
+      this.loadError = '';
+      try {
+        const response = await fetch(`${apiBaseUrl()}/api/children`);
+        if (!response.ok) throw new Error(`Failed to load children (${response.status})`);
+        this.children = await response.json();
+      } catch (error) {
+        this.loadError = error.message || 'Could not load children from the database.';
+      } finally {
+        this.isLoadingChildren = false;
+      }
+    },
+
     async createChild() {
       this.isSavingChild = true;
       this.createChildMessage = '';
       this.createChildError = '';
 
       try {
-        const response = await fetch('https://kindercare-backend.onrender.com/api/children', {
+        const response = await fetch(`${apiBaseUrl()}/api/children`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: this.newChild.name,
-            dateOfBirth: this.newChild.dateOfBirth,
-            allergies: this.newChild.allergies
+            dateOfBirth: this.newChild.dateOfBirth || null,
+            allergies: this.newChild.allergies || null
           })
         });
 
         if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data?.message || `Request failed (${response.status})`);
         }
 
-        const savedChild = await response.json();
-        this.createChildMessage = `Saved ${savedChild.name || this.newChild.name} to the database.`;
+        const saved = await response.json();
+        this.createChildMessage = `"${saved.name}" was saved to the database.`;
+        this.newChild = { name: '', dateOfBirth: '', allergies: '' };
+        await this.fetchChildren();
       } catch (error) {
         this.createChildError = error.message || 'Could not save child.';
       } finally {
@@ -186,11 +163,7 @@ export default {
     },
 
     toggleInfo(id) {
-      if (this.openChildId === id) {
-        this.openChildId = null;
-      } else {
-        this.openChildId = id;
-      }
+      this.openChildId = this.openChildId === id ? null : id;
     }
   }
 };
@@ -292,6 +265,12 @@ export default {
   color: #9f2f2f;
 }
 
+.loading-msg {
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   color: #2d8f7b;
@@ -324,6 +303,12 @@ export default {
   background: var(--bg-card);
   color: var(--text-primary);
   box-shadow: 0 14px 30px rgba(32, 48, 63, 0.08);
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
 :global(.dark-mode) .live-kindergarten-overview .overview-card,
@@ -408,6 +393,28 @@ export default {
   margin: 3px 0 0;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.extra-info {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 0.9rem;
+}
+
+.extra-info p {
+  margin: 4px 0;
+}
+
+.info-btn {
+  margin-left: auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
 }
 
 @media (max-width: 820px) {

@@ -60,6 +60,15 @@ public class ChildService {
     }
 
     public ChildHealthResponse createChild(ChildEntity child) {
+        if (child.getName() == null || child.getName().isBlank()) {
+            throw new IllegalArgumentException("Child name is required");
+        }
+        if (child.getDateOfBirth() == null) {
+            throw new IllegalArgumentException("Date of birth is required");
+        }
+        if (child.getDateOfBirth().isAfter(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Date of birth cannot be in the future");
+        }
         ChildEntity saved = childRepository.save(child);
         return toHealthResponse(saved);
     }

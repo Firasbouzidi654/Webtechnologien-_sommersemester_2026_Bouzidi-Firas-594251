@@ -1,68 +1,68 @@
-//src/main/resources/application.properties
-//Spring App mit GET-Route gepusht :
-// ./gradlew bootRun  and then localhost:9090
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.3.0'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.github.node-gradle.node' version '7.0.2'
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.node-gradle.node' version '7.0.2'
 }
 
 group = 'de.htw-berlin'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '21'
-	targetCompatibility = '21'
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
-	}
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	// Spring Boot Core
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Spring Boot Core
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	// PostgreSQL Database Driver
-	implementation 'org.postgresql:postgresql:42.7.2'
+    // PostgreSQL Database Driver
+    implementation 'org.postgresql:postgresql:42.7.2'
 
-	// H2 Database for local development/testing
-	runtimeOnly 'com.h2database:h2'
+    // Flyway database migrations
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
 
-	// Connection Pool (HikariCP - bundled with Spring Boot)
-	implementation 'com.zaxxer:HikariCP:5.1.0'
+    // H2 Database for local development/testing
+    runtimeOnly 'com.h2database:h2'
 
+    // Connection Pool
+    implementation 'com.zaxxer:HikariCP:5.1.0'
 
-	// Testing
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 node {
-	download = true
-	version = '20.19.0'
-	workDir = file("${rootDir}/frontend/.gradle-node")
-	nodeProjectDir = file("${rootDir}/frontend")
+    download = true
+    version = '20.19.0'
+    workDir = file("${rootDir}/frontend/.gradle-node")
+    nodeProjectDir = file("${rootDir}/frontend")
 }
 
-task buildFrontend(type: NpmTask) {
-	dependsOn npmInstall
-	args = ['run', 'build']
+tasks.register('buildFrontend', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'build']
 }
 
 processResources {
-	dependsOn buildFrontend
-	from("${rootDir}/frontend/dist") {
-		into "static"
-	}
-	duplicatesStrategy = 'include'
+    dependsOn buildFrontend
+    from("${rootDir}/frontend/dist") {
+        into "static"
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
