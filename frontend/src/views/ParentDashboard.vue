@@ -457,8 +457,8 @@
         </template>
 
         <footer>
-          <button class="secondary-button" type="button" @click="closeDialog">Cancel</button>
-          <button type="submit">Save</button>
+          <button class="secondary-button" type="button" :disabled="submitting" @click="closeDialog">Cancel</button>
+          <button type="submit" :disabled="submitting">{{ submitting ? 'Saving…' : 'Save' }}</button>
         </footer>
       </form>
     </section>
@@ -514,6 +514,7 @@ export default {
       kindercareStore,
       selectedChildId: parentChildren()[0]?.id || null,
       componentError: '',
+      submitting: false,
       activeDialog: '',
       parentNoteDraft: '',
       noteFeedback: '',
@@ -850,14 +851,20 @@ export default {
       this.activeDialog = '';
     },
     async submitDialog() {
+      if (this.submitting) return;
       const dialog = this.activeDialog;
+      this.submitting = true;
       this.closeDialog();
 
-      if (dialog === 'child') await this.addChild();
-      if (dialog === 'allergy') await this.addAllergy();
-      if (dialog === 'disease') await this.addDisease();
-      if (dialog === 'medication') await this.saveMedication();
-      if (dialog === 'emergency') await this.addEmergencyContact();
+      try {
+        if (dialog === 'child') await this.addChild();
+        if (dialog === 'allergy') await this.addAllergy();
+        if (dialog === 'disease') await this.addDisease();
+        if (dialog === 'medication') await this.saveMedication();
+        if (dialog === 'emergency') await this.addEmergencyContact();
+      } finally {
+        this.submitting = false;
+      }
     },
     async addChild() {
       const newChild = await storeAddChild({
@@ -867,7 +874,9 @@ export default {
         photoUrl: this.forms.child.photoUrl || null
       });
 
-      if (newChild) this.selectedChildId = newChild.id;
+      if (newChild) {
+        this.selectedChildId = newChild.id;
+      }
     },
     async confirmDeleteChild() {
       const name = this.selectedChild?.name || 'this child';

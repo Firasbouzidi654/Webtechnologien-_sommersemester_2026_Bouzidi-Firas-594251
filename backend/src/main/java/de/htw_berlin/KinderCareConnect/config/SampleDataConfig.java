@@ -5,16 +5,17 @@ import de.htw_berlin.KinderCareConnect.persistence.repository.ChildRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Configuration
+@Profile({"postgresql", "default"})
 public class SampleDataConfig {
 
-    // TODO: This seed data is intended for staff/admin demonstration only.
-    // In production, remove or gate this behind an ADMIN role so that new parent
-    // accounts start with an empty dashboard (no default children assigned).
+    // Only runs with the postgresql (local dev) or default profile.
+    // Production profile skips this so the database starts clean.
     @Bean
     CommandLineRunner loadSampleChildren(ChildRepository childRepository) {
         return args -> {

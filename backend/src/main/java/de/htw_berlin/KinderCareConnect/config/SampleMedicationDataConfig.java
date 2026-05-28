@@ -9,12 +9,14 @@ import de.htw_berlin.KinderCareConnect.persistence.repository.MedicationReposito
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 
 import java.util.List;
 import java.util.Map;
 
 @Configuration
+@Profile({"postgresql", "default"})
 public class SampleMedicationDataConfig {
 
     @Bean

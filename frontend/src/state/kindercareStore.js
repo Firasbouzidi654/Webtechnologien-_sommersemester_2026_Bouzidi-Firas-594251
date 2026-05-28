@@ -196,19 +196,28 @@ export function addVerificationLog(entry) {
 
 export async function addChild(data) {
   const user = currentUser();
-  const child = await api.createChild({
-    name: data.name,
-    groupName: data.groupName || '',
-    dateOfBirth: data.dateOfBirth || null,
-    parentName: user?.fullName || '',
-    parentEmail: user?.email || '',
-    photoUrl: data.photoUrl || null,
-    allergies: [],
-    chronicDiseases: [],
-    healthNotes: ''
-    // TODO: once the backend supports per-parent ownership via auth tokens,
-    // replace parentEmail with a server-side claim so parents can only see their own children.
-  });
+  let child;
+  try {
+    child = await api.createChild({
+      name: data.name,
+      groupName: data.groupName || '',
+      dateOfBirth: data.dateOfBirth || null,
+      parentName: user?.fullName || '',
+      parentEmail: user?.email || '',
+      photoUrl: data.photoUrl || null,
+      // allergies and chronicDiseases are Strings in ChildEntity — send '' not []
+      allergies: '',
+      chronicDiseases: '',
+      healthNotes: ''
+    });
+  } catch (err) {
+    addNotification({
+      title: 'Could not add child',
+      message: err?.message || 'Server error. Please check your connection and try again.',
+      type: 'danger'
+    });
+    return null;
+  }
 
   child.photo = data.photo || null;
   child.prescriptionFileName = null;
@@ -220,6 +229,12 @@ export async function addChild(data) {
     kindercareStore.parentChildIds.push(child.id);
   }
   saveParentChildIds(kindercareStore.parentChildIds);
+
+  addNotification({
+    title: 'Child added',
+    message: `${child.name}'s profile was saved successfully.`,
+    type: 'success'
+  });
   return child;
 }
 
