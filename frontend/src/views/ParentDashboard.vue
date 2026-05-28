@@ -36,19 +36,37 @@
 
     <section class="welcome-panel" :class="{ 'panel-dark': isDark }">
       <div class="welcome-copy">
-        <p class="eyebrow">Welcome back, Sara</p>
-        <h2>Here is {{ firstName(selectedChild.name) }}'s health overview for today.</h2>
+        <p class="eyebrow">Welcome back, {{ loggedInFirstName }}</p>
+        <h2 v-if="hasChildren">Here is {{ firstName(selectedChild.name) }}'s health overview for today.</h2>
+        <h2 v-else>Your KinderCare dashboard is ready.</h2>
         <p>
           A simple place to keep medication, allergies, emergency contacts, and notes ready for the kindergarten team.
         </p>
       </div>
     </section>
 
+    <!-- Empty state: new parent with no children yet -->
+    <section v-if="!kindercareStore.loading && !hasChildren" class="empty-dashboard-state" :class="{ 'panel-dark': isDark }">
+      <div class="empty-state-icon">👶</div>
+      <h2>No child added yet</h2>
+      <p>Add your child's profile so the kindergarten team can manage their health and medication.</p>
+      <button type="button" class="empty-add-btn" @click="openDialog('child')">+ Add your child</button>
+    </section>
+
     <p v-if="parentSearchEmpty" class="search-empty">No health record matches "{{ searchQuery }}".</p>
 
     <p v-if="kindercareStore.loading" style="text-align:center;padding:1rem;opacity:.6;">Loading children…</p>
 
-    <section class="child-toolbar" :class="{ 'panel-dark': isDark }">
+    <section v-if="hasChildren" class="child-toolbar" :class="{ 'panel-dark': isDark }">
+      <div class="child-toolbar-photo">
+        <img
+          v-if="selectedChild.photoUrl"
+          :src="selectedChild.photoUrl"
+          :alt="selectedChild.name"
+          class="child-toolbar-avatar"
+        />
+        <span v-else class="child-toolbar-initials">{{ firstName(selectedChild.name)[0] }}</span>
+      </div>
       <label>
         <span>Selected child</span>
         <select v-model.number="selectedChildId">
@@ -58,8 +76,10 @@
         </select>
       </label>
       <button type="button" @click="openDialog('child')">Add child</button>
+      <button type="button" class="delete-child-btn" @click="confirmDeleteChild">Delete child</button>
     </section>
 
+    <template v-if="hasChildren">
     <section class="quick-actions" aria-label="Parent quick actions">
       <button
         v-for="action in quickActions"
@@ -284,6 +304,8 @@
       </aside>
     </section>
 
+    </template><!-- /v-if="hasChildren" -->
+
     <input
       ref="prescriptionInput"
       class="hidden-input"
@@ -341,6 +363,14 @@
             <span>Date of birth</span>
             <input v-model="forms.child.dateOfBirth" type="date" required />
           </label>
+          <label>
+            <span>Child photo (optional)</span>
+            <input type="file" accept="image/*" class="photo-file-input" @change="handleChildPhotoInForm" />
+          </label>
+          <div v-if="forms.child.photoUrl" class="photo-preview-wrapper">
+            <img :src="forms.child.photoUrl" alt="Photo preview" class="photo-preview" />
+            <button type="button" class="remove-photo-btn" @click="forms.child.photoUrl = ''">Remove</button>
+          </div>
         </template>
 
         <template v-if="activeDialog === 'emergency'">
@@ -440,6 +470,7 @@ import heroImage from '../assets/hero.png';
 import LiveDashboardBar from '../components/LiveDashboardBar.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import WeatherHealthCard from '../components/WeatherHealthCard.vue';
+import { currentUser } from '../state/authStore';
 import {
   MEDICATION_STATUSES,
   addAllergy as storeAddAllergy,
@@ -459,7 +490,8 @@ import {
   removeDisease as storeRemoveDisease,
   removeMedication as storeRemoveMedication,
   saveParentNote as storeSaveParentNote,
-  uploadPrescription as storeUploadPrescription
+  uploadPrescription as storeUploadPrescription,
+  deleteChild as storeDeleteChild
 } from '../state/kindercareStore';
 
 export default {
@@ -591,10 +623,16 @@ export default {
     parentNotes() {
       return this.kindercareStore.parentNotes;
     },
+    hasChildren() {
+      return this.parentChildren.length > 0;
+    },
+    loggedInFirstName() {
+      return currentUser()?.fullName?.split(' ')[0] || 'there';
+    },
     parentInitials() {
-      const name = this.kindercareStore.parentAvatar ? '' : 'Sara Schneider';
-      const parts = name.split(' ');
-      return parts.map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+      const name = currentUser()?.fullName || '';
+      if (!name) return '?';
+      return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
     },
     allergySummary() {
       const allergies = this.meaningfulItems(this.selectedChild.allergies);
@@ -724,7 +762,8 @@ export default {
         child: {
           name: '',
           groupName: '',
-          dateOfBirth: ''
+          dateOfBirth: '',
+          photoUrl: ''
         },
         allergy: {
           suggestion: '',
@@ -825,10 +864,24 @@ export default {
         name: this.forms.child.name,
         groupName: this.forms.child.groupName,
         dateOfBirth: this.forms.child.dateOfBirth,
-        photo: this.forms.child.photo || null
+        photoUrl: this.forms.child.photoUrl || null
       });
 
       if (newChild) this.selectedChildId = newChild.id;
+    },
+    async confirmDeleteChild() {
+      const name = this.selectedChild?.name || 'this child';
+      if (!window.confirm(`Delete "${name}" permanently? This cannot be undone.`)) return;
+      const idToDelete = this.selectedChildId;
+      await storeDeleteChild(idToDelete);
+      this.selectedChildId = this.parentChildren[0]?.id || null;
+    },
+    handleChildPhotoInForm(event) {
+      const [file] = event.target.files;
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => { this.forms.child.photoUrl = e.target.result; };
+      reader.readAsDataURL(file);
     },
     async addAllergy() {
       await storeAddAllergy(this.selectedChildId, this.forms.allergy.name);
@@ -2030,5 +2083,140 @@ textarea {
     width: 100%;
     margin: 0 auto;
   }
+}
+
+/* ─── Child toolbar photo + delete ──────────────────────────────────────── */
+
+.child-toolbar {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.child-toolbar-photo {
+  display: flex;
+  align-items: center;
+}
+
+.child-toolbar-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}
+
+.child-toolbar-initials {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-care-bg);
+  color: #1f2937;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.delete-child-btn {
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #e53e3e, #9b2c2c);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.delete-child-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(229, 62, 62, 0.35);
+}
+
+/* ─── Photo form field ───────────────────────────────────────────────────── */
+
+.photo-file-input {
+  cursor: pointer;
+}
+
+.photo-preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.photo-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}
+
+.remove-photo-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ─── Empty-dashboard state ──────────────────────────────────────────────── */
+
+.empty-dashboard-state {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 1240px;
+  margin: 32px auto;
+  padding: 48px 24px;
+  border: 2px dashed var(--color-border);
+  border-radius: 18px;
+  background: var(--color-bg-secondary);
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.empty-dashboard-state h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.empty-dashboard-state p {
+  max-width: 440px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.empty-add-btn {
+  min-height: 48px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--color-success), #2f855a);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(56, 161, 105, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.empty-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 161, 105, 0.45);
+}
+
+:global([data-theme="dark"]) .empty-dashboard-state {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
 }
 </style>

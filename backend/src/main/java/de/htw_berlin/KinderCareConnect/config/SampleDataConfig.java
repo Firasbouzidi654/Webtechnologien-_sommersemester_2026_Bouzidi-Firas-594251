@@ -12,6 +12,9 @@ import java.util.List;
 @Configuration
 public class SampleDataConfig {
 
+    // TODO: This seed data is intended for staff/admin demonstration only.
+    // In production, remove or gate this behind an ADMIN role so that new parent
+    // accounts start with an empty dashboard (no default children assigned).
     @Bean
     CommandLineRunner loadSampleChildren(ChildRepository childRepository) {
         return args -> {

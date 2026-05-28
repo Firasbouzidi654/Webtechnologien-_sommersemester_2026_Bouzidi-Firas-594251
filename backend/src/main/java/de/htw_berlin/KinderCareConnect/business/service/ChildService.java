@@ -105,12 +105,18 @@ public class ChildService {
                 child.setChronicDiseases(String.join(",", list.stream().map(Object::toString).toList()));
             }
         }
+        if (fields.containsKey("photoUrl")) {
+            child.setPhotoUrl((String) fields.get("photoUrl"));
+        }
 
         return toHealthResponse(childRepository.save(child));
     }
 
     @Transactional
     public void deleteChild(Long id) {
+        if (!childRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Child not found: " + id);
+        }
         childRepository.deleteById(id);
     }
 
@@ -194,7 +200,8 @@ public class ChildService {
             splitToList(child.getChronicDiseases()),
             child.getHealthNotes() != null ? child.getHealthNotes() : "",
             meds,
-            contacts
+            contacts,
+            child.getPhotoUrl()
         );
     }
 

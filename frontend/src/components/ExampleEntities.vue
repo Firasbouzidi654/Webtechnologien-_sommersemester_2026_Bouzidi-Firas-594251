@@ -44,7 +44,8 @@
         :class="{ 'dark-mode': isDark }"
       >
         <div class="entity-card-header">
-          <span class="entity-id">#{{ child.id }}</span>
+          <img v-if="child.photoUrl" :src="child.photoUrl" :alt="child.name" class="entity-avatar-photo" />
+          <span v-else class="entity-id">#{{ child.id }}</span>
           <h3>{{ child.name }}</h3>
           <button class="info-btn" type="button" @click="toggleInfo(child.id)">ℹ️</button>
         </div>
@@ -368,6 +369,15 @@ export default {
   background: #e45b5b;
   font-size: 0.8rem;
   font-weight: 800;
+}
+
+.entity-avatar-photo {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-color);
 }
 
 .entity-card h3 {

@@ -38,6 +38,9 @@ public class ChildEntity {
     @Column(columnDefinition = "TEXT")
     private String healthNotes;
 
+    @Column(columnDefinition = "TEXT")
+    private String photoUrl;
+
     public ChildEntity() {
     }
 
@@ -112,4 +115,7 @@ public class ChildEntity {
 
     public String getHealthNotes() { return healthNotes; }
     public void setHealthNotes(String healthNotes) { this.healthNotes = healthNotes; }
+
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
 }

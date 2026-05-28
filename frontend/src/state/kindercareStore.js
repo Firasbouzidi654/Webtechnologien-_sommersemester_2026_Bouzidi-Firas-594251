@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
 import { api } from '../services/api';
+import { currentUser } from './authStore';
 
 export const MEDICATION_STATUSES = ['Pending', 'Taken', 'Missed', 'Upcoming'];
 
@@ -29,6 +30,38 @@ function todayDateKey() {
 
 function safeStatus(status, fallback = 'Pending') {
   return MEDICATION_STATUSES.includes(status) ? status : fallback;
+}
+
+// ─── Per-user parentChildIds persistence ─────────────────────────────────────
+
+function parentChildIdsKey() {
+  const email = currentUser()?.email;
+  return email ? `kindercare-parent-children-${email}` : null;
+}
+
+function loadParentChildIds() {
+  const key = parentChildIdsKey();
+  if (!key) return [];
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveParentChildIds(ids) {
+  const key = parentChildIdsKey();
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(ids));
+  } catch {}
+}
+
+export function resetParentSession() {
+  kindercareStore.parentChildIds = [];
+  kindercareStore.children = [];
+  kindercareStore.parentNotes = {};
 }
 
 function findMedicationOwner(medicationId) {
@@ -66,8 +99,9 @@ export async function loadChildren() {
   try {
     const children = await api.getChildren();
     mergeChildrenFromApi(children);
-    if (kindercareStore.parentChildIds.length === 0 && children.length > 0) {
-      kindercareStore.parentChildIds = children.map((c) => c.id);
+    // Restore only the IDs this specific logged-in parent created — never auto-assign all DB children.
+    if (kindercareStore.parentChildIds.length === 0) {
+      kindercareStore.parentChildIds = loadParentChildIds();
     }
   } catch (err) {
     addNotification({ title: 'Load failed', message: 'Could not load children from the server.', type: 'danger' });
@@ -161,22 +195,47 @@ export function addVerificationLog(entry) {
 // ─── Children CRUD ───────────────────────────────────────────────────────────
 
 export async function addChild(data) {
+  const user = currentUser();
   const child = await api.createChild({
     name: data.name,
     groupName: data.groupName || '',
     dateOfBirth: data.dateOfBirth || null,
-    parentName: 'Sara Schneider',
-    parentEmail: 'sara.schneider@example.com',
+    parentName: user?.fullName || '',
+    parentEmail: user?.email || '',
+    photoUrl: data.photoUrl || null,
     allergies: [],
     chronicDiseases: [],
     healthNotes: ''
+    // TODO: once the backend supports per-parent ownership via auth tokens,
+    // replace parentEmail with a server-side claim so parents can only see their own children.
   });
 
   child.photo = data.photo || null;
   child.prescriptionFileName = null;
-  kindercareStore.children.push(child);
-  kindercareStore.parentChildIds.push(child.id);
+
+  if (!kindercareStore.children.find((c) => c.id === child.id)) {
+    kindercareStore.children.push(child);
+  }
+  if (!kindercareStore.parentChildIds.includes(child.id)) {
+    kindercareStore.parentChildIds.push(child.id);
+  }
+  saveParentChildIds(kindercareStore.parentChildIds);
   return child;
+}
+
+export async function deleteChild(childId) {
+  // Optimistic: remove immediately so the UI feels instant
+  kindercareStore.children = kindercareStore.children.filter((c) => c.id !== childId);
+  kindercareStore.parentChildIds = kindercareStore.parentChildIds.filter((id) => id !== childId);
+  saveParentChildIds(kindercareStore.parentChildIds);
+
+  try {
+    await api.deleteChild(childId);
+    addNotification({ title: 'Child removed', message: 'Child profile deleted successfully.', type: 'success' });
+  } catch {
+    addNotification({ title: 'Delete failed', message: 'Could not delete child from server.', type: 'danger' });
+    await loadChildren();
+  }
 }
 
 // ─── Allergies ───────────────────────────────────────────────────────────────

@@ -60,7 +60,8 @@ public class HealthPrototypeRepository {
             List.copyOf(child.chronicDiseases()),
             child.healthNotes(),
             List.copyOf(medicationsByChildId.getOrDefault(id, List.of())),
-            List.copyOf(emergencyContactsByChildId.getOrDefault(id, List.of()))
+            List.copyOf(emergencyContactsByChildId.getOrDefault(id, List.of())),
+            null
         );
     }
 

@@ -13,7 +13,8 @@
       type="button"
       @click="$emit('select-child', child.id)"
     >
-      <span class="avatar">{{ initials(child.name) }}</span>
+      <img v-if="child.photoUrl" :src="child.photoUrl" :alt="child.name" class="avatar avatar-photo" />
+      <span v-else class="avatar">{{ initials(child.name) }}</span>
       <span>
         <strong>{{ child.name || 'Unnamed child' }}</strong>
         <small>{{ child.groupName || 'No group' }} - {{ medicationCount(child) }} medication(s)</small>
@@ -112,6 +113,11 @@ h2 {
   background: #ffe8a8;
   color: #5d4b12;
   font-weight: 900;
+}
+
+.avatar-photo {
+  object-fit: cover;
+  background: transparent;
 }
 
 strong,

@@ -13,6 +13,7 @@ public record ChildHealthResponse(
     List<String> chronicDiseases,
     String healthNotes,
     List<MedicationResponse> medications,
-    List<EmergencyContactResponse> emergencyContacts
+    List<EmergencyContactResponse> emergencyContacts,
+    String photoUrl
 ) {
 }
