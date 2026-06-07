@@ -11,9 +11,6 @@ version = '0.0.1-SNAPSHOT'
 java {
     sourceCompatibility = '21'
     targetCompatibility = '21'
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
 }
 
 repositories {
@@ -32,8 +29,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
-    // H2 Database for local development/testing
-    runtimeOnly 'com.h2database:h2'
+    // H2 — test scope only; not included in the production JAR
+    testImplementation 'com.h2database:h2'
 
     // Connection Pool
     implementation 'com.zaxxer:HikariCP:5.1.0'
@@ -66,6 +63,27 @@ processResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
+bootRun {
+    // Inject every KEY=VALUE from .env as a real environment variable for the Java process.
+    // Spring Boot then resolves ${DATABASE_URL}, ${SPRING_DATASOURCE_USERNAME}, etc. from these.
+    def envFile = rootProject.file('.env')
+    if (envFile.exists()) {
+        envFile.readLines().each { line ->
+            def trimmed = line.trim()
+            if (!trimmed || trimmed.startsWith('#') || !trimmed.contains('=')) return
+            def eqIdx  = trimmed.indexOf('=')
+            def key    = trimmed.substring(0, eqIdx).trim()
+            def value  = trimmed.substring(eqIdx + 1).trim()
+            environment(key, value)
+        }
+    }
+    // Always activate the postgresql profile for local bootRun
+    // (command-line args override env vars, so this wins even if .env sets SPRING_PROFILES_ACTIVE)
+    args = ['--spring.profiles.active=postgresql']
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+    // Isolate tests from any system-level DATABASE_URL / SPRING_PROFILES_ACTIVE env vars
+    systemProperty 'spring.profiles.active', 'test'
 }

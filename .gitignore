@@ -5,12 +5,18 @@ target/
 
 ### Secrets & Environment ###
 .env
+*.env
 .env.local
 .env.*.local
+!.env.example
 !gradle/wrapper/gradle-wrapper.jar
-**/.mvn/wrapper/apache-maven-*
-!**/src/main/**/build/
-!**/src/test/**/build/
+
+### Generated: Gradle-downloaded Node.js binaries ###
+frontend/node/
+frontend/.gradle-node/
+
+### Generated: Frontend build copied into backend by Gradle ###
+backend/src/main/resources/static/
 
 ### STS ###
 .apt_generated
