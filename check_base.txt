@@ -1,2 +1,0 @@
-psql "postgresql://firas:1OYkVdS80Y0KOiK2pwnBKXl89hjcq1zq@dpg-d83jkbog4nts73dh0pmg-a.frankfurt-postgres.render.com/kindercare_u3iu"
-\dt

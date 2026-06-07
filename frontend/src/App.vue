@@ -18,7 +18,6 @@
 <script>
 import ExampleEntities from './components/ExampleEntities.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
-import LoginPage from './views/LoginPage.vue';
 import ParentDashboard from './views/ParentDashboard.vue';
 import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
@@ -47,7 +46,6 @@ export default {
   components: {
     AdminDashboard,
     ExampleEntities,
-    LoginPage,
     ParentDashboard,
     SignInView,
     SignupView,
@@ -67,10 +65,6 @@ export default {
   },
   computed: {
     currentView() {
-      if (this.currentRoute === 'login') {
-        return 'LoginPage';
-      }
-
       if (this.currentRoute === 'parent') {
         return 'ParentDashboard';
       }
