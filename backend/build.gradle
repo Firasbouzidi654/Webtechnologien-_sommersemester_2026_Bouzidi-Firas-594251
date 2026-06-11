@@ -32,9 +32,6 @@ dependencies {
     // H2 — test scope only; not included in the production JAR
     testImplementation 'com.h2database:h2'
 
-    // Connection Pool
-    implementation 'com.zaxxer:HikariCP:5.1.0'
-
     // BCrypt password hashing (used by AuthService)
     implementation 'org.springframework.security:spring-security-crypto'
 

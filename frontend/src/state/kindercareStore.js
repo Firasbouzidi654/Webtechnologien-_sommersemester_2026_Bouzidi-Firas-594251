@@ -8,9 +8,7 @@ export const kindercareStore = reactive({
   children: [],
   medicationTasks: [],
   parentChildIds: [],
-  parentNotes: {},
   parentAvatar: null,
-  verificationLogs: [],
   notifications: [],
   toasts: [],
   loading: false
@@ -61,17 +59,12 @@ function saveParentChildIds(ids) {
 export function resetParentSession() {
   kindercareStore.parentChildIds = [];
   kindercareStore.children = [];
-  kindercareStore.parentNotes = {};
 }
 
 function findMedicationOwner(medicationId) {
   return kindercareStore.children.find((child) =>
     Array.isArray(child.medications) && child.medications.some((medication) => medication.medicationId === medicationId)
   );
-}
-
-function nextId(items) {
-  return Math.max(0, ...items.map((item) => Number(item.id) || 0)) + 1;
 }
 
 function statusNotificationType(status) {
@@ -86,7 +79,6 @@ function mergeChildrenFromApi(apiChildren) {
   kindercareStore.children.forEach((c) => { existing[c.id] = c; });
 
   kindercareStore.children = apiChildren.map((apiChild) => ({
-    photo: existing[apiChild.id]?.photo || null,
     prescriptionFileName: existing[apiChild.id]?.prescriptionFileName || null,
     ...apiChild
   }));
@@ -99,7 +91,7 @@ export async function loadChildren() {
   try {
     const children = await api.getChildren();
     mergeChildrenFromApi(children);
-    // Restore only the IDs this specific logged-in parent created — never auto-assign all DB children.
+    // Restore only the IDs this specific logged-in parent created
     if (kindercareStore.parentChildIds.length === 0) {
       kindercareStore.parentChildIds = loadParentChildIds();
     }
@@ -168,7 +160,6 @@ export function taskReminderDue(task) {
   if (!task || task.status !== 'Pending' || !task.scheduledTime) {
     return false;
   }
-
   const taskDate = task.scheduledDate || todayDateKey();
   return taskDate === todayDateKey() && task.scheduledTime <= new Date().toTimeString().slice(0, 5);
 }
@@ -177,19 +168,8 @@ export function parentChildren() {
   return kindercareStore.children.filter((child) => kindercareStore.parentChildIds.includes(child.id));
 }
 
-// ─── UI-only state setters ───────────────────────────────────────────────────
-
 export function setParentAvatar(dataUrl) {
   kindercareStore.parentAvatar = dataUrl;
-}
-
-export function setChildPhoto(childId, dataUrl) {
-  const child = findChild(childId);
-  if (child) child.photo = dataUrl;
-}
-
-export function addVerificationLog(entry) {
-  kindercareStore.verificationLogs.unshift({ id: Date.now(), ...entry });
 }
 
 // ─── Children CRUD ───────────────────────────────────────────────────────────
@@ -204,8 +184,7 @@ export async function addChild(data) {
       dateOfBirth: data.dateOfBirth || null,
       parentName: user?.fullName || '',
       parentEmail: user?.email || '',
-      photoUrl: data.photoUrl || null,
-      // allergies and chronicDiseases are Strings in ChildEntity — send '' not []
+      // allergies and chronicDiseases are stored as comma-separated strings
       allergies: '',
       chronicDiseases: '',
       healthNotes: ''
@@ -219,7 +198,6 @@ export async function addChild(data) {
     return null;
   }
 
-  child.photo = data.photo || null;
   child.prescriptionFileName = null;
 
   if (!kindercareStore.children.find((c) => c.id === child.id)) {
@@ -239,7 +217,7 @@ export async function addChild(data) {
 }
 
 export async function deleteChild(childId) {
-  // Optimistic: remove immediately so the UI feels instant
+  // Optimistic remove so the UI feels instant
   kindercareStore.children = kindercareStore.children.filter((c) => c.id !== childId);
   kindercareStore.parentChildIds = kindercareStore.parentChildIds.filter((id) => id !== childId);
   saveParentChildIds(kindercareStore.parentChildIds);
@@ -344,7 +322,7 @@ export async function addEmergencyContact(childId, data) {
   }
 }
 
-// ─── Prescriptions (UI-only) ──────────────────────────────────────────────────
+// ─── Prescriptions (UI-only) ─────────────────────────────────────────────────
 
 export function uploadPrescription(childId, fileName) {
   const child = findChild(childId);
@@ -354,27 +332,6 @@ export function uploadPrescription(childId, fileName) {
     ...medication,
     prescriptionUploaded: true
   }));
-}
-
-// ─── Parent notes ─────────────────────────────────────────────────────────────
-
-export async function saveParentNote(childId, note) {
-  kindercareStore.parentNotes[childId] = note;
-  const child = findChild(childId);
-  try {
-    await api.saveParentNote(childId, note);
-    addNotification({
-      title: 'Note saved',
-      message: `Note for ${child?.name || 'child'} was sent to staff.`,
-      type: 'success'
-    });
-  } catch {
-    addNotification({
-      title: 'Note not saved',
-      message: 'Could not send note to server. Please try again.',
-      type: 'danger'
-    });
-  }
 }
 
 // ─── Medications ─────────────────────────────────────────────────────────────
@@ -408,8 +365,7 @@ export async function addMedication(childId, data) {
       scheduledDate: data.date || todayDateKey(),
       instructions: data.instructions || data.notes || '',
       status: 'Pending',
-      reminderDue: false,
-      qrPayload: saved.qrPayload
+      reminderDue: false
     });
 
     addNotification({

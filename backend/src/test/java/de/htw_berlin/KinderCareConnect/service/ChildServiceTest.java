@@ -1,14 +1,13 @@
 package de.htw_berlin.KinderCareConnect.service;
 
-import de.htw_berlin.KinderCareConnect.business.error.ResourceNotFoundException;
-import de.htw_berlin.KinderCareConnect.business.service.ChildService;
-import de.htw_berlin.KinderCareConnect.persistence.entity.ChildEntity;
-import de.htw_berlin.KinderCareConnect.persistence.repository.ChildRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.EmergencyContactRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.MedicationLogRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.MedicationRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.ParentNoteRepository;
-import de.htw_berlin.KinderCareConnect.rest.model.ChildHealthResponse;
+import de.htw_berlin.KinderCareConnect.entity.ChildEntity;
+import de.htw_berlin.KinderCareConnect.exception.ResourceNotFoundException;
+import de.htw_berlin.KinderCareConnect.model.ChildHealthResponse;
+import de.htw_berlin.KinderCareConnect.repository.ChildRepository;
+import de.htw_berlin.KinderCareConnect.repository.EmergencyContactRepository;
+import de.htw_berlin.KinderCareConnect.repository.MedicationLogRepository;
+import de.htw_berlin.KinderCareConnect.repository.MedicationRepository;
+import de.htw_berlin.KinderCareConnect.service.ChildService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,9 +38,6 @@ class ChildServiceTest {
 
     @Mock
     private MedicationLogRepository medicationLogRepository;
-
-    @Mock
-    private ParentNoteRepository parentNoteRepository;
 
     // The real service with the mocks injected above
     @InjectMocks

@@ -1,11 +1,11 @@
 package de.htw_berlin.KinderCareConnect.config;
 
-import de.htw_berlin.KinderCareConnect.persistence.entity.ChildEntity;
-import de.htw_berlin.KinderCareConnect.persistence.entity.EmergencyContactEntity;
-import de.htw_berlin.KinderCareConnect.persistence.entity.MedicationEntity;
-import de.htw_berlin.KinderCareConnect.persistence.repository.ChildRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.EmergencyContactRepository;
-import de.htw_berlin.KinderCareConnect.persistence.repository.MedicationRepository;
+import de.htw_berlin.KinderCareConnect.entity.ChildEntity;
+import de.htw_berlin.KinderCareConnect.entity.EmergencyContactEntity;
+import de.htw_berlin.KinderCareConnect.entity.MedicationEntity;
+import de.htw_berlin.KinderCareConnect.repository.ChildRepository;
+import de.htw_berlin.KinderCareConnect.repository.EmergencyContactRepository;
+import de.htw_berlin.KinderCareConnect.repository.MedicationRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,7 +88,6 @@ public class SampleMedicationDataConfig {
         med.setFrequency("Daily");
         med.setTodayStatus("Pending");
         med.setPrescriptionUploaded(true);
-        med.setQrPayload("kindercare-connect:medication:" + medicationId);
         return med;
     }
 }

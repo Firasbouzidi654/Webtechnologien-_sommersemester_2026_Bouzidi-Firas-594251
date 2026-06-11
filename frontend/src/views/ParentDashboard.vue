@@ -59,13 +59,7 @@
 
     <section v-if="hasChildren" class="child-toolbar" :class="{ 'panel-dark': isDark }">
       <div class="child-toolbar-photo">
-        <img
-          v-if="selectedChild.photoUrl"
-          :src="selectedChild.photoUrl"
-          :alt="selectedChild.name"
-          class="child-toolbar-avatar"
-        />
-        <span v-else class="child-toolbar-initials">{{ firstName(selectedChild.name)[0] }}</span>
+        <span class="child-toolbar-initials">{{ firstName(selectedChild.name)[0] }}</span>
       </div>
       <label>
         <span>Selected child</span>
@@ -267,24 +261,6 @@
           </p>
         </section>
 
-        <section class="panel note-card">
-          <header>
-            <div>
-              <p class="eyebrow">Parent note</p>
-              <h2>Send note to staff</h2>
-            </div>
-          </header>
-          <textarea
-            ref="noteTextarea"
-            v-model="parentNoteDraft"
-            rows="5"
-            placeholder="Write a note for the kindergarten team..."
-          ></textarea>
-          <button type="button" @click="saveParentNote">Save note</button>
-          <p v-if="noteFeedback" class="feedback">{{ noteFeedback }}</p>
-          <p v-if="savedParentNote" class="saved-note">{{ savedParentNote }}</p>
-        </section>
-
         <section class="panel compact-list">
           <header>
             <div>
@@ -314,35 +290,6 @@
       @change="handlePrescriptionFile"
     />
 
-    <!-- QR Modal -->
-    <section v-if="selectedQrId" class="modal-backdrop" @click.self="selectedQrId = ''">
-      <form class="modal qr-modal" @submit.prevent="selectedQrId = ''">
-        <header>
-          <h2>Medication ID & QR Code</h2>
-          <button type="button" aria-label="Close dialog" @click="selectedQrId = ''">x</button>
-        </header>
-        <div v-if="selectedQrMedication" class="qr-content">
-          <div class="qr-section">
-            <h3>{{ selectedQrMedication.name }}</h3>
-            <p class="dosage">{{ selectedQrMedication.dosage }} - {{ selectedQrMedication.instructions }}</p>
-            <div class="qr-display">
-              <div class="mock-qr">
-                <span v-for="cell in qrCells(selectedQrMedication.medicationId)" :key="cell" :class="{ filled: cell % 2 === 0 || cell % 7 === 0 }"></span>
-              </div>
-            </div>
-            <div class="medication-id-box">
-              <p class="label">Medication ID:</p>
-              <p class="id">{{ selectedQrMedication.medicationId }}</p>
-            </div>
-            <p class="payload-info">QR Payload: {{ selectedQrMedication.qrPayload }}</p>
-          </div>
-        </div>
-        <footer>
-          <button type="submit">Close</button>
-        </footer>
-      </form>
-    </section>
-
     <section v-if="activeDialog" class="modal-backdrop" @click.self="closeDialog">
       <form class="modal" @submit.prevent="submitDialog">
         <header>
@@ -363,18 +310,6 @@
             <span>Date of birth</span>
             <input v-model="forms.child.dateOfBirth" type="date" required />
           </label>
-          <label>
-            <span>Photo URL (optional)</span>
-            <input
-              v-model.trim="forms.child.photoUrl"
-              type="url"
-              placeholder="https://example.com/photo.jpg"
-            />
-          </label>
-          <div v-if="forms.child.photoUrl" class="photo-preview-wrapper">
-            <img :src="forms.child.photoUrl" alt="Photo preview" class="photo-preview" @error="forms.child.photoUrl = ''" />
-            <button type="button" class="remove-photo-btn" @click="forms.child.photoUrl = ''">Remove</button>
-          </div>
         </template>
 
         <template v-if="activeDialog === 'emergency'">
@@ -493,7 +428,6 @@ import {
   setParentAvatar,
   removeDisease as storeRemoveDisease,
   removeMedication as storeRemoveMedication,
-  saveParentNote as storeSaveParentNote,
   uploadPrescription as storeUploadPrescription,
   deleteChild as storeDeleteChild
 } from '../state/kindercareStore';
@@ -520,9 +454,6 @@ export default {
       componentError: '',
       submitting: false,
       activeDialog: '',
-      parentNoteDraft: '',
-      noteFeedback: '',
-      selectedQrId: '',
       editingMedicationId: '',
       searchQuery: '',
       forms: this.emptyForms(),
@@ -532,8 +463,7 @@ export default {
         { key: 'disease', label: 'Add chronic disease', icon: 'Doc' },
         { key: 'medication', label: 'Add medication', icon: 'Med' },
         { key: 'emergency', label: 'Add emergency contact', icon: 'SOS' },
-        { key: 'prescription', label: 'Upload prescription', icon: 'Rx' },
-        { key: 'note', label: 'Send note to staff', icon: 'Msg' }
+        { key: 'prescription', label: 'Upload prescription', icon: 'Rx' }
       ],
       timelineStatuses: ['Upcoming', 'Pending', 'Taken', 'Missed'],
       allergySuggestions: ['Peanuts', 'Milk', 'Eggs', 'Bee stings', 'Gluten', 'Dust', 'Other'],
@@ -542,10 +472,6 @@ export default {
     };
   },
   computed: {
-    selectedQrMedication() {
-      if (!this.selectedQrId) return null;
-      return this.medicationTimeline.find((med) => med.medicationId === this.selectedQrId);
-    },
     parentChildren() {
       return parentChildren();
     },
@@ -621,12 +547,6 @@ export default {
         ...(this.selectedChild.allergies || []),
         ...(this.selectedChild.chronicDiseases || [])
       ]);
-    },
-    savedParentNote() {
-      return this.kindercareStore.parentNotes[this.selectedChildId] || '';
-    },
-    parentNotes() {
-      return this.kindercareStore.parentNotes;
     },
     hasChildren() {
       return this.parentChildren.length > 0;
@@ -723,11 +643,6 @@ export default {
         },
         {
           icon: '2',
-          title: 'Keep staff informed',
-          text: this.savedParentNote ? 'A parent note is saved for this child.' : 'Add a short note if anything changed this morning.'
-        },
-        {
-          icon: '3',
           title: 'Documents',
           text: this.prescriptionStatus.detail
         }
@@ -740,16 +655,6 @@ export default {
       this.selectedChildId = this.parentChildren[0].id;
     }
   },
-  watch: {
-    selectedChildId: {
-      immediate: true,
-      handler(childId) {
-        this.parentNoteDraft = this.parentNotes[childId] || '';
-        this.noteFeedback = '';
-      }
-    }
-  },
-
   errorCaptured(err, vm, info) {
     // surface runtime errors to the UI for easier debugging
     // eslint-disable-next-line no-console
@@ -767,8 +672,7 @@ export default {
         child: {
           name: '',
           groupName: '',
-          dateOfBirth: '',
-          photoUrl: ''
+          dateOfBirth: ''
         },
         allergy: {
           suggestion: '',
@@ -838,12 +742,6 @@ export default {
         this.$refs.prescriptionInput.click();
         return;
       }
-
-      if (actionKey === 'note') {
-        this.focusParentNote();
-        return;
-      }
-
       this.openDialog(actionKey);
     },
     openDialog(dialogName) {
@@ -874,8 +772,7 @@ export default {
       const newChild = await storeAddChild({
         name: this.forms.child.name,
         groupName: this.forms.child.groupName,
-        dateOfBirth: this.forms.child.dateOfBirth,
-        photoUrl: this.forms.child.photoUrl || null
+        dateOfBirth: this.forms.child.dateOfBirth
       });
 
       if (newChild) {
@@ -924,17 +821,6 @@ export default {
 
       event.target.value = '';
     },
-    focusParentNote() {
-      this.noteFeedback = 'Write your message below, then press Save note.';
-      this.$nextTick(() => {
-        this.$refs.noteTextarea?.focus();
-      });
-    },
-    async saveParentNote() {
-      this.noteFeedback = 'Saving...';
-      await storeSaveParentNote(this.selectedChildId, this.parentNoteDraft);
-      this.noteFeedback = 'Note sent to staff.';
-    },
     async editAllergyItem(index, allergy) {
       const nextValue = window.prompt('Edit allergy', allergy);
 
@@ -970,10 +856,6 @@ export default {
     async removeMedicationItem(medicationId) {
       await storeRemoveMedication(this.selectedChildId, medicationId);
     },
-    toggleQr(medicationId) {
-      this.selectedQrId = this.selectedQrId === medicationId ? '' : medicationId;
-    },
-
     handleParentAvatar(event) {
       const [file] = event.target.files;
 
@@ -986,10 +868,6 @@ export default {
       reader.readAsDataURL(file);
     },
 
-    qrCells(medicationId) {
-      const seed = String(medicationId || '').split('').reduce((total, character) => total + character.charCodeAt(0), 0);
-      return Array.from({ length: 36 }, (_, index) => index + seed);
-    },
     formatTime(value) {
       return new Date(value).toLocaleTimeString('en-US', {
         hour: '2-digit',

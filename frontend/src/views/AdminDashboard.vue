@@ -6,10 +6,6 @@
         <h1>Medication tasks today</h1>
       </div>
       <div class="top-actions">
-        <label class="global-search" aria-label="Search dashboard">
-          <span>Search</span>
-          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication, parent, contact..." />
-        </label>
         <div class="top-action-buttons">
           <NotificationCenter />
           <button class="primary-action" type="button" @click="openTaskModal('add')">Add medication</button>
@@ -22,10 +18,6 @@
       </div>
     </nav>
 
-    <LiveDashboardBar :children-count="children.length" shift-label="Morning care team" :is-dark="isDark">
-      <WeatherHealthCard compact :is-dark="isDark" />
-    </LiveDashboardBar>
-
     <section class="hero-strip" :class="{ 'panel-dark': isDark }">
       <div>
         <p class="eyebrow">Live care operations</p>
@@ -33,29 +25,6 @@
         <p>Staff can scan the plan, confirm medication, see missed alerts, and check the daily calendar without leaving the dashboard.</p>
       </div>
     </section>
-    <!-- Verification modal -->
-    <section v-if="verificationActive" class="modal-backdrop" @click.self="verificationActive = false">
-      <form class="modal" @submit.prevent="verifyMedication">
-        <header>
-          <h2>Confirm medication — verification</h2>
-          <button type="button" aria-label="Close" @click="verificationActive = false">x</button>
-        </header>
-        <div>
-          <p v-if="verificationTask"><strong>{{ verificationTask.childName }} — {{ verificationTask.medicationName }}</strong></p>
-          <label>
-            <span>Enter Medication ID or scan (mock)</span>
-            <input v-model="verificationInput" placeholder="MED-001 or scan result" />
-          </label>
-          <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;">
-            <button type="submit" :disabled="verificationLoading">Verify</button>
-            <button type="button" @click="verificationInput = verificationTask?.medicationId">Fill ID</button>
-            <div v-if="verificationLoading">Checking…</div>
-          </div>
-          <p v-if="verificationMessage" :class="{ 'success': verificationState === 'success', 'error': verificationState === 'error' }">{{ verificationMessage }}</p>
-        </div>
-      </form>
-    </section>
-
     <section v-if="taskModalActive" class="modal-backdrop" @click.self="closeTaskModal">
       <form class="modal" @submit.prevent="saveTask">
         <header>
@@ -131,8 +100,7 @@
 
             <template v-if="selectedEmergencyChild">
               <section class="child-summary" aria-label="Selected child summary">
-                <img v-if="selectedEmergencyChild.photo || selectedEmergencyChild.photoUrl" :src="selectedEmergencyChild.photo || selectedEmergencyChild.photoUrl" class="child-photo" alt="Selected child photo" />
-                <span v-else class="child-photo placeholder">{{ initials(selectedEmergencyChild.name) }}</span>
+                <span class="child-photo placeholder">{{ initials(selectedEmergencyChild.name) }}</span>
                 <div class="child-summary-content">
                   <div class="child-summary-heading">
                     <h3>{{ selectedEmergencyChild.name || 'Unknown child' }}</h3>
@@ -256,46 +224,6 @@
         <span>{{ stats.Upcoming }}</span>
         <p>Upcoming</p>
       </article>
-      <article class="alerts" :class="{ 'panel-dark': isDark }">
-        <strong>{{ missedTasks.length }} missed alert(s)</strong>
-        <p>Follow up with emergency contacts if needed.</p>
-      </article>
-    </section>
-
-    <section class="filters" :class="{ 'panel-dark': isDark }">
-      <label>
-        <span>Filter by group</span>
-        <select v-model="groupFilter">
-          <option value="all">All groups</option>
-          <option v-for="group in groups" :key="group" :value="group">{{ group }}</option>
-        </select>
-      </label>
-      <label>
-        <span>Filter by child</span>
-        <select v-model="childFilter">
-          <option value="all">All children</option>
-          <option v-for="child in children" :key="child.id" :value="child.name">{{ child.name }}</option>
-        </select>
-      </label>
-    </section>
-
-    <p v-if="searchEmpty" class="search-empty">No child, medication, parent, or emergency contact matches "{{ searchQuery }}".</p>
-
-    <section class="alerts-panel">
-      <article :class="{ 'panel-dark': isDark }">
-        <p class="eyebrow">Reminder alerts</p>
-        <h2>{{ reminderTasks.length ? `${reminderTasks.length} medication time(s) arrived` : 'No medication reminder due now' }}</h2>
-        <p v-for="task in reminderTasks" :key="task.taskId">
-          {{ task.scheduledTime }} - {{ task.childName }} needs {{ task.medicationName }}
-        </p>
-      </article>
-      <article :class="{ 'panel-dark': isDark }">
-        <p class="eyebrow">Missed medication alerts</p>
-        <h2>{{ missedTasks.length ? `${missedTasks.length} missed medication(s)` : 'No missed medication alerts' }}</h2>
-        <p v-for="task in missedTasks" :key="task.taskId">
-          {{ task.childName }} missed {{ task.medicationName }} at {{ task.scheduledTime }}
-        </p>
-      </article>
     </section>
 
     <section class="operations-row">
@@ -337,40 +265,6 @@
       </article>
     </section>
 
-    <section class="child-overview">
-      <article v-for="child in filteredChildren" :key="child.id">
-        <header>
-          <div class="child-heading">
-            <img v-if="child.photo || child.photoUrl" :src="child.photo || child.photoUrl" :alt="`${child.name} photo`" />
-            <span v-else>{{ initials(child.name) }}</span>
-          </div>
-          <div>
-            <p class="eyebrow">{{ child.groupName }}</p>
-            <h2>{{ child.name }}</h2>
-          </div>
-          <span>{{ (child.medications || []).length }} med(s)</span>
-        </header>
-        <dl>
-          <div>
-            <dt>Allergies</dt>
-            <dd>{{ meaningfulList(child.allergies, 'No allergy recorded') }}</dd>
-          </div>
-          <div>
-            <dt>Chronic diseases</dt>
-            <dd>{{ meaningfulList(child.chronicDiseases, 'No chronic disease recorded') }}</dd>
-          </div>
-          <div>
-            <dt>Prescription</dt>
-            <dd>{{ child.prescriptionFileName || prescriptionLabel(child) }}</dd>
-          </div>
-          <div>
-            <dt>Parent note</dt>
-            <dd>{{ parentNotes[child.id] || 'No parent note yet' }}</dd>
-          </div>
-        </dl>
-      </article>
-    </section>
-
     <section class="admin-grid">
       <div class="task-stack">
         <AdminCalendar
@@ -395,78 +289,6 @@
 
       <aside class="control-stack">
         <MedicationAssistant compact />
-
-        <section class="panel">
-          <header>
-            <h2>Parent notes</h2>
-            <span>Shared mock state</span>
-          </header>
-          <article v-for="child in childrenWithNotes" :key="child.id" class="note-item">
-            <strong>{{ child.name }}</strong>
-            <p>{{ parentNotes[child.id] }}</p>
-          </article>
-          <p v-if="childrenWithNotes.length === 0" class="empty-state">No notes from parents yet.</p>
-        </section>
-
-        <section class="panel">
-          <header>
-            <div class="panel-header-group">
-              <div>
-                <h2>QR verification</h2>
-                <span>Unique medication IDs</span>
-              </div>
-              <button
-                class="panel-toggle"
-                type="button"
-                :disabled="filteredTasks.length === 0"
-                @click="toggleShowAllQrCodes"
-                :aria-label="qrSectionButtonText"
-              >
-                {{ qrSectionButtonText }}
-              </button>
-            </div>
-          </header>
-          <div class="panel-card-list" :class="{ centered: !showAllQrCodes }">
-            <QRMedicationCard
-              v-for="task in displayedQrTasks"
-              :key="task.medicationId"
-              :medication-id="task.medicationId"
-              :medication-name="`${task.childName} - ${task.medicationName}`"
-              :qr-payload="task.qrPayload"
-              :compact="!showAllQrCodes"
-            />
-          </div>
-        </section>
-
-        <VerificationHistoryPanel :logs="verificationLogs" />
-
-        <section class="panel">
-          <header>
-            <div class="panel-header-group">
-              <div>
-                <h2>Emergency contacts</h2>
-                <span>Visible to staff</span>
-              </div>
-              <button
-                class="panel-toggle"
-                type="button"
-                :disabled="visibleEmergencyContacts.length === 0"
-                @click="toggleShowAllContacts"
-                :aria-label="emergencySectionButtonText"
-              >
-                {{ emergencySectionButtonText }}
-              </button>
-            </div>
-          </header>
-          <div class="panel-card-list" :class="{ centered: !showAllContacts }">
-            <EmergencyContactCard
-              v-for="contact in displayedEmergencyContacts"
-              :key="`${contact.childName}-${contact.id}`"
-              :contact="contact"
-              :compact="!showAllContacts"
-            />
-          </div>
-        </section>
       </aside>
     </section>
   </main>
@@ -474,16 +296,11 @@
 
 <script>
 import AdminCalendar from '../components/AdminCalendar.vue';
-import EmergencyContactCard from '../components/EmergencyContactCard.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
-import LiveDashboardBar from '../components/LiveDashboardBar.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
-import QRMedicationCard from '../components/QRMedicationCard.vue';
-import VerificationHistoryPanel from '../components/VerificationHistoryPanel.vue';
-import WeatherHealthCard from '../components/WeatherHealthCard.vue';
 import L from 'leaflet';
-import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addVerificationLog, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
+import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
 import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 import { estimateDriveTimeMinutes, formatDistanceMeters } from '../utils/formatters';
 
@@ -502,14 +319,9 @@ export default {
   name: 'AdminDashboard',
   components: {
     AdminCalendar,
-    EmergencyContactCard,
     EmergencyPoiCard,
-    LiveDashboardBar,
     MedicationAssistant,
-    NotificationCenter,
-    QRMedicationCard,
-    VerificationHistoryPanel,
-    WeatherHealthCard
+    NotificationCenter
   },
   props: {
     isDark: {
@@ -520,15 +332,6 @@ export default {
   emits: ['navigate', 'logout'],
   data() {
     return {
-      groupFilter: 'all',
-      childFilter: 'all',
-      searchQuery: '',
-      verificationActive: false,
-      verificationInput: '',
-      verificationTask: null,
-      verificationMessage: '',
-      verificationState: '',
-      verificationLoading: false,
       emergencyActive: false,
       selectedEmergencyChildId: null,
       nearbyPOIs: [],
@@ -550,12 +353,6 @@ export default {
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
-      showAllQrCodes: false,
-      showAllContacts: false,
-      emergencyExpandedIds: [],
-      emergencyCollapsedIds: [],
-      qrExpandedIds: [],
-      qrCollapsedIds: [],
       mobileCompactMode: false
     };
   },
@@ -649,9 +446,6 @@ export default {
 
       return pois;
     },
-    verificationLogs() {
-      return kindercareStore.verificationLogs;
-    },
     children() {
       return kindercareStore.children;
     },
@@ -663,33 +457,8 @@ export default {
         reminderDue: taskReminderDue(task)
       }));
     },
-    parentNotes() {
-      return kindercareStore.parentNotes;
-    },
-    groups() {
-      return [...new Set(this.children.map((child) => child.groupName).filter(Boolean))];
-    },
-    normalizedSearchQuery() {
-      return this.searchQuery.trim().toLowerCase();
-    },
-    searchEmpty() {
-      return Boolean(this.normalizedSearchQuery) && this.filteredChildren.length === 0 && this.filteredTasks.length === 0;
-    },
-    filteredChildren() {
-      return this.children.filter((child) => {
-        const groupMatches = this.groupFilter === 'all' || child.groupName === this.groupFilter;
-        const childMatches = this.childFilter === 'all' || child.name === this.childFilter;
-        const searchMatches = this.matchesChildSearch(child);
-        return groupMatches && childMatches && searchMatches;
-      });
-    },
     filteredTasks() {
-      return this.tasks.filter((task) => {
-        const groupMatches = this.groupFilter === 'all' || task.groupName === this.groupFilter;
-        const childMatches = this.childFilter === 'all' || task.childName === this.childFilter;
-        const searchMatches = this.matchesTaskSearch(task);
-        return groupMatches && childMatches && searchMatches;
-      });
+      return this.tasks;
     },
     medicationProgress() {
       const total = this.filteredTasks.length;
@@ -734,29 +503,6 @@ export default {
     reminderTasks() {
       return this.tasks.filter((task) => task.reminderDue);
     },
-    childrenWithNotes() {
-      return this.children.filter((child) => this.parentNotes[child.id]);
-    },
-    visibleEmergencyContacts() {
-      return this.filteredChildren
-        .flatMap((child) => (child.emergencyContacts || []).map((contact) => ({
-          ...contact,
-          childName: child.name,
-          name: `${contact.name} (${child.name})`
-        })));
-    },
-    displayedQrTasks() {
-      return this.showAllQrCodes ? this.filteredTasks : this.filteredTasks.slice(0, 1);
-    },
-    displayedEmergencyContacts() {
-      return this.showAllContacts ? this.visibleEmergencyContacts : this.visibleEmergencyContacts.slice(0, 1);
-    },
-    emergencySectionButtonText() {
-      return this.showAllContacts ? 'Hide Contacts' : 'Show All Contacts';
-    },
-    qrSectionButtonText() {
-      return this.showAllQrCodes ? 'Hide QR Codes' : 'Show All QR Codes';
-    }
   },
   watch: {
     selectedEmergencyChildId() {
@@ -772,38 +518,6 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
-    },
-    textMatches(values) {
-      if (!this.normalizedSearchQuery) {
-        return true;
-      }
-
-      return values
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(this.normalizedSearchQuery);
-    },
-    matchesChildSearch(child) {
-      return this.textMatches([
-        child?.name,
-        child?.parentName,
-        child?.groupName,
-        ...(child?.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone]),
-        ...(child?.medications || []).flatMap((medication) => [medication.name, medication.medicationId, medication.dosage])
-      ]);
-    },
-    matchesTaskSearch(task) {
-      const child = this.children.find((item) => item.id === task?.childId);
-      return this.textMatches([
-        task?.childName,
-        task?.medicationName,
-        task?.medicationId,
-        task?.dosage,
-        task?.status,
-        child?.parentName,
-        ...(child?.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone])
-      ]);
     },
     initials(name) {
       return (name || '?')
@@ -873,40 +587,6 @@ export default {
     },
     async confirmMedication(medicationId) {
       await markMedicationTaken(medicationId);
-    },
-    openVerificationModal(medicationId) {
-      this.verificationTask = this.tasks.find((t) => t.medicationId === medicationId) || null;
-      this.verificationInput = '';
-      this.verificationMessage = '';
-      this.verificationState = '';
-      this.verificationLoading = false;
-      this.verificationActive = true;
-    },
-    async verifyMedication() {
-      if (!this.verificationTask) return;
-
-      this.verificationLoading = true;
-      const input = this.verificationInput.trim();
-      const ok = input === this.verificationTask.medicationId || (this.verificationTask.qrPayload && this.verificationTask.qrPayload.includes(input));
-
-      await new Promise((r) => setTimeout(r, 500));
-
-      if (ok) {
-        addVerificationLog({ medicationId: this.verificationTask.medicationId, method: input === this.verificationTask.medicationId ? 'ID' : 'QR', admin: 'Staff Demo', time: new Date().toISOString() });
-        await markMedicationTaken(this.verificationTask.medicationId);
-        this.verificationMessage = 'Verification successful — medication confirmed.';
-        this.verificationState = 'success';
-      } else {
-        this.verificationMessage = 'Verification failed — ID or QR did not match.';
-        this.verificationState = 'error';
-        addNotification({
-          title: 'Verification failed',
-          message: 'Medication ID or QR payload did not match.',
-          type: 'danger'
-        });
-      }
-
-      this.verificationLoading = false;
     },
     openEmergency() {
       this.selectedEmergencyChildId = this.children?.[0]?.id || null;
@@ -1105,57 +785,6 @@ export default {
     updateCompactMode() {
       this.mobileCompactMode = window.innerWidth <= 768;
     },
-    getEmergencyIds() {
-      return this.visibleEmergencyContacts.map((contact) => contact.id);
-    },
-    getQrIds() {
-      return this.filteredTasks.map((task) => task.medicationId);
-    },
-    toggleShowAllContacts() {
-      this.showAllContacts = !this.showAllContacts;
-    },
-    toggleShowAllQrCodes() {
-      this.showAllQrCodes = !this.showAllQrCodes;
-    },
-    toggleEmergencyContact(contactId) {
-      if (this.mobileCompactMode) {
-        const index = this.emergencyExpandedIds.indexOf(contactId);
-        if (index === -1) {
-          this.emergencyExpandedIds.push(contactId);
-        } else {
-          this.emergencyExpandedIds.splice(index, 1);
-        }
-      } else {
-        const index = this.emergencyCollapsedIds.indexOf(contactId);
-        if (index === -1) {
-          this.emergencyCollapsedIds.push(contactId);
-        } else {
-          this.emergencyCollapsedIds.splice(index, 1);
-        }
-      }
-    },
-    toggleQrCard(taskId) {
-      if (this.mobileCompactMode) {
-        const index = this.qrExpandedIds.indexOf(taskId);
-        if (index === -1) {
-          this.qrExpandedIds.push(taskId);
-        } else {
-          this.qrExpandedIds.splice(index, 1);
-        }
-      } else {
-        const index = this.qrCollapsedIds.indexOf(taskId);
-        if (index === -1) {
-          this.qrCollapsedIds.push(taskId);
-        } else {
-          this.qrCollapsedIds.splice(index, 1);
-        }
-      }
-    },
-    prescriptionLabel(child) {
-      return (child.medications || []).some((medication) => medication.prescriptionUploaded)
-        ? 'Prescription available'
-        : 'No prescription uploaded';
-    }
   }
 };
 </script>
@@ -1183,9 +812,6 @@ export default {
 .topbar,
 .hero-strip,
 .stats-row,
-.filters,
-.alerts-panel,
-.child-overview,
 .admin-grid {
   max-width: 1240px;
   margin: 0 auto;
@@ -1212,14 +838,6 @@ export default {
 }
 
 .topbar > div:first-child {
-  min-width: 0;
-}
-
-.admin-dashboard :deep(.live-dashboard-bar) {
-  gap: 8px;
-}
-
-.admin-dashboard :deep(.live-dashboard-bar > .weather-health-card) {
   min-width: 0;
 }
 
@@ -1298,57 +916,6 @@ select {
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
   white-space: nowrap;
-}
-
-.global-search {
-  position: relative;
-  display: grid;
-  gap: 4px;
-  flex: 1 1 280px;
-  min-width: min(300px, 100%);
-  max-width: 360px;
-}
-
-.global-search span {
-  color: var(--color-text-secondary);
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.global-search input {
-  min-height: 42px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 9px 14px 9px 38px;
-  background:
-    linear-gradient(90deg, transparent 0 28px, var(--color-border-light) 28px 29px, transparent 29px),
-    var(--color-bg-primary);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.global-search::before {
-  position: absolute;
-  left: 13px;
-  bottom: 11px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--color-text-tertiary);
-  border-radius: 999px;
-  content: '';
-}
-
-.global-search::after {
-  position: absolute;
-  left: 25px;
-  bottom: 9px;
-  width: 7px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--color-text-tertiary);
-  content: '';
-  transform: rotate(45deg);
 }
 
 .top-actions button:hover {
@@ -2024,7 +1591,7 @@ select {
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -2048,7 +1615,6 @@ select {
 }
 
 .stats-row article:hover,
-.filters:hover,
 .panel:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
@@ -2100,98 +1666,6 @@ select {
 .stats-row article.upcoming {
   border-color: rgba(49, 130, 206, 0.35);
   background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-upcoming));
-}
-
-.alerts strong {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--color-text-primary);
-  font-weight: 700;
-}
-
-.filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-}
-
-.search-empty {
-  max-width: 1240px;
-  margin: 14px auto 0;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  font-weight: 800;
-  box-shadow: var(--shadow-sm);
-}
-
-.filters label {
-  display: grid;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.filters select {
-  min-height: 44px;
-  border: 2px solid var(--color-border);
-  border-radius: 10px;
-  padding: 12px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  font-weight: 500;
-  transition: border-color 0.3s ease;
-}
-
-.filters select:focus {
-  outline: none;
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-}
-
-.alerts-panel {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.alerts-panel article {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 20px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-}
-
-.alerts-panel h2 {
-  margin-top: 8px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.alerts-panel article p:not(.eyebrow) {
-  margin-top: 10px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.child-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
 }
 
 .operations-row {
@@ -2350,78 +1824,6 @@ select {
   color: var(--color-upcoming-text);
 }
 
-.child-heading {
-  display: grid;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--color-upcoming);
-  color: var(--color-upcoming-text);
-  font-weight: 900;
-  box-shadow: var(--shadow-sm);
-}
-
-.child-heading img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.child-overview article {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 20px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
-}
-
-.child-overview article:hover {
-  transform: translateY(-4px);
-}
-
-.child-overview header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.child-overview header span {
-  border-radius: 20px;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, var(--color-success), #2f855a);
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.child-overview dl {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-}
-
-.child-overview dt {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.child-overview dd {
-  margin: 4px 0 0;
-  color: var(--color-text-primary);
-  font-weight: 600;
-}
-
 .admin-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
@@ -2431,100 +1833,9 @@ select {
 }
 
 .task-stack,
-.control-stack,
-.panel {
+.control-stack {
   display: grid;
   gap: 16px;
-}
-
-.panel {
-  padding: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-}
-
-.panel header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.panel-header-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
-.panel-card-list {
-  display: grid;
-  gap: 16px;
-  width: 100%;
-}
-
-.panel-card-list.centered {
-  justify-items: center;
-}
-
-.panel-card-list > * {
-  width: 100%;
-}
-
-.panel-toggle {
-  min-height: 42px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-  padding: 10px 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.panel-toggle:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: var(--color-brand);
-  background: rgba(49, 130, 206, 0.12);
-}
-
-.panel-toggle:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.panel header h2 {
-  color: var(--color-text-primary);
-}
-
-.panel header span {
-  color: var(--color-text-secondary);
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.note-item {
-  display: grid;
-  gap: 6px;
-  border-top: 1px solid var(--color-border-light);
-  padding-top: 12px;
-}
-
-.note-item strong {
-  color: var(--color-text-primary);
-}
-
-.note-item p {
-  color: var(--color-text-secondary);
-  font-weight: 500;
 }
 
 .empty-state {
@@ -2536,16 +1847,10 @@ select {
 }
 
 :global([data-theme="dark"]) .admin-dashboard .hero-strip,
-:global([data-theme="dark"]) .admin-dashboard .filters,
-:global([data-theme="dark"]) .admin-dashboard .search-empty,
-:global([data-theme="dark"]) .admin-dashboard .alerts-panel article,
 :global([data-theme="dark"]) .admin-dashboard .progress-panel,
 :global([data-theme="dark"]) .admin-dashboard .day-timeline-panel,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section,
-:global([data-theme="dark"]) .admin-dashboard .child-overview article,
-:global([data-theme="dark"]) .admin-dashboard .panel,
 :global([data-theme="dark"]) .admin-dashboard .modal,
-:global([data-theme="dark"]) .admin-dashboard :deep(.contact-card),
 :global([data-theme="dark"]) .admin-dashboard :deep(.qr-card),
 :global([data-theme="dark"]) .admin-dashboard :deep(.verification-history),
 :global([data-theme="dark"]) .admin-dashboard :deep(.calendar-card),
@@ -2584,16 +1889,12 @@ select {
 :global([data-theme="dark"]) .admin-dashboard span,
 :global([data-theme="dark"]) .admin-dashboard small,
 :global([data-theme="dark"]) .admin-dashboard .hero-strip p:not(.eyebrow),
-:global([data-theme="dark"]) .admin-dashboard .alerts-panel article p:not(.eyebrow),
-:global([data-theme="dark"]) .admin-dashboard .panel header span,
-:global([data-theme="dark"]) .admin-dashboard .note-item p,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section p {
   color: #cbd5e1;
 }
 
 :global([data-theme="dark"]) .admin-dashboard .eyebrow,
 :global([data-theme="dark"]) .admin-dashboard .empty-state,
-:global([data-theme="dark"]) .admin-dashboard .search-empty,
 :global([data-theme="dark"]) .admin-dashboard .date-widget small {
   color: #94a3b8;
 }
@@ -2601,8 +1902,6 @@ select {
 :global([data-theme="dark"]) .admin-dashboard select,
 :global([data-theme="dark"]) .admin-dashboard input,
 :global([data-theme="dark"]) .admin-dashboard textarea,
-:global([data-theme="dark"]) .admin-dashboard .global-search input,
-:global([data-theme="dark"]) .admin-dashboard .filters select,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section,
 :global([data-theme="dark"]) .admin-dashboard .mini-timeline > span,
 :global([data-theme="dark"]) .admin-dashboard .empty-state {
@@ -2611,7 +1910,6 @@ select {
   color: #f8fafc;
 }
 
-:global([data-theme="dark"]) .admin-dashboard .panel-toggle,
 :global([data-theme="dark"]) .admin-dashboard .secondary-button,
 :global([data-theme="dark"]) .admin-dashboard :deep(.toggle-button) {
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -2619,7 +1917,6 @@ select {
   color: #f8fafc;
 }
 
-:global([data-theme="dark"]) .admin-dashboard .panel-toggle:hover:not(:disabled),
 :global([data-theme="dark"]) .admin-dashboard .secondary-button:hover,
 :global([data-theme="dark"]) .admin-dashboard :deep(.toggle-button:hover) {
   background: rgba(255, 255, 255, 0.12);
@@ -2668,7 +1965,6 @@ select {
   }
 
   .stats-row,
-  .alerts-panel,
   .admin-grid,
   .operations-row,
   .day-timeline-panel {
@@ -2694,9 +1990,6 @@ select {
     padding-right: 0;
   }
 
-  .child-overview {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
 }
 
 @media (max-width: 640px) {

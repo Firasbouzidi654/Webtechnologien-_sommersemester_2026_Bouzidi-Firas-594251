@@ -1,7 +1,7 @@
 package de.htw_berlin.KinderCareConnect.config;
 
-import de.htw_berlin.KinderCareConnect.persistence.entity.ChildEntity;
-import de.htw_berlin.KinderCareConnect.persistence.repository.ChildRepository;
+import de.htw_berlin.KinderCareConnect.entity.ChildEntity;
+import de.htw_berlin.KinderCareConnect.repository.ChildRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
