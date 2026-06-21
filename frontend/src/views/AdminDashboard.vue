@@ -226,6 +226,15 @@
       </article>
     </section>
 
+    <section class="holiday-panel" :class="{ 'panel-dark': isDark }">
+      <p class="eyebrow">External API · Nager.Date</p>
+      <h2>Upcoming German public holidays</h2>
+      <p v-if="holidays.length === 0">No holiday information available.</p>
+      <ul v-else>
+        <li v-for="holiday in holidays" :key="holiday.date">{{ holiday.date }} — {{ holiday.localName }}</li>
+      </ul>
+    </section>
+
     <section class="operations-row">
       <article class="progress-panel">
         <div>
@@ -303,6 +312,7 @@ import L from 'leaflet';
 import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
 import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 import { estimateDriveTimeMinutes, formatDistanceMeters } from '../utils/formatters';
+import { getGermanPublicHolidays } from '../services/holidayService.js';
 
 const PHARMACY_IMAGE = 'https://images.unsplash.com/photo-1766258630872-2b1403439fb5?auto=format&fit=crop&q=80&w=300';
 const POLICE_IMAGE = 'https://images.unsplash.com/photo-1693329900318-9686ec84b1cd?auto=format&fit=crop&q=80&w=300';
@@ -353,7 +363,8 @@ export default {
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
-      mobileCompactMode: false
+      mobileCompactMode: false,
+      holidays: []
     };
   },
   created() {
@@ -363,6 +374,11 @@ export default {
     this.updateCompactMode();
     window.addEventListener('resize', this.updateCompactMode);
     await Promise.all([loadChildren(), loadMedicationTasks()]);
+    try {
+      this.holidays = await getGermanPublicHolidays();
+    } catch {
+      this.holidays = [];
+    }
     if (!this.selectedEmergencyChildId && this.children.length > 0) {
       this.selectedEmergencyChildId = this.children[0].id;
     }

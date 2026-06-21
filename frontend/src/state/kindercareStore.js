@@ -165,6 +165,10 @@ export function taskReminderDue(task) {
 }
 
 export function parentChildren() {
+  // In public demo mode (opening /#/parent directly), show the saved records.
+  if (kindercareStore.parentChildIds.length === 0) {
+    return kindercareStore.children;
+  }
   return kindercareStore.children.filter((child) => kindercareStore.parentChildIds.includes(child.id));
 }
 

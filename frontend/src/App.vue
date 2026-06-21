@@ -10,13 +10,10 @@
       @toggle-theme="toggleTheme"
       @update-language="updateLanguage"
     />
-    <ExampleEntities v-if="showExampleEntities" :is-dark="isDark" />
-    <!-- Affiche le composant ExampleEntities si showExampleEntities est vrai -->
   </div>
 </template>
 
 <script>
-import ExampleEntities from './components/ExampleEntities.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import ParentDashboard from './views/ParentDashboard.vue';
 import SignInView from './views/SignInView.vue';
@@ -24,7 +21,7 @@ import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
 import ForgotPasswordView from './views/ForgotPasswordView.vue';
 import { translations } from './content/siteContent';
-import { isAuthenticated, clearAuth } from './state/authStore';
+import { clearAuth } from './state/authStore';
 
 const routes = {
   '/': 'signin',
@@ -45,7 +42,6 @@ export default {
   name: 'App',
   components: {
     AdminDashboard,
-    ExampleEntities,
     ParentDashboard,
     SignInView,
     SignupView,
@@ -88,10 +84,6 @@ export default {
       return 'SignupView';
     },
 
-    // Show the example / overview only to staff (admin view)
-    showExampleEntities() {
-      return this.currentRoute === 'admin';
-    }
   },
   created() {
     // support both history and hash navigation
@@ -122,9 +114,6 @@ export default {
     },
     resolveRoute(pathname) {
       const resolved = routes[this.normalizePath(pathname)] || 'signup';
-      if ((resolved === 'parent' || resolved === 'admin') && !isAuthenticated()) {
-        return 'signin';
-      }
       return resolved;
     },
     handlePopState() {
@@ -137,12 +126,6 @@ export default {
     },
     navigate(path) {
       if (!routes[path]) return;
-
-      const destination = routes[path];
-      if ((destination === 'parent' || destination === 'admin') && !isAuthenticated()) {
-        this.navigate('/signin');
-        return;
-      }
 
       // prefer hash navigation to avoid server rewrite issues; keep pathname
       // navigation where appropriate

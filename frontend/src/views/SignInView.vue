@@ -355,7 +355,7 @@ export default {
       this.isLoading = true;
 
       try {
-        const user = await login(this.form.email, this.form.password);
+        const user = await login(this.form.email, this.form.password, this.role);
 
         this.isSuccess = true;
         this.feedback = this.signin.successMessage;

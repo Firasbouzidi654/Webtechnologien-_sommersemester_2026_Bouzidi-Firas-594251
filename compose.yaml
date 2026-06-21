@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kindercare-db
+    environment:
+      POSTGRES_DB: kindercare
+      POSTGRES_USER: kindercare
+      POSTGRES_PASSWORD: kindercare
+    ports:
+      - "5432:5432"
+    volumes:
+      - kindercare-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/kindercare
+      SPRING_DATASOURCE_USERNAME: kindercare
+      SPRING_DATASOURCE_PASSWORD: kindercare
+      SPRING_PROFILES_ACTIVE: local
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  kindercare-data:
