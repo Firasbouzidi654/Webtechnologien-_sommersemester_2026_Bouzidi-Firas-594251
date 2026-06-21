@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("!test")
+// Demo data is useful locally, but production must never modify an existing Render database at startup.
+@Profile("local")
 public class SampleDataConfig {
     @Bean
     CommandLineRunner addExamples(ChildRepository children, MedicationRepository medications, StaffRepository staff) {
