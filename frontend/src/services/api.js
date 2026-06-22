@@ -84,6 +84,15 @@ async function loadRawRecords() {
   return { children, medications };
 }
 
+// Match by childId when the medication has one (reliable even with duplicate child names).
+// Falls back to matching by name for older medications saved before childId existed.
+function belongsToChild(medication, child) {
+  if (medication.childId != null) {
+    return medication.childId === child.id;
+  }
+  return medication.childName === child.name;
+}
+
 async function getChildren() {
   const { children, medications } = await loadRawRecords();
   return children.map((child) => ({
@@ -94,14 +103,14 @@ async function getChildren() {
     parentEmail: '',
     allergies: asList(child.allergies),
     chronicDiseases: [],
-    medications: medications.filter((medication) => medication.childName === child.name).map((medication) => toMedication(medication, child))
+    medications: medications.filter((medication) => belongsToChild(medication, child)).map((medication) => toMedication(medication, child))
   }));
 }
 
 async function getTodayTasks() {
   const { children, medications } = await loadRawRecords();
   return medications.map((medication) => {
-    const child = children.find((item) => item.name === medication.childName);
+    const child = children.find((item) => belongsToChild(medication, item));
     return {
       taskId: `TASK-${medication.id}`,
       medicationId: String(medication.id),
@@ -144,6 +153,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({
         name: medication.name,
+        childId: child?.id ?? childId,
         childName: child?.name || '',
         dosage: medication.dosage || '',
         time: medication.scheduledTime || '12:00',

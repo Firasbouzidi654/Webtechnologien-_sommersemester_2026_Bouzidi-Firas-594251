@@ -15,6 +15,7 @@ public class Medication {
     private Long id;
     private String name;
     private String childName;
+    private Long childId;
     private String dosage;
     @Column(name = "medication_time")
     private String time;
@@ -39,6 +40,8 @@ public class Medication {
     public void setName(String name) { this.name = name; }
     public String getChildName() { return childName; }
     public void setChildName(String childName) { this.childName = childName; }
+    public Long getChildId() { return childId; }
+    public void setChildId(Long childId) { this.childId = childId; }
     public String getDosage() { return dosage; }
     public void setDosage(String dosage) { this.dosage = dosage; }
     public String getTime() { return time; }

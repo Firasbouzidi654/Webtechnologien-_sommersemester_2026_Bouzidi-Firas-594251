@@ -36,7 +36,7 @@ public class MedicationController {
             @RequestBody Medication medication
     ) {
         requireMedicationDetails(medication);
-        RoleAccess.require(role, "STAFF", "ADMIN");
+        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
         normalizeStatus(medication);
         return service.create(medication);
     }

@@ -55,7 +55,7 @@ public class ChildController {
         String previousName = service.findById(id).getName();
         Child updated = service.update(id, child);
         if (!previousName.equals(updated.getName())) {
-            medicationService.renameChild(previousName, updated.getName());
+            medicationService.renameChild(id, previousName, updated.getName());
         }
         return updated;
     }
@@ -64,7 +64,7 @@ public class ChildController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long id) {
         RoleAccess.require(role, "PARENT");
-        medicationService.deleteByChildName(service.findById(id).getName());
+        medicationService.deleteByChildName(id, service.findById(id).getName());
         service.delete(id);
     }
 }

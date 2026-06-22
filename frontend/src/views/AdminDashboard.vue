@@ -25,6 +25,31 @@
         <p>Staff can scan the plan, confirm medication, see missed alerts, and check the daily calendar without leaving the dashboard.</p>
       </div>
     </section>
+
+    <section class="children-panel">
+      <header>
+        <div>
+          <p class="eyebrow">All children</p>
+          <h2>Children directory</h2>
+        </div>
+        <input
+          v-model.trim="childSearch"
+          type="search"
+          class="children-search"
+          placeholder="Search children..."
+          aria-label="Search children"
+        />
+      </header>
+      <ChildList
+        :children="filteredChildren"
+        :selected-child-id="selectedEmergencyChildId"
+        title="Children"
+        eyebrow="All children"
+        @select-child="selectedEmergencyChildId = $event"
+      />
+      <p v-if="filteredChildren.length === 0" class="empty-state">No children match your search.</p>
+    </section>
+
     <section v-if="taskModalActive" class="modal-backdrop" @click.self="closeTaskModal">
       <form class="modal" @submit.prevent="saveTask">
         <header>
@@ -99,30 +124,6 @@
             </label>
 
             <template v-if="selectedEmergencyChild">
-              <section class="child-summary" aria-label="Selected child summary">
-                <span class="child-photo placeholder">{{ initials(selectedEmergencyChild.name) }}</span>
-                <div class="child-summary-content">
-                  <div class="child-summary-heading">
-                    <h3>{{ selectedEmergencyChild.name || 'Unknown child' }}</h3>
-                    <p>{{ selectedEmergencyChild.groupName || 'No group assigned' }}</p>
-                  </div>
-                  <dl class="child-medical-grid">
-                    <div>
-                      <dt>Allergies</dt>
-                      <dd>{{ meaningfulList(selectedEmergencyChild.allergies, 'None recorded') }}</dd>
-                    </div>
-                    <div>
-                      <dt>Chronic conditions</dt>
-                      <dd>{{ meaningfulList(selectedEmergencyChild.chronicDiseases, 'None recorded') }}</dd>
-                    </div>
-                    <div>
-                      <dt>Location</dt>
-                      <dd>{{ selectedEmergencyLocation.lat }}, {{ selectedEmergencyLocation.lng }}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </section>
-
               <section class="support-grid" aria-label="Emergency support shortcuts">
                 <article
                   v-for="card in emergencySupportCards"
@@ -166,9 +167,6 @@
                 </div>
               </div>
 
-              <div class="emergency-actions">
-                <button type="button" class="secondary-button" @click="callServices">Call services</button>
-              </div>
             </template>
           </div>
 
@@ -304,6 +302,7 @@
 
 <script>
 import AdminCalendar from '../components/AdminCalendar.vue';
+import ChildList from '../components/ChildList.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
@@ -329,6 +328,7 @@ export default {
   name: 'AdminDashboard',
   components: {
     AdminCalendar,
+    ChildList,
     EmergencyPoiCard,
     MedicationAssistant,
     MedicationTaskCard,
@@ -365,7 +365,8 @@ export default {
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
       holidays: [],
-      syncInterval: null
+      syncInterval: null,
+      childSearch: ''
     };
   },
   async mounted() {
@@ -455,6 +456,11 @@ export default {
     children() {
       return kindercareStore.children;
     },
+    filteredChildren() {
+      const query = this.childSearch.trim().toLowerCase();
+      if (!query) return this.children;
+      return this.children.filter((child) => (child.name || '').toLowerCase().includes(query));
+    },
     tasks() {
       return kindercareStore.medicationTasks.map((task) => ({
         ...task,
@@ -518,14 +524,6 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
-    },
-    initials(name) {
-      return (name || '?')
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase();
     },
     nearestPoiByType(type) {
       return this.displayedEmergencyPOIs.find((poi) => poi.type === type) || null;
@@ -753,20 +751,13 @@ export default {
       this.emergencyActive = false;
       this.emergencyMapError = '';
     },
-    callServices() {
-      window.open('tel:112');
-    },
     async changeTaskStatus({ medicationId, status }) {
       if (!medicationId || !this.statusOptions.includes(status)) {
         return;
       }
 
       await setMedicationStatus(medicationId, status);
-    },
-    meaningfulList(items, fallback) {
-      const values = (items || []).filter((item) => item && !['None', 'None known'].includes(item));
-      return values.length ? values.join(', ') : fallback;
-    },
+    }
   }
 };
 </script>
@@ -1066,96 +1057,10 @@ select {
   color: var(--color-text-primary);
 }
 
-.child-summary {
-  display: grid;
-  grid-template-columns: 88px 1fr;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.emergency-modal .child-summary {
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: start;
-  gap: 14px;
-  margin-bottom: 0;
-  border: 1px solid rgba(229, 62, 62, 0.16);
-  border-radius: 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(229, 62, 62, 0.08), rgba(49, 130, 206, 0.08));
-}
-
-.child-summary img.child-photo {
-  width: 88px;
-  height: 88px;
-  border-radius: 18px;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-}
-
-.emergency-modal .child-photo {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
-}
-
-.child-photo.placeholder {
-  display: grid;
-  place-items: center;
-  background: var(--color-missed);
-  color: var(--color-missed-text);
-  font-weight: 900;
-}
-
-.child-summary-content {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
-.child-summary-heading h3,
 .map-card-header h3,
 .panel-header h3 {
   margin: 0;
   color: var(--color-text-primary);
-}
-
-.child-summary-heading p {
-  margin-top: 3px;
-  color: var(--color-text-secondary);
-  font-weight: 700;
-}
-
-.child-medical-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-}
-
-.child-medical-grid div {
-  min-width: 0;
-  border-radius: 14px;
-  padding: 12px 14px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-light);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.03);
-}
-
-.child-medical-grid dt {
-  color: var(--color-text-tertiary);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.child-medical-grid dd {
-  margin: 4px 0 0;
-  color: var(--color-text-primary);
-  font-weight: 800;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
 }
 
 .support-grid {
@@ -1332,17 +1237,6 @@ select {
   white-space: nowrap;
 }
 
-.child-summary h3 {
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
-
-.summary-line {
-  margin: 6px 0;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-
 .emergency-map {
   min-height: 280px;
   border-radius: 18px;
@@ -1369,35 +1263,6 @@ select {
 
 .map-fallback p {
   margin: 0 0 12px;
-}
-
-.emergency-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.emergency-modal .emergency-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 0;
-}
-
-.emergency-actions .secondary-button {
-  min-width: 160px;
-  background: rgba(45, 143, 123, 0.12);
-  color: var(--color-text-primary);
-}
-
-.emergency-modal .emergency-actions .secondary-button {
-  min-width: 0;
-  min-height: 44px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-bg-primary);
-  font-weight: 900;
 }
 
 .emergency-poi-panel {
@@ -1450,10 +1315,6 @@ select {
   border-top-color: var(--color-brand);
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
-}
-
-.emergency-actions .secondary-button:hover {
-  opacity: 0.92;
 }
 
 .modal-fields {
@@ -1569,6 +1430,47 @@ select {
 :global([data-theme="dark"]) .hero-strip p:not(.eyebrow),
 :global([data-theme="dark"]) .panel header span {
   color: #cbd5e1;
+}
+
+.children-panel {
+  max-width: 1240px;
+  margin: 16px auto 0;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px;
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.children-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.children-search {
+  min-height: 42px;
+  min-width: 220px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+:global([data-theme="dark"]) .children-panel {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+}
+
+:global([data-theme="dark"]) .children-search {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
 }
 
 .stats-row {
@@ -2079,17 +1981,10 @@ select {
     padding: 16px;
   }
 
-  .emergency-modal .child-summary,
-  .child-medical-grid,
   .support-grid,
-  .emergency-modal .emergency-actions,
   .map-card-header,
   .panel-header {
     grid-template-columns: 1fr;
-  }
-
-  .emergency-modal .child-summary {
-    display: grid;
   }
 
   .support-card {

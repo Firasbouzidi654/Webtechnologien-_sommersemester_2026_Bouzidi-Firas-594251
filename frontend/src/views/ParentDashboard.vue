@@ -20,19 +20,11 @@
         </div>
       </div>
       <div class="parent-top-actions">
-        <label class="global-search" aria-label="Search parent dashboard">
-          <span>Search</span>
-          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication..." />
-        </label>
         <NotificationCenter />
         <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
         <button class="logout-button" type="button" @click="$emit('logout')">Log out</button>
       </div>
     </nav>
-
-    <LiveDashboardBar :children-count="parentChildren.length" shift-label="Parent view" :is-dark="isDark">
-      <WeatherHealthCard compact :is-dark="isDark" />
-    </LiveDashboardBar>
 
     <section class="welcome-panel" :class="{ 'panel-dark': isDark }">
       <div class="welcome-copy">
@@ -52,8 +44,6 @@
       <p>Add your child's profile so the kindergarten team can manage their health and medication.</p>
       <button type="button" class="empty-add-btn" @click="openDialog('child')">+ Add your child</button>
     </section>
-
-    <p v-if="parentSearchEmpty" class="search-empty">No health record matches "{{ searchQuery }}".</p>
 
     <p v-if="kindercareStore.loading" style="text-align:center;padding:1rem;opacity:.6;">Loading children…</p>
 
@@ -84,16 +74,6 @@
         <span>{{ action.icon }}</span>
         {{ action.label }}
       </button>
-    </section>
-
-    <section class="care-cues">
-      <article v-for="cue in careCues" :key="cue.title">
-        <span>{{ cue.icon }}</span>
-        <div>
-          <h3>{{ cue.title }}</h3>
-          <p>{{ cue.text }}</p>
-        </div>
-      </article>
     </section>
 
     <section class="health-summary">
@@ -160,66 +140,42 @@
       <section class="panel medication-panel">
         <header>
           <div>
-            <p class="eyebrow">Today</p>
-            <h2>Medication timeline</h2>
+            <h2>Medication</h2>
           </div>
-          <span>{{ medicationTimeline.length }} item(s)</span>
         </header>
 
-        <div class="status-legend">
-          <span
-            v-for="status in timelineStatuses"
-            :key="status"
-            class="status-badge"
-            :class="statusClass(status)"
-          >
-            {{ status }}
-          </span>
-        </div>
+        <form class="simple-medication-form" @submit.prevent="submitParentMedication">
+          <label>
+            <span>Child name</span>
+            <select v-model.number="medicationForm.childId" required>
+              <option v-for="child in parentChildren" :key="child.id" :value="child.id">{{ child.name }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Medication name</span>
+            <input v-model.trim="medicationForm.name" type="text" required />
+          </label>
+          <label>
+            <span>Dosage</span>
+            <input v-model.trim="medicationForm.dosage" type="text" required />
+          </label>
+          <label>
+            <span>Time</span>
+            <input v-model="medicationForm.time" type="time" required />
+          </label>
+          <button type="submit" :disabled="medicationSubmitting">
+            {{ medicationSubmitting ? 'Saving…' : 'Add medication' }}
+          </button>
+        </form>
 
-        <div class="medication-progress">
-          <div>
-            <strong>{{ medicationProgress.completed }}/{{ medicationProgress.total }}</strong>
-            <span>completed today</span>
-          </div>
-          <div class="progress-track">
-            <span :style="{ width: `${medicationProgress.percent}%` }"></span>
-          </div>
-        </div>
-
-        <div class="daily-periods">
-          <article v-for="section in medicationPeriods" :key="section.key">
-            <strong>{{ section.label }}</strong>
-            <span>{{ section.tasks.length }} item(s)</span>
-          </article>
-        </div>
-
-        <div class="timeline">
-          <article
-            v-for="medication in medicationTimeline"
-            :key="medication.medicationId"
-            class="timeline-item"
-            :class="statusClass(medication.status)"
-          >
-            <time>{{ medication.schedule.specificTime }}</time>
-            <div>
-              <h3>{{ medication.name }}</h3>
-              <p>{{ medication.dosage }} - {{ medication.instructions }}</p>
-              <small>{{ medication.medicationId }}</small>
-            </div>
-            <span class="status-badge">{{ medication.status }}</span>
-          </article>
-          <p v-if="medicationTimeline.length === 0" class="empty-state">
-            No medication scheduled for today.
-          </p>
-        </div>
-
-        <section class="status-explainer">
-          <p><strong>Upcoming</strong> = scheduled later</p>
-          <p><strong>Pending</strong> = waiting for confirmation</p>
-          <p><strong>Taken</strong> = confirmed by staff</p>
-          <p><strong>Missed</strong> = time passed without confirmation</p>
-        </section>
+        <ul class="simple-medication-list">
+          <li v-for="medication in parentMedications" :key="medication.medicationId">
+            <strong>{{ medication.childName }}</strong>
+            <span>{{ medication.name }} - {{ medication.dosage }} - {{ medication.schedule.specificTime }}</span>
+            <span class="status-badge" :class="statusClass(medication.status)">{{ medication.status }}</span>
+          </li>
+          <p v-if="parentMedications.length === 0" class="empty-state">No medication added yet.</p>
+        </ul>
       </section>
     </section>
 
@@ -287,34 +243,6 @@
           </label>
         </template>
 
-        <template v-if="activeDialog === 'medication'">
-          <label>
-            <span>Suggested medication</span>
-            <select v-model="forms.medication.suggestion" @change="applySuggestion('medication')">
-              <option value="">Choose a suggestion</option>
-              <option v-for="suggestion in medicationSuggestions" :key="suggestion" :value="suggestion">
-                {{ suggestion }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>Medication name or custom value</span>
-            <input v-model.trim="forms.medication.name" type="text" required />
-          </label>
-          <label>
-            <span>Dosage</span>
-            <input v-model.trim="forms.medication.dosage" type="text" required />
-          </label>
-          <label>
-            <span>Time</span>
-            <input v-model="forms.medication.time" type="time" required />
-          </label>
-          <label>
-            <span>Instructions</span>
-            <textarea v-model.trim="forms.medication.instructions" rows="3" required></textarea>
-          </label>
-        </template>
-
         <footer>
           <button class="secondary-button" type="button" :disabled="submitting" @click="closeDialog">Cancel</button>
           <button type="submit" :disabled="submitting">{{ submitting ? 'Saving…' : 'Save' }}</button>
@@ -326,9 +254,7 @@
 
 <script>
 import heroImage from '../assets/hero.png';
-import LiveDashboardBar from '../components/LiveDashboardBar.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
-import WeatherHealthCard from '../components/WeatherHealthCard.vue';
 import { currentUser } from '../state/authStore';
 import {
   MEDICATION_STATUSES,
@@ -339,13 +265,11 @@ import {
   editAllergy as storeEditAllergy,
   editDisease as storeEditDisease,
   loadChildren,
-  editMedication as storeEditMedication,
   kindercareStore,
   parentChildren,
   removeAllergy as storeRemoveAllergy,
   setParentAvatar,
   removeDisease as storeRemoveDisease,
-  removeMedication as storeRemoveMedication,
   uploadPrescription as storeUploadPrescription,
   deleteChild as storeDeleteChild
 } from '../state/kindercareStore';
@@ -353,9 +277,7 @@ import {
 export default {
   name: 'ParentDashboard',
   components: {
-    LiveDashboardBar,
-    NotificationCenter,
-    WeatherHealthCard
+    NotificationCenter
   },
   props: {
     isDark: {
@@ -372,18 +294,21 @@ export default {
       componentError: '',
       submitting: false,
       activeDialog: '',
-      editingMedicationId: '',
-      searchQuery: '',
       forms: this.emptyForms(),
       quickActions: [
         { key: 'child', label: 'Add child', icon: 'Kid' },
         { key: 'allergy', label: 'Add allergy', icon: 'All' },
         { key: 'disease', label: 'Add chronic disease', icon: 'Doc' }
       ],
-      timelineStatuses: ['Upcoming', 'Pending', 'Taken', 'Missed'],
       allergySuggestions: ['Peanuts', 'Milk', 'Eggs', 'Bee stings', 'Gluten', 'Dust', 'Other'],
       diseaseSuggestions: ['Asthma', 'Diabetes', 'Epilepsy', 'Heart condition', 'Food allergy', 'Other'],
-      medicationSuggestions: ['Inhaler', 'Antibiotic', 'Allergy tablets', 'Insulin', 'Pain relief', 'Other']
+      medicationForm: {
+        childId: parentChildren()[0]?.id || null,
+        name: '',
+        dosage: '',
+        time: '12:00'
+      },
+      medicationSubmitting: false
     };
   },
   computed: {
@@ -401,65 +326,15 @@ export default {
         location: { lat: 0, lng: 0 }
       };
     },
-    medicationTimeline() {
-      return [...(this.selectedChild.medications || [])]
-        .map((medication) => ({
+    parentMedications() {
+      return this.parentChildren
+        .flatMap((child) => (child.medications || []).map((medication) => ({
           ...medication,
-          schedule: {
-            specificTime: '12:00',
-            dosage: medication.dosage || '',
-            instructions: medication.instructions || '',
-            ...(medication.schedule || {})
-          },
+          childName: child.name,
+          schedule: { specificTime: '12:00', ...(medication.schedule || {}) },
           status: this.medicationStatus(medication)
-        }))
-        .filter((medication) => this.matchesParentSearch([
-          medication.name,
-          medication.medicationId,
-          medication.dosage,
-          medication.instructions,
-          medication.status
-        ]))
-        .sort((first, second) => (first.schedule?.specificTime || '').localeCompare(second.schedule?.specificTime || ''));
-    },
-    medicationProgress() {
-      const total = this.medicationTimeline.length;
-      const completed = this.medicationTimeline.filter((medication) => medication.status === 'Taken').length;
-      return {
-        total,
-        completed,
-        percent: total ? Math.round((completed / total) * 100) : 0
-      };
-    },
-    medicationPeriods() {
-      const sections = [
-        { key: 'morning', label: 'Morning', tasks: [] },
-        { key: 'afternoon', label: 'Afternoon', tasks: [] },
-        { key: 'evening', label: 'Evening', tasks: [] }
-      ];
-
-      this.medicationTimeline.forEach((medication) => {
-        const hour = Number((medication.schedule?.specificTime || '12:00').split(':')[0]);
-        const target = hour < 12 ? sections[0] : hour < 17 ? sections[1] : sections[2];
-        target.tasks.push(medication);
-      });
-
-      return sections;
-    },
-    normalizedSearchQuery() {
-      return this.searchQuery.trim().toLowerCase();
-    },
-    parentSearchEmpty() {
-      return Boolean(this.normalizedSearchQuery) && this.medicationTimeline.length === 0 && !this.matchesSelectedChildSearch;
-    },
-    matchesSelectedChildSearch() {
-      return this.matchesParentSearch([
-        this.selectedChild.name,
-        this.selectedChild.parentName,
-        this.selectedChild.groupName,
-        ...(this.selectedChild.allergies || []),
-        ...(this.selectedChild.chronicDiseases || [])
-      ]);
+        })))
+        .sort((first, second) => (first.schedule.specificTime || '').localeCompare(second.schedule.specificTime || ''));
     },
     hasChildren() {
       return this.parentChildren.length > 0;
@@ -506,33 +381,19 @@ export default {
       const titles = {
         child: 'Add child',
         allergy: 'Add allergy',
-        disease: 'Add chronic disease',
-        medication: this.editingMedicationId ? 'Edit medication' : 'Add medication'
+        disease: 'Add chronic disease'
       };
 
       return titles[this.activeDialog] || '';
-    },
-    careCues() {
-      return [
-        {
-          icon: '1',
-          title: 'Check today',
-          text: this.medicationTimeline.length
-            ? `${this.medicationTimeline.length} medication item(s) are visible in the timeline.`
-            : 'No medication scheduled for today.'
-        },
-        {
-          icon: '2',
-          title: 'Documents',
-          text: this.prescriptionStatus.detail
-        }
-      ];
     }
   },
   async mounted() {
     await loadChildren();
     if (!this.selectedChildId && this.parentChildren.length > 0) {
       this.selectedChildId = this.parentChildren[0].id;
+    }
+    if (!this.medicationForm.childId && this.parentChildren.length > 0) {
+      this.medicationForm.childId = this.parentChildren[0].id;
     }
   },
   errorCaptured() {
@@ -554,13 +415,6 @@ export default {
         disease: {
           suggestion: '',
           name: ''
-        },
-        medication: {
-          suggestion: '',
-          name: '',
-          dosage: '',
-          time: '12:00',
-          instructions: ''
         }
       };
     },
@@ -569,17 +423,6 @@ export default {
     },
     meaningfulItems(items) {
       return (items || []).filter((item) => item && !['None', 'None known'].includes(item));
-    },
-    matchesParentSearch(values) {
-      if (!this.normalizedSearchQuery) {
-        return true;
-      }
-
-      return values
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(this.normalizedSearchQuery);
     },
     applySuggestion(formName) {
       const selectedSuggestion = this.forms[formName].suggestion;
@@ -612,7 +455,6 @@ export default {
     },
     openDialog(dialogName) {
       this.forms = this.emptyForms();
-      this.editingMedicationId = '';
       this.activeDialog = dialogName;
     },
     closeDialog() {
@@ -628,7 +470,6 @@ export default {
         if (dialog === 'child') await this.addChild();
         if (dialog === 'allergy') await this.addAllergy();
         if (dialog === 'disease') await this.addDisease();
-        if (dialog === 'medication') await this.saveMedication();
       } finally {
         this.submitting = false;
       }
@@ -657,20 +498,20 @@ export default {
     async addDisease() {
       await storeAddDisease(this.selectedChildId, this.forms.disease.name);
     },
-    async saveMedication() {
-      const medicationData = {
-        name: this.forms.medication.name,
-        dosage: this.forms.medication.dosage,
-        time: this.forms.medication.time,
-        instructions: this.forms.medication.instructions
-      };
+    async submitParentMedication() {
+      if (this.medicationSubmitting) return;
+      const { childId, name, dosage, time } = this.medicationForm;
+      if (!childId || !name || !dosage || !time) return;
 
-      if (this.editingMedicationId) {
-        await storeEditMedication(this.selectedChildId, this.editingMedicationId, medicationData);
-        return;
+      this.medicationSubmitting = true;
+      try {
+        await storeAddMedication(childId, { name, dosage, time });
+        this.medicationForm.name = '';
+        this.medicationForm.dosage = '';
+        this.medicationForm.time = '12:00';
+      } finally {
+        this.medicationSubmitting = false;
       }
-
-      await storeAddMedication(this.selectedChildId, medicationData);
     },
     handlePrescriptionFile(event) {
       const [file] = event.target.files;
@@ -702,21 +543,6 @@ export default {
     },
     async removeDiseaseItem(index) {
       await storeRemoveDisease(this.selectedChildId, index);
-    },
-    editMedicationItem(medication) {
-      this.forms = this.emptyForms();
-      this.forms.medication = {
-        suggestion: '',
-        name: medication.name,
-        dosage: medication.dosage,
-        time: medication.schedule?.specificTime || '12:00',
-        instructions: medication.instructions
-      };
-      this.editingMedicationId = medication.medicationId;
-      this.activeDialog = 'medication';
-    },
-    async removeMedicationItem(medicationId) {
-      await storeRemoveMedication(this.selectedChildId, medicationId);
     },
     handleParentAvatar(event) {
       const [file] = event.target.files;
@@ -814,65 +640,6 @@ export default {
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.global-search {
-  position: relative;
-  display: grid;
-  gap: 4px;
-  min-width: min(300px, 100%);
-}
-
-.global-search span {
-  color: var(--color-text-secondary);
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.global-search input {
-  min-height: 44px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 10px 14px 10px 38px;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.global-search::before {
-  position: absolute;
-  left: 13px;
-  bottom: 12px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--color-text-tertiary);
-  border-radius: 999px;
-  content: '';
-}
-
-.global-search::after {
-  position: absolute;
-  left: 25px;
-  bottom: 10px;
-  width: 7px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--color-text-tertiary);
-  content: '';
-  transform: rotate(45deg);
-}
-
-.search-empty {
-  max-width: 1240px;
-  margin: 16px auto 0;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  font-weight: 800;
-  box-shadow: var(--shadow-sm);
 }
 
 .error-banner {
@@ -1068,20 +835,17 @@ textarea {
   font-weight: 700;
 }
 
-.quick-actions button:nth-child(1) span,
-.care-cues article:nth-child(1) span {
+.quick-actions button:nth-child(1) span {
   background: rgba(34, 197, 94, 0.18);
   color: #166534;
 }
 
-.quick-actions button:nth-child(2) span,
-.care-cues article:nth-child(2) span {
+.quick-actions button:nth-child(2) span {
   background: rgba(59, 130, 246, 0.18);
   color: #1e3a8a;
 }
 
-.quick-actions button:nth-child(3) span,
-.care-cues article:nth-child(3) span {
+.quick-actions button:nth-child(3) span {
   background: rgba(139, 92, 246, 0.18);
   color: #5b21b6;
 }
@@ -1096,49 +860,6 @@ textarea {
 .quick-actions button:nth-child(7) span {
   background: rgba(245, 158, 11, 0.18);
   color: #92400e;
-}
-
-.care-cues {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
-  max-width: 1240px;
-  margin: 16px auto 0;
-}
-
-.care-cues article {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 14px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
-}
-
-.care-cues article:hover {
-  transform: translateY(-4px);
-}
-
-.care-cues span {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--color-care-bg);
-  color: var(--color-care-text);
-  font-weight: 700;
-}
-
-.care-cues p {
-  margin-top: 4px;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
 }
 
 .health-summary {
@@ -1272,114 +993,31 @@ textarea {
   font-weight: 600;
 }
 
-.timeline {
+.simple-medication-form {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
+  align-items: end;
   margin-top: 16px;
 }
 
-.status-legend {
+.simple-medication-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.simple-medication-list li {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.medication-progress {
-  display: grid;
   gap: 10px;
-  margin-top: 16px;
-  border: 1px solid var(--color-border-light);
-  border-radius: 14px;
-  padding: 14px;
-  background: var(--color-bg-primary);
-}
-
-.medication-progress > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--color-text-primary);
-  font-weight: 900;
-}
-
-.medication-progress span {
-  color: var(--color-text-secondary);
-}
-
-.progress-track {
-  height: 12px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--color-bg-tertiary);
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-taken-border), var(--color-upcoming-border));
-  transition: width 0.35s ease;
-}
-
-.daily-periods {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.daily-periods article {
-  border: 1px solid var(--color-border-light);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--color-bg-primary);
-}
-
-.daily-periods strong,
-.daily-periods span {
-  display: block;
-}
-
-.daily-periods span {
-  margin-top: 2px;
-  color: var(--color-text-secondary);
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.timeline-item {
-  display: grid;
-  grid-template-columns: 70px minmax(0, 1fr) auto;
-  gap: 14px;
   align-items: center;
   border: 1px solid var(--color-border);
-  border-left: 5px solid #9fb0be;
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px 14px;
   background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease;
-}
-
-.timeline-item:hover {
-  transform: translateY(-2px);
-}
-
-.timeline-item time {
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.timeline-item p,
-.timeline-item small {
-  color: var(--color-text-secondary);
-}
-
-.timeline-item small {
-  display: block;
-  margin-top: 4px;
-  font-weight: 600;
 }
 
 .status-badge {
@@ -1391,59 +1029,24 @@ textarea {
   font-weight: 700;
 }
 
-.timeline-item.status-upcoming {
-  border-left-color: #4f86c6;
-}
-
-.timeline-item.status-pending {
-  border-left-color: var(--color-warning);
-}
-
-.timeline-item.status-taken {
-  border-left-color: var(--color-success);
-}
-
-.timeline-item.status-missed {
-  border-left-color: var(--color-danger);
-}
-
-.status-badge.status-upcoming,
-.status-upcoming .status-badge {
+.status-badge.status-upcoming {
   background: var(--color-upcoming);
   color: var(--color-upcoming-text);
 }
 
-.status-badge.status-pending,
-.status-pending .status-badge {
+.status-badge.status-pending {
   background: var(--color-pending);
   color: var(--color-pending-text);
 }
 
-.status-badge.status-taken,
-.status-taken .status-badge {
+.status-badge.status-taken {
   background: var(--color-taken);
   color: var(--color-taken-text);
 }
 
-.status-badge.status-missed,
-.status-missed .status-badge {
+.status-badge.status-missed {
   background: var(--color-missed);
   color: var(--color-missed-text);
-}
-
-.status-explainer {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 16px;
-  border-radius: 10px;
-  padding: 12px;
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-}
-
-.status-explainer strong {
-  color: var(--color-text-primary);
 }
 
 .note-card {
@@ -1544,12 +1147,10 @@ textarea {
 :global([data-theme="dark"]) .parent-dashboard .topbar,
 :global([data-theme="dark"]) .parent-dashboard .welcome-panel,
 :global([data-theme="dark"]) .parent-dashboard .child-toolbar,
-:global([data-theme="dark"]) .parent-dashboard .search-empty,
 :global([data-theme="dark"]) .parent-dashboard .quick-actions button,
-:global([data-theme="dark"]) .parent-dashboard .care-cues article,
 :global([data-theme="dark"]) .parent-dashboard .health-summary article,
 :global([data-theme="dark"]) .parent-dashboard .panel,
-:global([data-theme="dark"]) .parent-dashboard .timeline-item,
+:global([data-theme="dark"]) .parent-dashboard .simple-medication-list li,
 :global([data-theme="dark"]) .parent-dashboard .modal {
   border: 1px solid rgba(255, 255, 255, 0.06);
   background:
@@ -1577,8 +1178,6 @@ textarea {
 :global([data-theme="dark"]) .parent-dashboard small,
 :global([data-theme="dark"]) .parent-dashboard .welcome-copy p:not(.eyebrow),
 :global([data-theme="dark"]) .parent-dashboard .panel header span,
-:global([data-theme="dark"]) .parent-dashboard .timeline-item p,
-:global([data-theme="dark"]) .parent-dashboard .timeline-item small,
 :global([data-theme="dark"]) .parent-dashboard .health-summary p {
   color: #cbd5e1;
 }
@@ -1591,10 +1190,6 @@ textarea {
 :global([data-theme="dark"]) .parent-dashboard select,
 :global([data-theme="dark"]) .parent-dashboard input,
 :global([data-theme="dark"]) .parent-dashboard textarea,
-:global([data-theme="dark"]) .parent-dashboard .global-search input,
-:global([data-theme="dark"]) .parent-dashboard .medication-progress,
-:global([data-theme="dark"]) .parent-dashboard .daily-periods article,
-:global([data-theme="dark"]) .parent-dashboard .status-explainer,
 :global([data-theme="dark"]) .parent-dashboard .saved-note {
   border-color: rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.06);
@@ -1622,7 +1217,6 @@ textarea {
 }
 
 :global([data-theme="dark"]) .parent-dashboard .quick-actions span,
-:global([data-theme="dark"]) .parent-dashboard .care-cues span,
 :global([data-theme="dark"]) .parent-dashboard .initials {
   background: rgba(59, 130, 246, 0.22) !important;
   color: #bfdbfe !important;
@@ -1649,7 +1243,6 @@ textarea {
 
 @media (max-width: 980px) {
   .welcome-panel,
-  .care-cues,
   .manage-grid,
   .health-summary {
     grid-template-columns: 1fr;
@@ -1666,23 +1259,16 @@ textarea {
   }
 
   .topbar,
-  .child-toolbar,
-  .timeline-item,
-  .status-explainer {
+  .child-toolbar {
     grid-template-columns: 1fr;
   }
 
-  .parent-top-actions,
-  .global-search {
+  .parent-top-actions {
     width: 100%;
   }
 
   .quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .daily-periods {
-    grid-template-columns: 1fr;
   }
 
   .welcome-copy h2 {

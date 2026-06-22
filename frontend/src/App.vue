@@ -20,7 +20,7 @@ import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
 import { translations } from './content/siteContent';
-import { clearAuth, isAuthenticated } from './state/authStore';
+import { clearAuth, currentUser, isAuthenticated } from './state/authStore';
 
 const routes = {
   '/': 'signin',
@@ -107,8 +107,19 @@ export default {
     resolveRoute(pathname) {
       const resolved = routes[this.normalizePath(pathname)] || 'signup';
       // Dashboards require a logged-in account; send anyone else to sign in.
-      if ((resolved === 'parent' || resolved === 'admin') && !isAuthenticated()) {
-        return 'signin';
+      if (resolved === 'parent' || resolved === 'admin') {
+        if (!isAuthenticated()) {
+          return 'signin';
+        }
+        // Each dashboard is only for its own role; the other role goes back to sign in.
+        const role = (currentUser()?.role || '').toUpperCase();
+        const isAdminRole = role === 'ADMIN' || role === 'STAFF';
+        if (resolved === 'admin' && !isAdminRole) {
+          return 'signin';
+        }
+        if (resolved === 'parent' && isAdminRole) {
+          return 'signin';
+        }
       }
       return resolved;
     },
