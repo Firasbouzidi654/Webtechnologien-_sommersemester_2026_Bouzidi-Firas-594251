@@ -160,9 +160,9 @@ export default {
         if (this.mounted) {
           this.weather = weather;
         }
-      } catch (error) {
+      } catch {
         if (this.mounted) {
-          this.errorMessage = error.message || 'Weather data is temporarily unavailable.';
+          this.errorMessage = 'Weather data is temporarily unavailable. Please try again later.';
         }
       } finally {
         if (this.mounted) {

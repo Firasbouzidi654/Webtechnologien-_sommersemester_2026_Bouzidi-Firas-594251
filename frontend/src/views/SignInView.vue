@@ -21,26 +21,6 @@
       :aria-busy="isLoading ? 'true' : 'false'"
       @submit.prevent="submitForm"
     >
-      <div class="role-select" role="group" :aria-label="signin.roleLabel">
-        <p class="role-label">{{ signin.roleLabel }}</p>
-        <div class="role-cards">
-          <button
-            v-for="option in roleOptions"
-            :key="option.value"
-            type="button"
-            :class="['role-card', { active: role === option.value }]"
-            :aria-pressed="role === option.value"
-            @click="setRole(option.value)"
-          >
-            <span class="role-icon" aria-hidden="true">{{ option.initial }}</span>
-            <span class="role-copy">
-              <span class="role-title">{{ option.label }}</span>
-              <span class="role-description">{{ option.description }}</span>
-            </span>
-          </button>
-        </div>
-      </div>
-
       <div class="field" :class="{ invalid: errors.email }">
         <label for="signin-email">{{ signin.emailLabel }}</label>
         <input
@@ -93,16 +73,10 @@
         </Transition>
       </div>
 
-      <div class="signin-row">
-        <label class="checkbox">
-          <input v-model="form.rememberMe" type="checkbox" />
-          <span>{{ signin.rememberMe }}</span>
-        </label>
-
-        <button class="text-link" type="button" @click="$emit('navigate', '/forgot-password')">
-          {{ signin.forgotPassword }}
-        </button>
-      </div>
+      <label class="checkbox">
+        <input v-model="form.rememberMe" type="checkbox" />
+        <span>{{ signin.rememberMe }}</span>
+      </label>
 
       <Transition name="form-feedback">
         <p v-if="feedback" class="feedback" :class="feedbackType" :role="feedbackType === 'error' ? 'alert' : 'status'">
@@ -139,15 +113,15 @@ import { login } from '../state/authStore';
 
 const fallbackContent = {
   common: {
-    brandLead: 'Making health communication',
+    brandLead: 'Making health information',
     brandAccent: 'feel safe, simple, and human.',
     languageLabel: 'Language',
     lightMode: 'Light mode',
     darkMode: 'Dark mode'
   },
   hero: {
-    eyebrow: 'Trusted childcare communication',
-    title: 'Keeping children safe through better communication',
+    eyebrow: 'Child health overview',
+    title: 'A clear view of child health and medication',
     text: 'KinderCare Connect helps families and staff coordinate child wellbeing.',
     image: '',
     highlights: []
@@ -155,13 +129,12 @@ const fallbackContent = {
   signin: {
     badge: 'Welcome back',
     title: 'Sign in to your account',
-    subtitle: 'Access your Kids dashboard, messages, and care information.',
+    subtitle: 'Access the child and medication dashboards.',
     emailLabel: 'Email address',
     emailPlaceholder: 'parent@example.com',
     passwordLabel: 'Password',
     passwordPlaceholder: 'Enter your password',
     rememberMe: 'Keep me signed in on this device',
-    forgotPassword: 'Forgot password?',
     submitButton: 'Sign in',
     loadingButton: 'Checking credentials',
     successButton: 'Opening dashboard',
@@ -183,7 +156,7 @@ const fallbackContent = {
     staffRole: 'Staff',
     staffRoleDescription: 'Care team workspace',
     securityTitle: 'Security indicators',
-    securityBadges: ['GDPR compliant', 'Encrypted medical data', 'Trusted childcare communication']
+    securityBadges: ['Password-protected account', 'PostgreSQL data storage', 'Child and medication overview']
   },
   features: {
     title: 'Key features',
@@ -214,7 +187,6 @@ export default {
   emits: ['navigate', 'toggle-theme', 'update-language'],
   data() {
     return {
-      role: 'parent',
       form: {
         email: '',
         password: '',
@@ -248,22 +220,6 @@ export default {
     features() {
       return { ...fallbackContent.features, ...(this.dictionary.features || {}) };
     },
-    roleOptions() {
-      return [
-        {
-          value: 'parent',
-          initial: 'P',
-          label: this.signin.parentRole,
-          description: this.signin.parentRoleDescription
-        },
-        {
-          value: 'admin',
-          initial: 'S',
-          label: this.signin.staffRole,
-          description: this.signin.staffRoleDescription
-        }
-      ];
-    },
     securityBadges() {
       return Array.isArray(this.signin.securityBadges) ? this.signin.securityBadges : fallbackContent.signin.securityBadges;
     },
@@ -278,10 +234,6 @@ export default {
     window.clearTimeout(this.rejectionTimer);
   },
   methods: {
-    setRole(role) {
-      this.role = role;
-      this.clearFeedback();
-    },
     clearFieldError(field) {
       if (this.errors[field]) {
         this.errors = { ...this.errors, [field]: '' };
@@ -355,7 +307,7 @@ export default {
       this.isLoading = true;
 
       try {
-        const user = await login(this.form.email, this.form.password, this.role);
+        const user = await login(this.form.email, this.form.password);
 
         this.isSuccess = true;
         this.feedback = this.signin.successMessage;
@@ -415,8 +367,7 @@ export default {
   gap: 8px;
 }
 
-.field label,
-.role-label {
+.field label {
   margin: 0;
   font-size: 0.92rem;
   font-weight: 800;
@@ -469,87 +420,11 @@ export default {
   font-weight: 700;
 }
 
-.role-select {
-  display: grid;
-  gap: 8px;
-}
-
-.role-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  min-height: 52px;
-  padding: 4px;
-  border: 1px solid var(--border-color);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
-}
-
-.role-card {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  min-height: 44px;
-  padding: 8px 12px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  overflow: hidden;
-  text-align: center;
-  transition: all 0.25s ease;
-}
-
-.role-card:hover {
-  transform: translateY(-1px);
-  background: rgba(14, 165, 233, 0.08);
-}
-
-.role-card.active {
-  border-color: transparent;
-  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
-  color: #ffffff;
-  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25);
-  transform: translateY(-1px);
-}
-
-.role-card:focus-visible,
 .text-link:focus-visible,
 .primary-button:focus-visible,
 .password-toggle:focus-visible {
   outline: 2px solid rgba(45, 143, 123, 0.46);
   outline-offset: 3px;
-}
-
-.role-icon {
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: rgba(14, 165, 233, 0.12);
-  color: currentColor;
-  font-size: 0.76rem;
-  font-weight: 900;
-}
-
-.role-copy {
-  min-width: 0;
-  display: block;
-}
-
-.role-title {
-  color: currentColor;
-  font-weight: 850;
-}
-
-.role-description {
-  display: none;
 }
 
 .password-control {
@@ -611,14 +486,6 @@ export default {
   border-radius: 999px;
   background: #246f60;
   transform: rotate(-35deg);
-}
-
-.signin-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .checkbox {
@@ -828,13 +695,11 @@ export default {
 :global(.dark-mode) .page-header p,
 :global(.dark-mode) .checkbox,
 :global(.dark-mode) .auth-footer,
-:global(.dark-mode) .role-description,
 :global(.dark-mode) .security-badges li {
   color: #b6c3ce;
 }
 
-:global(.dark-mode) .field label,
-:global(.dark-mode) .role-label {
+:global(.dark-mode) .field label {
   color: #edf4f8;
 }
 
@@ -846,28 +711,6 @@ export default {
 :global(.dark-mode) .field input:hover,
 :global(.dark-mode) .field input:focus {
   background: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark-mode) .role-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-}
-
-:global(.dark-mode) .role-card.active {
-  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
-  border-color: transparent;
-  color: #ffffff;
-  box-shadow: 0 0 18px rgba(20, 184, 166, 0.25);
-}
-
-:global(.dark-mode) .role-title,
-:global(.dark-mode) .role-icon {
-  color: currentColor;
-}
-
-:global(.dark-mode) .role-icon {
-  background: rgba(255, 255, 255, 0.12);
 }
 
 :global(.dark-mode) .password-toggle {
@@ -908,12 +751,6 @@ export default {
   color: #f3cf8d;
 }
 
-@media (max-width: 760px) {
-  .role-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 640px) {
   .page-header h3 {
     font-size: 1.5rem;
@@ -921,15 +758,6 @@ export default {
 
   .auth-form {
     gap: 14px;
-  }
-
-  .signin-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .role-card {
-    min-height: 72px;
   }
 
   .security-badges {
@@ -947,7 +775,6 @@ export default {
   }
 
   .field input,
-  .role-card,
   .password-toggle,
   .text-link,
   .primary-button,

@@ -207,6 +207,7 @@ export default {
 .hero-card {
   position: relative;
   z-index: 2;
+  min-width: 0;
   max-width: 540px;
   padding: 40px;
   border-radius: 32px;
@@ -245,7 +246,7 @@ export default {
 }
 
 .hero-text {
-  max-width: 34rem;
+  max-width: 100%;
   font-size: 1.05rem;
   line-height: 1.6;
   opacity: 0.95;

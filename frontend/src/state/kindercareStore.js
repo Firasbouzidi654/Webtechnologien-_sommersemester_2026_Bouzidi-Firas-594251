@@ -56,11 +56,6 @@ function saveParentChildIds(ids) {
   } catch {}
 }
 
-export function resetParentSession() {
-  kindercareStore.parentChildIds = [];
-  kindercareStore.children = [];
-}
-
 function findMedicationOwner(medicationId) {
   return kindercareStore.children.find((child) =>
     Array.isArray(child.medications) && child.medications.some((medication) => medication.medicationId === medicationId)
@@ -95,7 +90,7 @@ export async function loadChildren() {
     if (kindercareStore.parentChildIds.length === 0) {
       kindercareStore.parentChildIds = loadParentChildIds();
     }
-  } catch (err) {
+  } catch {
     addNotification({ title: 'Load failed', message: 'Could not load children from the server.', type: 'danger' });
   } finally {
     kindercareStore.loading = false;
@@ -106,7 +101,7 @@ export async function loadMedicationTasks() {
   try {
     const tasks = await api.getTodayTasks();
     kindercareStore.medicationTasks = Array.isArray(tasks) ? tasks : [];
-  } catch (err) {
+  } catch {
     addNotification({ title: 'Load failed', message: 'Could not load medication tasks.', type: 'danger' });
   }
 }
@@ -146,16 +141,6 @@ export function markNotificationsRead() {
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
-export function nextMedicationId() {
-  const highestNumber = kindercareStore.children
-    .flatMap((child) => child.medications || [])
-    .map((medication) => Number(medication.medicationId.replace('MED-', '')))
-    .filter((number) => Number.isFinite(number))
-    .reduce((highest, number) => Math.max(highest, number), 0);
-
-  return `MED-${String(highestNumber + 1).padStart(3, '0')}`;
-}
-
 export function taskReminderDue(task) {
   if (!task || task.status !== 'Pending' || !task.scheduledTime) {
     return false;
@@ -188,15 +173,14 @@ export async function addChild(data) {
       dateOfBirth: data.dateOfBirth || null,
       parentName: user?.fullName || '',
       parentEmail: user?.email || '',
-      // allergies and chronicDiseases are stored as comma-separated strings
+      // Allergies use a comma-separated string in the persisted model.
       allergies: '',
-      chronicDiseases: '',
-      healthNotes: ''
+      chronicDiseases: ''
     });
-  } catch (err) {
+  } catch {
     addNotification({
       title: 'Could not add child',
-      message: err?.message || 'Server error. Please check your connection and try again.',
+      message: 'Server unavailable. Please check your connection and try again.',
       type: 'danger'
     });
     return null;
@@ -309,23 +293,6 @@ export async function removeDisease(childId, index) {
   }
 }
 
-// ─── Emergency contacts ──────────────────────────────────────────────────────
-
-export async function addEmergencyContact(childId, data) {
-  const child = findChild(childId);
-  if (!child) return null;
-  try {
-    const contact = await api.addEmergencyContact(childId, data);
-    child.emergencyContacts ||= [];
-    child.emergencyContacts.push(contact);
-    child.emergencyContacts.sort((a, b) => a.priority - b.priority);
-    return contact;
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not add emergency contact.', type: 'danger' });
-    return null;
-  }
-}
-
 // ─── Prescriptions (UI-only) ─────────────────────────────────────────────────
 
 export function uploadPrescription(childId, fileName) {
@@ -350,6 +317,7 @@ export async function addMedication(childId, data) {
       dosage: data.dosage || '',
       instructions: data.instructions || data.notes || '',
       scheduledTime: data.time || '12:00',
+      status: data.status || 'Pending',
       frequency: 'Daily',
       dayPart: 'Specific time'
     });
@@ -380,7 +348,7 @@ export async function addMedication(childId, data) {
 
     await loadMedicationTasks();
     return saved;
-  } catch (err) {
+  } catch {
     addNotification({ title: 'Save failed', message: 'Could not add medication.', type: 'danger' });
     return null;
   }
@@ -396,6 +364,7 @@ export async function editMedication(childId, medicationId, data) {
     dosage: data.dosage,
     instructions: data.instructions || data.notes || '',
     scheduledTime: data.time || medication.schedule?.specificTime || '12:00',
+    status: data.status || medication.todayStatus || 'Pending',
     frequency: medication.schedule?.frequency || 'Daily',
     dayPart: medication.schedule?.dayPart || 'Specific time'
   };

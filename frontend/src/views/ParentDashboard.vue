@@ -1,7 +1,7 @@
 <template>
   <main class="parent-dashboard">
     <div v-if="componentError" class="error-banner" role="alert">
-      <strong>Component error:</strong> {{ componentError }}
+      <strong>Something went wrong.</strong> Please refresh the page and try again.
     </div>
     <nav class="topbar" :class="{ 'panel-dark': isDark }">
       <div class="parent-heading">
@@ -22,7 +22,7 @@
       <div class="parent-top-actions">
         <label class="global-search" aria-label="Search parent dashboard">
           <span>Search</span>
-          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication, contact..." />
+          <input v-model.trim="searchQuery" type="search" placeholder="Child, medication..." />
         </label>
         <NotificationCenter />
         <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
@@ -40,7 +40,7 @@
         <h2 v-if="hasChildren">Here is {{ firstName(selectedChild.name) }}'s health overview for today.</h2>
         <h2 v-else>Your KinderCare dashboard is ready.</h2>
         <p>
-          A simple place to keep medication, allergies, emergency contacts, and notes ready for the kindergarten team.
+          A simple place to keep medication and allergy information ready for the kindergarten team.
         </p>
       </div>
     </section>
@@ -106,11 +106,6 @@
         <p>Chronic diseases</p>
         <strong>{{ meaningfulItems(selectedChild.chronicDiseases).length }}</strong>
         <span>{{ chronicDiseaseSummary }}</span>
-      </article>
-      <article :class="{ 'panel-dark': isDark }">
-        <p>Emergency contacts</p>
-        <strong>{{ (selectedChild.emergencyContacts || []).length }}</strong>
-        <span>{{ emergencyContactSummary }}</span>
       </article>
       <article :class="{ 'panel-dark': isDark }">
         <p>Prescription status</p>
@@ -211,13 +206,6 @@
               <h3>{{ medication.name }}</h3>
               <p>{{ medication.dosage }} - {{ medication.instructions }}</p>
               <small>{{ medication.medicationId }}</small>
-               <div class="inline-actions">
-                 <button type="button" @click="toggleQr(medication.medicationId)">
-                   View QR / ID
-                 </button>
-                 <button type="button" @click="editMedicationItem(medication)">Edit</button>
-                 <button type="button" @click="removeMedicationItem(medication.medicationId)">Remove</button>
-               </div>
             </div>
             <span class="status-badge">{{ medication.status }}</span>
           </article>
@@ -233,51 +221,6 @@
           <p><strong>Missed</strong> = time passed without confirmation</p>
         </section>
       </section>
-
-      <aside class="side-stack">
-        <section class="panel update-card">
-          <p class="eyebrow">Reminder</p>
-          <h2>{{ nextMedicationReminder }}</h2>
-        </section>
-
-        <section class="panel update-card">
-          <p class="eyebrow">Last kindergarten update</p>
-          <h2>{{ lastKindergartenUpdate }}</h2>
-        </section>
-
-        <section class="panel compact-list">
-          <header>
-            <div>
-              <p class="eyebrow">Medication history</p>
-              <h2>Staff confirmations</h2>
-            </div>
-          </header>
-          <article v-for="entry in medicationHistory" :key="entry.id">
-            <strong>{{ entry.time }} {{ entry.medicationName }}</strong>
-            <span>{{ entry.status }} by {{ entry.adminName }}</span>
-          </article>
-          <p v-if="medicationHistory.length === 0" class="empty-state">
-            No medication confirmation history yet.
-          </p>
-        </section>
-
-        <section class="panel compact-list">
-          <header>
-            <div>
-              <p class="eyebrow">Contacts</p>
-              <h2>Emergency contacts</h2>
-            </div>
-            <button type="button" @click="openDialog('emergency')">Add emergency contact</button>
-          </header>
-          <article v-for="contact in (selectedChild.emergencyContacts || [])" :key="contact.id">
-            <strong>{{ contact.name }}</strong>
-            <span>{{ contact.relationship }} - {{ contact.phone }}</span>
-          </article>
-          <p v-if="(selectedChild.emergencyContacts || []).length === 0" class="empty-state">
-            No emergency contact added yet.
-          </p>
-        </section>
-      </aside>
     </section>
 
     </template><!-- /v-if="hasChildren" -->
@@ -309,29 +252,6 @@
           <label>
             <span>Date of birth</span>
             <input v-model="forms.child.dateOfBirth" type="date" required />
-          </label>
-        </template>
-
-        <template v-if="activeDialog === 'emergency'">
-          <label>
-            <span>Name</span>
-            <input v-model.trim="forms.emergency.name" type="text" required />
-          </label>
-          <label>
-            <span>Relationship</span>
-            <input v-model.trim="forms.emergency.relationship" type="text" required />
-          </label>
-          <label>
-            <span>Phone</span>
-            <input v-model.trim="forms.emergency.phone" type="tel" required />
-          </label>
-          <label>
-            <span>Email</span>
-            <input v-model.trim="forms.emergency.email" type="email" required />
-          </label>
-          <label>
-            <span>Priority</span>
-            <input v-model.number="forms.emergency.priority" type="number" min="1" required />
           </label>
         </template>
 
@@ -415,14 +335,12 @@ import {
   addAllergy as storeAddAllergy,
   addChild as storeAddChild,
   addDisease as storeAddDisease,
-  addEmergencyContact as storeAddEmergencyContact,
   addMedication as storeAddMedication,
   editAllergy as storeEditAllergy,
   editDisease as storeEditDisease,
   loadChildren,
   editMedication as storeEditMedication,
   kindercareStore,
-  markMedicationTaken,
   parentChildren,
   removeAllergy as storeRemoveAllergy,
   setParentAvatar,
@@ -460,10 +378,7 @@ export default {
       quickActions: [
         { key: 'child', label: 'Add child', icon: 'Kid' },
         { key: 'allergy', label: 'Add allergy', icon: 'All' },
-        { key: 'disease', label: 'Add chronic disease', icon: 'Doc' },
-        { key: 'medication', label: 'Add medication', icon: 'Med' },
-        { key: 'emergency', label: 'Add emergency contact', icon: 'SOS' },
-        { key: 'prescription', label: 'Upload prescription', icon: 'Rx' }
+        { key: 'disease', label: 'Add chronic disease', icon: 'Doc' }
       ],
       timelineStatuses: ['Upcoming', 'Pending', 'Taken', 'Missed'],
       allergySuggestions: ['Peanuts', 'Milk', 'Eggs', 'Bee stings', 'Gluten', 'Dust', 'Other'],
@@ -481,7 +396,6 @@ export default {
         groupName: '—',
         allergies: [],
         chronicDiseases: [],
-        emergencyContacts: [],
         medications: [],
         prescriptionFileName: null,
         location: { lat: 0, lng: 0 }
@@ -543,7 +457,6 @@ export default {
         this.selectedChild.name,
         this.selectedChild.parentName,
         this.selectedChild.groupName,
-        ...(this.selectedChild.emergencyContacts || []).flatMap((contact) => [contact.name, contact.relationship, contact.phone]),
         ...(this.selectedChild.allergies || []),
         ...(this.selectedChild.chronicDiseases || [])
       ]);
@@ -566,38 +479,6 @@ export default {
     chronicDiseaseSummary() {
       const diseases = this.meaningfulItems(this.selectedChild.chronicDiseases);
       return diseases.length ? diseases.join(', ') : 'No chronic disease recorded yet.';
-    },
-    emergencyContactSummary() {
-      return this.selectedChild.emergencyContacts?.[0]?.name || 'No emergency contact added yet.';
-    },
-    lastKindergartenUpdate() {
-      const confirmed = this.medicationHistory[0];
-
-      if (!confirmed) {
-        return 'No update from kindergarten yet.';
-      }
-
-      return `${confirmed.medicationName} confirmed at ${confirmed.time} by ${confirmed.adminName}.`;
-    },
-    nextMedicationReminder() {
-      const nextMedication = this.medicationTimeline
-        .filter((medication) => ['Upcoming', 'Pending'].includes(medication.status))
-        .sort((first, second) => first.schedule.specificTime.localeCompare(second.schedule.specificTime))[0];
-
-      if (!nextMedication) {
-        return 'No medication scheduled today.';
-      }
-
-      return `Next medication: ${nextMedication.name} at ${nextMedication.schedule.specificTime}`;
-    },
-    medicationHistory() {
-      return (this.selectedChild.medications || [])
-        .flatMap((medication) => (medication.history || []).map((entry) => ({
-          ...entry,
-          medicationName: medication.name,
-          time: this.formatTime(entry.loggedAt)
-        })))
-        .sort((first, second) => (second.loggedAt || '').localeCompare(first.loggedAt || ''));
     },
     prescriptionStatus() {
       if (this.selectedChild.prescriptionFileName) {
@@ -626,8 +507,7 @@ export default {
         child: 'Add child',
         allergy: 'Add allergy',
         disease: 'Add chronic disease',
-        medication: this.editingMedicationId ? 'Edit medication' : 'Add medication',
-        emergency: 'Add emergency contact'
+        medication: this.editingMedicationId ? 'Edit medication' : 'Add medication'
       };
 
       return titles[this.activeDialog] || '';
@@ -655,16 +535,9 @@ export default {
       this.selectedChildId = this.parentChildren[0].id;
     }
   },
-  errorCaptured(err, vm, info) {
-    // surface runtime errors to the UI for easier debugging
-    // eslint-disable-next-line no-console
-    console.error('Captured error in ParentDashboard:', err, info);
-    try {
-      this.componentError = err?.message || String(err);
-    } catch (e) {
-      this.componentError = 'Unknown error';
-    }
-    return false; // allow global handler to also run
+  errorCaptured() {
+    this.componentError = 'A dashboard component failed to load.';
+    return false;
   },
   methods: {
     emptyForms() {
@@ -688,13 +561,6 @@ export default {
           dosage: '',
           time: '12:00',
           instructions: ''
-        },
-        emergency: {
-          name: '',
-          relationship: '',
-          phone: '',
-          email: '',
-          priority: 1
         }
       };
     },
@@ -763,7 +629,6 @@ export default {
         if (dialog === 'allergy') await this.addAllergy();
         if (dialog === 'disease') await this.addDisease();
         if (dialog === 'medication') await this.saveMedication();
-        if (dialog === 'emergency') await this.addEmergencyContact();
       } finally {
         this.submitting = false;
       }
@@ -791,9 +656,6 @@ export default {
     },
     async addDisease() {
       await storeAddDisease(this.selectedChildId, this.forms.disease.name);
-    },
-    async addEmergencyContact() {
-      await storeAddEmergencyContact(this.selectedChildId, this.forms.emergency);
     },
     async saveMedication() {
       const medicationData = {
@@ -866,16 +728,6 @@ export default {
         setParentAvatar(e.target.result);
       };
       reader.readAsDataURL(file);
-    },
-
-    formatTime(value) {
-      return new Date(value).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    },
-    confirmDemoMedication(medicationId) {
-      markMedicationTaken(medicationId);
     }
   }
 };
@@ -1291,7 +1143,7 @@ textarea {
 
 .health-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -1328,10 +1180,6 @@ textarea {
 }
 
 .health-summary article:nth-child(3) {
-  background: var(--gradient-today-card);
-}
-
-.health-summary article:nth-child(4) {
   background: var(--gradient-children-card);
 }
 
@@ -1401,7 +1249,7 @@ textarea {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   margin-top: 16px;
   align-items: start;
@@ -1598,19 +1446,6 @@ textarea {
   color: var(--color-text-primary);
 }
 
-.side-stack {
-  display: grid;
-  gap: 12px;
-}
-
-.update-card h2 {
-  margin-top: 8px;
-  color: var(--color-text-secondary);
-  font-size: 1.125rem;
-  line-height: 1.5;
-  font-weight: 600;
-}
-
 .note-card {
   display: grid;
   gap: 12px;
@@ -1671,92 +1506,6 @@ textarea {
   background: var(--color-bg-secondary);
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   color: var(--color-text-primary);
-}
-
-.qr-modal {
-  width: min(500px, 100%);
-}
-
-.qr-content {
-  display: grid;
-  gap: 16px;
-}
-
-.qr-section {
-  display: grid;
-  gap: 12px;
-  align-items: center;
-}
-
-.qr-section h3 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.dosage {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.qr-display {
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: var(--color-bg-tertiary);
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-}
-
-.mock-qr {
-  display: grid;
-  width: 120px;
-  height: 120px;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 3px;
-  border: 5px solid var(--color-text-primary);
-  padding: 4px;
-  background: var(--color-bg-secondary);
-}
-
-.mock-qr span {
-  background: var(--color-bg-tertiary);
-}
-
-.mock-qr .filled {
-  background: var(--color-text-primary);
-}
-
-.medication-id-box {
-  display: grid;
-  gap: 6px;
-  padding: 12px;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-}
-
-.medication-id-box .label {
-  font-size: 0.875rem;
-  color: var(--color-text-tertiary);
-  margin: 0;
-}
-
-.medication-id-box .id {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-brand);
-  font-family: 'Courier New', monospace;
-  margin: 0;
-}
-
-.payload-info {
-  font-size: 0.75rem;
-  color: var(--color-text-tertiary);
-  font-family: 'Courier New', monospace;
-  margin: 0;
 }
 
 .modal header,
@@ -1835,9 +1584,7 @@ textarea {
 }
 
 :global([data-theme="dark"]) .parent-dashboard .eyebrow,
-:global([data-theme="dark"]) .parent-dashboard .health-summary span,
-:global([data-theme="dark"]) .parent-dashboard .payload-info,
-:global([data-theme="dark"]) .parent-dashboard .medication-id-box .label {
+:global([data-theme="dark"]) .parent-dashboard .health-summary span {
   color: #94a3b8;
 }
 
@@ -1848,10 +1595,7 @@ textarea {
 :global([data-theme="dark"]) .parent-dashboard .medication-progress,
 :global([data-theme="dark"]) .parent-dashboard .daily-periods article,
 :global([data-theme="dark"]) .parent-dashboard .status-explainer,
-:global([data-theme="dark"]) .parent-dashboard .saved-note,
-:global([data-theme="dark"]) .parent-dashboard .qr-display,
-:global([data-theme="dark"]) .parent-dashboard .medication-id-box,
-:global([data-theme="dark"]) .parent-dashboard .mock-qr {
+:global([data-theme="dark"]) .parent-dashboard .saved-note {
   border-color: rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
@@ -1894,13 +1638,12 @@ textarea {
   background: var(--gradient-weather-card);
 }
 
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(3) span,
-:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(3) {
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(3) span {
   background: var(--gradient-today-card);
 }
 
 :global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(4) span,
-:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(4) {
+:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(3) {
   background: var(--gradient-children-card);
 }
 
@@ -1908,17 +1651,12 @@ textarea {
   .welcome-panel,
   .care-cues,
   .manage-grid,
-  .health-summary,
-  .dashboard-grid {
+  .health-summary {
     grid-template-columns: 1fr;
   }
 
   .quick-actions {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
   }
 }
 

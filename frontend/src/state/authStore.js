@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { api } from '../services/api';
 
 const AUTH_KEY = 'kindercare-simple-user';
 
@@ -21,18 +22,19 @@ export function clearAuth() {
 export function isAuthenticated() { return Boolean(authStore.user); }
 export function currentUser() { return authStore.user; }
 
-// Login is intentionally local for this course project: no password is stored.
-export async function login(email, password, selectedRole) {
-  if (!email || !password) throw new Error('Email and password are required.');
-  const role = selectedRole || (email.toLowerCase().includes('admin') ? 'ADMIN' : 'PARENT');
-  const user = { fullName: email.split('@')[0], email, role };
+// Credentials are validated against the backend database (see AuthController).
+export async function login(email, password) {
+  if (!email || !password) throw new Error('Invalid email or password.');
+  const account = await api.loginUser({ email, password });
+  const user = { ...account, fullName: account.email.split('@')[0] };
   setAuth(user);
   return user;
 }
 
 export async function signup(fullName, email, password, role) {
   if (!fullName || !email || !password) throw new Error('Please complete the required fields.');
-  const user = { fullName, email, role: role || 'PARENT' };
+  const account = await api.registerUser({ email, password, role: role || 'PARENT' });
+  const user = { ...account, fullName };
   setAuth(user);
   return user;
 }

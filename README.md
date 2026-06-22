@@ -1,88 +1,55 @@
 # KinderCare Connect
 
-Application Vue.js + Spring Boot pour le cours Webtechnologien. Le frontend garde les pages Login, Parent et Admin ainsi que le design initial. Le backend reste volontairement petit et sauvegarde seulement les données utiles dans PostgreSQL.
+> Gesundheits- und Medikationsübersicht für Kindergärten
 
-## Structure
+KinderCare Connect ist eine Webanwendung für Eltern und Kindergartenpersonal. Sie bündelt Kinderprofile, Allergien und Medikamentenaufgaben in einer klaren Tagesansicht.
 
-```text
-backend/src/main/java/de/htw_berlin/kindercare/
-├── config/                    # CORS et données de démonstration
-├── child/                     # Child: Entity, Repository, Service, Controller
-├── medication/                # Medication: Entity, Repository, Service, Controller
-├── staff/                     # Staff: Entity, Repository, Service, Controller
-└── KinderCareApplication.java # démarrage Spring Boot
+## Hauptfunktionen
 
-frontend/src/
-├── assets/                    # image et icônes
-├── components/                # composants réutilisables du design
-├── views/                     # Login, ParentDashboard, AdminDashboard
-├── services/                  # API backend et API externes
-├── state/                     # état Vue léger
-└── __tests__/                 # tests Vitest
-```
+- Registrierung und Anmeldung mit den Rollen **Parent** und **Staff**
+- Kinderprofile mit Name und Allergien anlegen, ändern und löschen
+- Medikamente mit Kind, Dosierung, Uhrzeit und Status verwalten
+- Persistente Tagesansicht mit `Upcoming`, `Pending`, `Taken` und `Missed`
+- Wetter, deutsche Feiertage, öffentliche Medikamenteninformationen und eine Notfallkarte
+- Heller/dunkler Modus sowie englische/deutsche Oberflächentexte
 
-Chaque domaine backend suit le même chemin clair :
+## Rollen
 
-`Controller → Service → Repository → PostgreSQL`
+| Rolle | Berechtigungen |
+| --- | --- |
+| **Parent** | Verwaltet Kinder und Allergien und sieht die Medikamenten-Tagesansicht. |
+| **Staff** | Sieht Kinder und verwaltet Medikamente einschließlich Uhrzeit und Status. |
+| **Admin** | Keine eigene registrierbare Rolle; das Admin-Dashboard ist die Arbeitsansicht für **Staff**. |
 
-## Données sauvegardées
+Für dieses Kursprojekt prüft das Backend den vom Frontend gesendeten Header `X-User-Role`. Das ist bewusst einfach gehalten und kein Ersatz für produktive Authentifizierung.
 
-- `Child` : nom, allergies
-- `Medication` : nom, enfant, dosage
-- `Staff` : nom, rôle
+## Persistierte Daten
 
-Routes REST :
+| Bereich | Daten |
+| --- | --- |
+| Benutzerkonto | E-Mail-Adresse, BCrypt-Passwort-Hash, Rolle |
+| Kind | Name, Allergien |
+| Medikament | Name, Kind, Dosierung, Uhrzeit, Status |
 
-- `GET` / `POST` `/api/children`
-- `GET` / `POST` `/api/medications`
-- `GET` / `POST` `/api/staff`
+Chronische Erkrankungen und Rezept-Dateinamen sind Oberflächen-Demonstrationen und werden nicht gespeichert. Notfallkontakte, Nachrichten und eine eigenständige Admin-Verwaltung sind nicht implementiert.
 
-## API externes
+## Technologie
 
-- Open-Meteo : météo
-- openFDA : informations publiques sur les médicaments
-- Nager.Date : jours fériés allemands
+- Vue 3 und Vite
+- Java 21, Spring Boot und Spring Data JPA
+- PostgreSQL 16
+- JUnit/Spring MockMvc und Vitest
 
-## Tester localement
+## Lokal starten
 
-### 1. Démarrer PostgreSQL
+Voraussetzungen: Java 21, Node.js mit npm, Docker Desktop und Docker Compose.
 
 ```powershell
 docker compose up -d db
-```
-
-### 2. Démarrer le backend
-
-Depuis la racine du projet :
-
-```powershell
 .\gradlew :backend:bootRun
 ```
 
-Le backend est disponible sur `http://localhost:8080`.
-
-### 3. Vérifier la sauvegarde backend
-
-Créer un enfant :
-
-```powershell
-$child = @{ name = 'Test Child'; allergies = 'None' } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/children -ContentType 'application/json' -Body $child
-```
-
-Lire les enfants :
-
-```powershell
-Invoke-RestMethod http://localhost:8080/api/children
-```
-
-Vérifier directement PostgreSQL :
-
-```powershell
-docker compose exec db psql -U kindercare -d kindercare -c "SELECT * FROM children;"
-```
-
-### 4. Démarrer et vérifier le frontend
+In einem zweiten Terminal:
 
 ```powershell
 cd frontend
@@ -90,30 +57,28 @@ npm install
 npm run dev
 ```
 
-Ouvrir :
+Das Backend läuft unter `http://localhost:8080`; Vite startet standardmäßig unter `http://localhost:5173`.
 
-- `http://localhost:5173/#/parent` : ajouter un enfant puis actualiser la page.
-- `http://localhost:5173/#/admin` : ajouter un médicament via le calendrier puis actualiser la page.
+## REST-Schnittstelle
 
-Si les données restent visibles après actualisation et dans la commande PostgreSQL, elles sont bien enregistrées.
+| Methode | Endpunkt | Zweck |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Benutzerkonto registrieren |
+| `POST` | `/api/auth/login` | Benutzer anmelden |
+| `GET`, `POST` | `/api/children` | Kinder lesen bzw. anlegen |
+| `PUT`, `DELETE` | `/api/children/{id}` | Kind ändern bzw. löschen |
+| `GET`, `POST` | `/api/medications` | Medikamente lesen bzw. anlegen |
+| `PUT`, `DELETE` | `/api/medications/{id}` | Medikament ändern bzw. löschen |
 
-## Tests automatisés
+## Tests
 
 ```powershell
 .\gradlew :backend:test
+
 cd frontend
 npm test
 ```
 
-GitHub Actions lance ces deux commandes à chaque `push` et `pull request`.
+## Deployment auf Render
 
-## Render
-
-`render.yaml` contient un backend Docker et un frontend statique. Il utilise la base PostgreSQL Render existante. Configurer sur Render :
-
-- `DATABASE_URL` au format JDBC : `jdbc:postgresql://HOST:5432/kindercare`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
-- `VITE_API_BASE_URL` : URL publique du backend, sans `/api`
-
-Le backend active automatiquement le profil `prod` sur Render et le profil `local` en développement. Les vrais identifiants ne sont jamais ajoutés au dépôt.
+[`render.yaml`](render.yaml) definiert ein Docker-Backend und ein statisches Frontend. Auf Render müssen `DATABASE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` und `VITE_API_BASE_URL` gesetzt werden. Die Platzhalter stehen in [`.env.example`](.env.example); echte Zugangsdaten gehören nicht ins Repository.

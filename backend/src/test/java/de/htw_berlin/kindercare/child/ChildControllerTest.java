@@ -18,14 +18,27 @@ class ChildControllerTest {
     @Autowired MockMvc mockMvc;
 
     @Test
-    void createsAndListsChildren() throws Exception {
-        mockMvc.perform(post("/api/children").contentType(MediaType.APPLICATION_JSON)
+    void parentCanCreateUpdateAndDeleteChild() throws Exception {
+        String response = mockMvc.perform(post("/api/children").header("X-User-Role", "PARENT")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Emma\",\"allergies\":\"Peanuts\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Emma"));
+                .andExpect(jsonPath("$.name").value("Emma"))
+                .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(get("/api/children"))
+        Number idValue = com.jayway.jsonpath.JsonPath.read(response, "$.id");
+        long id = idValue.longValue();
+        mockMvc.perform(get("/api/children").header("X-User-Role", "STAFF"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/children/{id}", id)
+                .header("X-User-Role", "PARENT").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"allergies\":\"Peanuts, Milk\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Emma"));
+                .andExpect(jsonPath("$.allergies").value("Peanuts, Milk"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/children/{id}", id)
+                .header("X-User-Role", "PARENT"))
+                .andExpect(status().isNoContent());
     }
 }

@@ -60,7 +60,7 @@ export default {
       required: true
     }
   },
-  emits: ['confirm', 'edit', 'delete', 'toggle-status', 'status-change'],
+  emits: ['confirm', 'edit', 'delete', 'status-change'],
   data() {
     return {
       statuses: ['Pending', 'Taken', 'Missed', 'Upcoming']

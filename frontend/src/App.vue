@@ -19,9 +19,8 @@ import ParentDashboard from './views/ParentDashboard.vue';
 import SignInView from './views/SignInView.vue';
 import SignupView from './views/SignupView.vue';
 import PrivacyView from './views/PrivacyView.vue';
-import ForgotPasswordView from './views/ForgotPasswordView.vue';
 import { translations } from './content/siteContent';
-import { clearAuth } from './state/authStore';
+import { clearAuth, isAuthenticated } from './state/authStore';
 
 const routes = {
   '/': 'signin',
@@ -32,8 +31,6 @@ const routes = {
   '/parent/': 'parent',
   '/admin': 'admin',
   '/admin/': 'admin',
-  '/forgot-password': 'forgotPassword',
-  '/forgot-password/': 'forgotPassword',
   '/privacy': 'privacy',
   '/privacy/': 'privacy'
 };
@@ -45,8 +42,7 @@ export default {
     ParentDashboard,
     SignInView,
     SignupView,
-    PrivacyView,
-    ForgotPasswordView
+    PrivacyView
   },
   data() {
     return {
@@ -75,10 +71,6 @@ export default {
 
       if (this.currentRoute === 'privacy') {
         return 'PrivacyView';
-      }
-
-      if (this.currentRoute === 'forgotPassword') {
-        return 'ForgotPasswordView';
       }
 
       return 'SignupView';
@@ -114,6 +106,10 @@ export default {
     },
     resolveRoute(pathname) {
       const resolved = routes[this.normalizePath(pathname)] || 'signup';
+      // Dashboards require a logged-in account; send anyone else to sign in.
+      if ((resolved === 'parent' || resolved === 'admin') && !isAuthenticated()) {
+        return 'signin';
+      }
       return resolved;
     },
     handlePopState() {

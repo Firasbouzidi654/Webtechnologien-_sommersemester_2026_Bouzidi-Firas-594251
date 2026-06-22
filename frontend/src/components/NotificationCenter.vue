@@ -145,13 +145,16 @@ export default {
 
 .notification-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   right: 0;
   z-index: 1300;
-  width: min(360px, calc(100vw - 32px));
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(480px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--color-border);
   border-radius: 18px;
-  padding: 16px;
+  padding: 18px;
   background: var(--color-bg-secondary);
   box-shadow: var(--shadow-xl);
   animation: dropdown-in 0.18s ease;
@@ -160,9 +163,9 @@ export default {
 .notification-dropdown header {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .notification-dropdown h3,
@@ -170,31 +173,45 @@ export default {
   margin: 0;
 }
 
+.notification-dropdown h3 {
+  color: var(--color-text-primary);
+  font-size: 1.02rem;
+}
+
 .notification-dropdown header button {
+  flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 8px 10px;
+  padding: 9px 12px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 900;
+  white-space: nowrap;
+}
+
+.notification-dropdown header button:hover {
+  background: var(--color-bg-primary);
 }
 
 .notification-list {
   display: grid;
-  gap: 10px;
-  max-height: 360px;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
   overflow: auto;
+  padding-right: 2px;
 }
 
 .notification-item {
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr);
-  gap: 10px;
+  gap: 12px;
+  align-items: start;
   border: 1px solid var(--color-border-light);
   border-radius: 14px;
-  padding: 12px;
+  padding: 14px;
   background: var(--color-bg-primary);
 }
 
@@ -218,20 +235,32 @@ export default {
   background: var(--color-missed-border);
 }
 
-.notification-item strong {
-  color: var(--color-text-primary);
+.notification-item > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
-.notification-item p,
-.notification-item time,
-.empty-note {
-  color: var(--color-text-secondary);
-  font-size: 0.84rem;
+.notification-item strong {
+  color: var(--color-text-primary);
+  font-size: 0.94rem;
+  line-height: 1.3;
 }
 
 .notification-item p {
-  margin: 2px 0 4px;
-  line-height: 1.4;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.notification-item time,
+.empty-note {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .toast-stack {

@@ -146,23 +146,6 @@
           </Transition>
         </div>
 
-        <div class="field field-full" :class="fieldClass('phoneNumber')">
-          <label for="signup-phone">{{ signup.phoneLabel }}</label>
-          <input
-            id="signup-phone"
-            v-model.trim="form.phoneNumber"
-            type="tel"
-            :placeholder="signup.phonePlaceholder"
-            autocomplete="tel"
-            :aria-invalid="Boolean(errors.phoneNumber)"
-            aria-describedby="signup-phone-error"
-            @input="handleFieldInput('phoneNumber')"
-            @blur="validateField('phoneNumber')"
-          />
-          <Transition name="field-message">
-            <p v-if="errors.phoneNumber" id="signup-phone-error" class="field-error">{{ errors.phoneNumber }}</p>
-          </Transition>
-        </div>
       </div>
 
       <section class="password-helper" :aria-label="signup.passwordHelperTitle">
@@ -247,8 +230,6 @@ const fallbackSignup = {
   passwordPlaceholder: 'At least 8 characters',
   confirmPasswordLabel: 'Confirm password',
   confirmPasswordPlaceholder: 'Repeat your password',
-  phoneLabel: 'Emergency phone number',
-  phonePlaceholder: '+49 176 12345678',
   checkboxText: 'I agree to the',
   submitButton: 'Create account',
   loadingButton: 'Creating secure account',
@@ -264,8 +245,6 @@ const fallbackSignup = {
   passwordTooWeak: 'Use a stronger password before continuing.',
   confirmPasswordRequired: 'Confirm your password.',
   mismatchError: 'The passwords do not match yet.',
-  phoneRequired: 'Enter an emergency phone number.',
-  phoneInvalid: 'Enter a valid phone number.',
   termsRequired: 'Please accept the privacy policy to continue.',
   showPassword: 'Show password',
   hidePassword: 'Hide password',
@@ -313,7 +292,6 @@ export default {
         email: '',
         password: '',
         confirmPassword: '',
-        phoneNumber: '',
         agreeToTerms: false
       },
       errors: {},
@@ -454,11 +432,6 @@ export default {
         if (value !== this.form.password) return this.signup.mismatchError;
       }
 
-      if (field === 'phoneNumber') {
-        if (!value) return this.signup.phoneRequired;
-        if (!/^[+\d][\d\s().-]{6,}$/.test(value)) return this.signup.phoneInvalid;
-      }
-
       if (field === 'agreeToTerms' && !value) {
         return this.signup.termsRequired;
       }
@@ -472,7 +445,7 @@ export default {
       return !message;
     },
     validateForm() {
-      const fields = ['fullName', 'email', 'password', 'confirmPassword', 'phoneNumber', 'agreeToTerms'];
+      const fields = ['fullName', 'email', 'password', 'confirmPassword', 'agreeToTerms'];
       const nextErrors = {};
       const nextTouched = {};
 
@@ -518,8 +491,7 @@ export default {
           this.form.fullName,
           this.form.email,
           this.form.password,
-          this.role,
-          this.form.phoneNumber
+          this.role
         );
 
         this.isSuccess = true;
@@ -668,10 +640,6 @@ export default {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-}
-
-.field-full {
-  grid-column: 1 / -1;
 }
 
 .field label {
@@ -1226,9 +1194,6 @@ export default {
     grid-template-columns: 1fr;
   }
 
-  .field-full {
-    grid-column: auto;
-  }
 }
 
 @media (max-width: 640px) {

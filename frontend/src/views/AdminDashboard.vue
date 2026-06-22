@@ -116,10 +116,6 @@
                       <dd>{{ meaningfulList(selectedEmergencyChild.chronicDiseases, 'None recorded') }}</dd>
                     </div>
                     <div>
-                      <dt>Parent contact</dt>
-                      <dd>{{ selectedEmergencyChild.emergencyContacts?.[0]?.name || 'No parent' }} - {{ selectedEmergencyChild.emergencyContacts?.[0]?.phone || 'N/A' }}</dd>
-                    </div>
-                    <div>
                       <dt>Location</dt>
                       <dd>{{ selectedEmergencyLocation.lat }}, {{ selectedEmergencyLocation.lng }}</dd>
                     </div>
@@ -171,7 +167,6 @@
               </div>
 
               <div class="emergency-actions">
-                <button type="button" class="secondary-button" @click="callParent">Call parent</button>
                 <button type="button" class="secondary-button" @click="callServices">Call services</button>
               </div>
             </template>
@@ -226,15 +221,6 @@
       </article>
     </section>
 
-    <section class="holiday-panel" :class="{ 'panel-dark': isDark }">
-      <p class="eyebrow">External API · Nager.Date</p>
-      <h2>Upcoming German public holidays</h2>
-      <p v-if="holidays.length === 0">No holiday information available.</p>
-      <ul v-else>
-        <li v-for="holiday in holidays" :key="holiday.date">{{ holiday.date }} — {{ holiday.localName }}</li>
-      </ul>
-    </section>
-
     <section class="operations-row">
       <article class="progress-panel">
         <div>
@@ -272,6 +258,20 @@
           </div>
         </div>
       </article>
+
+      <article class="holiday-panel">
+        <div>
+          <p class="eyebrow">External API · Nager.Date</p>
+          <h2>Upcoming German public holidays</h2>
+        </div>
+        <p v-if="holidays.length === 0" class="empty-state">No holiday information available.</p>
+        <ul v-else class="holiday-list">
+          <li v-for="holiday in holidays" :key="holiday.date">
+            <span class="holiday-date">{{ holiday.date }}</span>
+            <span class="holiday-name">{{ holiday.localName }}</span>
+          </li>
+        </ul>
+      </article>
     </section>
 
     <section class="admin-grid">
@@ -288,10 +288,9 @@
           v-for="task in filteredTasks"
           :key="task.taskId"
           :task="task"
-          @confirm="openVerificationModal"
+          @confirm="confirmMedication"
           @edit="openTaskModal('edit', $event)"
           @delete="deleteTask($event)"
-          @toggle-status="toggleTaskStatus"
           @status-change="changeTaskStatus"
         />
       </div>
@@ -307,6 +306,7 @@
 import AdminCalendar from '../components/AdminCalendar.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
+import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
@@ -331,6 +331,7 @@ export default {
     AdminCalendar,
     EmergencyPoiCard,
     MedicationAssistant,
+    MedicationTaskCard,
     NotificationCenter
   },
   props: {
@@ -363,16 +364,11 @@ export default {
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
-      mobileCompactMode: false,
-      holidays: []
+      holidays: [],
+      syncInterval: null
     };
   },
-  created() {
-    // noop
-  },
   async mounted() {
-    this.updateCompactMode();
-    window.addEventListener('resize', this.updateCompactMode);
     await Promise.all([loadChildren(), loadMedicationTasks()]);
     try {
       this.holidays = await getGermanPublicHolidays();
@@ -382,9 +378,15 @@ export default {
     if (!this.selectedEmergencyChildId && this.children.length > 0) {
       this.selectedEmergencyChildId = this.children[0].id;
     }
+    // Parents add children from a separate session, so poll the backend
+    // periodically to pick up new children/medications without a page reload.
+    this.syncInterval = window.setInterval(() => {
+      loadChildren();
+      loadMedicationTasks();
+    }, 5000);
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.updateCompactMode);
+    window.clearInterval(this.syncInterval);
   },
   computed: {
     selectedEmergencyChild() {
@@ -398,11 +400,9 @@ export default {
       };
     },
     emergencySupportCards() {
-      const contactsCount = this.selectedEmergencyChild?.emergencyContacts?.length || 0;
       const hospital = this.supportPoiByType('hospital');
       const pharmacy = this.supportPoiByType('pharmacy');
       const police = this.supportPoiByType('police');
-      const contact = this.selectedEmergencyChild?.emergencyContacts?.[0] || null;
 
       return [
         {
@@ -436,16 +436,6 @@ export default {
           image: POLICE_IMAGE,
           actionLabel: 'Show route',
           action: () => this.routeToPoiType('police')
-        },
-        {
-          key: 'contacts',
-          icon: 'Tel',
-          title: 'Emergency contacts',
-          name: contact ? `${contact.name} - ${contact.phone}` : 'No contact saved',
-          distance: contactsCount ? `${contactsCount} contact(s)` : 'Missing',
-          eta: 'Call parent',
-          actionLabel: 'Call',
-          action: this.callParent
         }
       ];
     },
@@ -512,12 +502,6 @@ export default {
         counts[status] += 1;
         return counts;
       }, { Pending: 0, Taken: 0, Missed: 0, Upcoming: 0 });
-    },
-    missedTasks() {
-      return this.tasks.filter((task) => task.status === 'Missed');
-    },
-    reminderTasks() {
-      return this.tasks.filter((task) => task.reminderDue);
     },
   },
   watch: {
@@ -769,23 +753,8 @@ export default {
       this.emergencyActive = false;
       this.emergencyMapError = '';
     },
-    callParent() {
-      const phone = this.selectedEmergencyChild?.emergencyContacts?.[0]?.phone || 'N/A';
-      if (phone !== 'N/A') {
-        window.open(`tel:${phone}`);
-      } else {
-        window.alert('Parent contact number unavailable.');
-      }
-    },
     callServices() {
       window.open('tel:112');
-    },
-    async toggleTaskStatus(medicationId) {
-      const current = this.tasks.find((task) => task.medicationId === medicationId)?.status;
-      if (!current) return;
-      const statuses = this.statusOptions;
-      const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
-      await setMedicationStatus(medicationId, next);
     },
     async changeTaskStatus({ medicationId, status }) {
       if (!medicationId || !this.statusOptions.includes(status)) {
@@ -797,9 +766,6 @@ export default {
     meaningfulList(items, fallback) {
       const values = (items || []).filter((item) => item && !['None', 'None known'].includes(item));
       return values.length ? values.join(', ') : fallback;
-    },
-    updateCompactMode() {
-      this.mobileCompactMode = window.innerWidth <= 768;
     },
   }
 };
@@ -1686,14 +1652,15 @@ select {
 
 .operations-row {
   display: grid;
-  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
   max-width: 1240px;
   margin: 16px auto 0;
 }
 
 .progress-panel,
-.day-timeline-panel {
+.day-timeline-panel,
+.holiday-panel {
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 18px;
@@ -1701,15 +1668,54 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
+.holiday-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
 .progress-panel {
   display: grid;
   gap: 14px;
 }
 
-.progress-panel h2 {
+.progress-panel h2,
+.holiday-panel h2 {
   margin-top: 6px;
   color: var(--color-text-primary);
   font-size: 1.3rem;
+}
+
+.holiday-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.holiday-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-primary);
+}
+
+.holiday-date {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.holiday-name {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  text-align: right;
 }
 
 .progress-track {
@@ -1865,6 +1871,7 @@ select {
 :global([data-theme="dark"]) .admin-dashboard .hero-strip,
 :global([data-theme="dark"]) .admin-dashboard .progress-panel,
 :global([data-theme="dark"]) .admin-dashboard .day-timeline-panel,
+:global([data-theme="dark"]) .admin-dashboard .holiday-panel,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section,
 :global([data-theme="dark"]) .admin-dashboard .modal,
 :global([data-theme="dark"]) .admin-dashboard :deep(.qr-card),
