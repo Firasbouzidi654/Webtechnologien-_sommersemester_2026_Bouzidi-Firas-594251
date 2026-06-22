@@ -28,8 +28,7 @@ public class ChildController {
     }
 
     @GetMapping
-    public List<Child> getAll(@RequestHeader(value = "X-User-Role", required = false) String role) {
-        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
+    public List<Child> getAll() {
         return service.findAll();
     }
 

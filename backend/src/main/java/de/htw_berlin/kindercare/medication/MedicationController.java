@@ -25,8 +25,7 @@ public class MedicationController {
     public MedicationController(MedicationService service) { this.service = service; }
 
     @GetMapping
-    public List<Medication> getAll(@RequestHeader(value = "X-User-Role", required = false) String role) {
-        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
+    public List<Medication> getAll() {
         return service.findAll();
     }
 
