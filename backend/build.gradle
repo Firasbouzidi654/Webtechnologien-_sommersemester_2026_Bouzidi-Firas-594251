@@ -32,14 +32,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    systemProperty 'spring.profiles.active', 'test'
 }
 
 tasks.named('bootJar') {
     archiveFileName = 'kindercare-backend.jar'
-}
-
-// Local Gradle development must not accidentally use Render's production profile.
-tasks.named('bootRun') {
-    environment 'SPRING_PROFILES_ACTIVE', 'local'
 }
