@@ -90,10 +90,6 @@
         <span>{{ submitButtonLabel }}</span>
       </button>
 
-      <ul class="security-badges" :aria-label="signin.securityTitle">
-        <li v-for="badge in securityBadges" :key="badge">{{ badge }}</li>
-      </ul>
-
       <footer class="auth-footer">
         <span>{{ signin.alternatePrompt }}</span>
         <button class="text-link" type="button" @click="$emit('navigate', '/signup')">
@@ -129,7 +125,7 @@ const fallbackContent = {
   signin: {
     badge: 'Welcome back',
     title: 'Sign in to your account',
-    subtitle: 'Access the child and medication dashboards.',
+    subtitle: 'Use your account to continue to your care workspace.',
     emailLabel: 'Email address',
     emailPlaceholder: 'parent@example.com',
     passwordLabel: 'Password',
@@ -154,9 +150,7 @@ const fallbackContent = {
     parentRole: 'Parent',
     parentRoleDescription: 'Family dashboard',
     staffRole: 'Staff',
-    staffRoleDescription: 'Care team workspace',
-    securityTitle: 'Security indicators',
-    securityBadges: ['Password-protected account', 'PostgreSQL data storage', 'Child and medication overview']
+    staffRoleDescription: 'Care team workspace'
   },
   features: {
     title: 'Key features',
@@ -219,9 +213,6 @@ export default {
     },
     features() {
       return { ...fallbackContent.features, ...(this.dictionary.features || {}) };
-    },
-    securityBadges() {
-      return Array.isArray(this.signin.securityBadges) ? this.signin.securityBadges : fallbackContent.signin.securityBadges;
     },
     submitButtonLabel() {
       if (this.isLoading) return this.signin.loadingButton;

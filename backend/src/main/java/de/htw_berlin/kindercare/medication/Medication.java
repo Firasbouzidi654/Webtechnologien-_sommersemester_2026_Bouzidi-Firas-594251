@@ -20,19 +20,27 @@ public class Medication {
     @Column(name = "medication_time")
     private String time;
     private String status;
+    private String frequency;
+    private Integer intervalDays;
+    @Column(name = "start_date")
+    private String startDate;
 
     public Medication() { }
 
     public Medication(String name, String childName, String dosage) {
-        this(name, childName, dosage, "12:00", "PENDING");
+        this(name, childName, dosage, "12:00", "PENDING", "DAILY", null, null);
     }
 
-    public Medication(String name, String childName, String dosage, String time, String status) {
+    public Medication(String name, String childName, String dosage, String time, String status,
+                      String frequency, Integer intervalDays, String startDate) {
         this.name = name;
         this.childName = childName;
         this.dosage = dosage;
         this.time = time;
         this.status = status;
+        this.frequency = frequency;
+        this.intervalDays = intervalDays;
+        this.startDate = startDate;
     }
 
     public Long getId() { return id; }
@@ -48,4 +56,10 @@ public class Medication {
     public void setTime(String time) { this.time = time; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getFrequency() { return frequency; }
+    public void setFrequency(String frequency) { this.frequency = frequency; }
+    public Integer getIntervalDays() { return intervalDays; }
+    public void setIntervalDays(Integer intervalDays) { this.intervalDays = intervalDays; }
+    public String getStartDate() { return startDate; }
+    public void setStartDate(String startDate) { this.startDate = startDate; }
 }

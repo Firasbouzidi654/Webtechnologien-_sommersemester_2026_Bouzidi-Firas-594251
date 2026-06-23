@@ -2,6 +2,7 @@ package de.htw_berlin.kindercare.medication;
 
 import de.htw_berlin.kindercare.config.RoleAccess;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,11 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Set;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @RestController
 @RequestMapping("/api/medications")
 public class MedicationController {
     private static final Set<String> STATUSES = Set.of("UPCOMING", "PENDING", "TAKEN", "MISSED");
+    private static final Set<String> FREQUENCIES = Set.of("DAILY", "WEEKLY", "EVERY_X_DAYS", "WEEKDAYS_ONLY");
     private final MedicationService service;
 
     public MedicationController(MedicationService service) { this.service = service; }
@@ -32,18 +36,19 @@ public class MedicationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Medication create(
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
             @RequestBody Medication medication
     ) {
         requireMedicationDetails(medication);
         RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
         normalizeStatus(medication);
+        normalizeSchedule(medication);
         return service.create(medication);
     }
 
     @PutMapping("/{id}")
     public Medication update(
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
             @PathVariable Long id,
             @RequestBody Medication medication
     ) {
@@ -52,12 +57,13 @@ public class MedicationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
         }
         normalizeStatus(medication);
+        normalizeSchedule(medication);
         return service.update(id, medication);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long id) {
+    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable Long id) {
         RoleAccess.require(role, "STAFF", "ADMIN");
         service.delete(id);
     }
@@ -66,8 +72,8 @@ public class MedicationController {
         if (medication.getName() == null || medication.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication name is required.");
         }
-        if (medication.getChildName() == null || medication.getChildName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child name is required.");
+        if (medication.getChildId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
         }
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
@@ -82,5 +88,32 @@ public class MedicationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be UPCOMING, PENDING, TAKEN, or MISSED.");
         }
         medication.setStatus(status);
+    }
+
+    private void normalizeSchedule(Medication medication) {
+        if (medication.getFrequency() != null) {
+            String frequency = medication.getFrequency().trim().toUpperCase();
+            if (!FREQUENCIES.contains(frequency)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Frequency must be DAILY, WEEKLY, EVERY_X_DAYS, or WEEKDAYS_ONLY.");
+            }
+            medication.setFrequency(frequency);
+            if ("EVERY_X_DAYS".equals(frequency)) {
+                if (medication.getIntervalDays() == null || medication.getIntervalDays() < 2) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Every X days requires an interval of at least 2 days.");
+                }
+            } else {
+                medication.setIntervalDays(null);
+            }
+        }
+
+        if (medication.getStartDate() != null && !medication.getStartDate().isBlank()) {
+            try {
+                LocalDate.parse(medication.getStartDate());
+            } catch (DateTimeParseException exception) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must use the YYYY-MM-DD format.");
+            }
+        }
     }
 }

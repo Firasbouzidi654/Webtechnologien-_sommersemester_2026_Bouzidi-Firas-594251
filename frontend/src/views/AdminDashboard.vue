@@ -8,7 +8,6 @@
       <div class="top-actions">
         <div class="top-action-buttons">
           <NotificationCenter />
-          <button class="primary-action" type="button" @click="openTaskModal('add')">Add medication</button>
           <div class="control-actions" aria-label="Dashboard controls">
             <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
             <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
@@ -90,6 +89,19 @@
             </select>
           </label>
           <label>
+            <span>Frequency</span>
+            <select v-model="taskForm.frequency" required>
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="EVERY_X_DAYS">Every X days</option>
+              <option value="WEEKDAYS_ONLY">Weekdays only</option>
+            </select>
+          </label>
+          <label v-if="taskForm.frequency === 'EVERY_X_DAYS'">
+            <span>Every how many days?</span>
+            <input v-model.number="taskForm.intervalDays" type="number" min="2" required />
+          </label>
+          <label>
             <span>Notes</span>
             <textarea v-model="taskForm.instructions" placeholder="Take with food or water" rows="3"></textarea>
           </label>
@@ -116,42 +128,10 @@
 
         <div class="emergency-body">
           <div class="emergency-details">
-            <label class="field-label">
-              <span>Active child</span>
-              <select v-model.number="selectedEmergencyChildId" aria-label="Select child for emergency response">
-                <option v-for="c in children" :key="c.id" :value="c.id">{{ c.name }} — {{ c.groupName }}</option>
-              </select>
-            </label>
-
             <template v-if="selectedEmergencyChild">
-              <section class="support-grid" aria-label="Emergency support shortcuts">
-                <article
-                  v-for="card in emergencySupportCards"
-                  :key="card.key"
-                  class="support-card"
-                  :class="card.key"
-                >
-                  <img v-if="card.image" class="support-photo" :src="card.image" :alt="card.title" loading="lazy" />
-                  <span v-else class="support-icon">{{ card.icon }}</span>
-                  <div class="support-card-copy">
-                    <strong>{{ card.title }}</strong>
-                    <span>{{ card.name }}</span>
-                    <div class="support-metrics">
-                      <small>{{ card.distance }}</small>
-                      <small>{{ card.eta }}</small>
-                    </div>
-                  </div>
-                  <button type="button" @click="card.action">{{ card.actionLabel }}</button>
-                </article>
-              </section>
-
               <div class="map-card">
                 <div class="map-card-header">
-                  <div>
-                    <p class="eyebrow">Live map</p>
-                    <h3>Nearby route context</h3>
-                  </div>
-                  <span>{{ nearbyPOIs.length }} result(s)</span>
+                  <p class="eyebrow">Live map</p>
                 </div>
 
                 <div id="emergency-map" class="emergency-map" aria-label="Emergency location map">
@@ -171,14 +151,6 @@
           </div>
 
           <aside class="emergency-poi-panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Nearby emergency support</p>
-                <h3>Fast response options</h3>
-              </div>
-              <p class="panel-note">Route directly from the child's location.</p>
-            </div>
-
             <div class="poi-list">
               <div v-if="poiLoading" class="loading-state">
                 <span class="spinner" aria-hidden="true"></span>
@@ -309,12 +281,9 @@ import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
-import { buildEmergencyRouteLink, fetchNearbyEmergencyPOIs } from '../services/emergencyService';
-import { estimateDriveTimeMinutes, formatDistanceMeters } from '../utils/formatters';
+import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 import { getGermanPublicHolidays } from '../services/holidayService.js';
 
-const PHARMACY_IMAGE = 'https://images.unsplash.com/photo-1766258630872-2b1403439fb5?auto=format&fit=crop&q=80&w=300';
-const POLICE_IMAGE = 'https://images.unsplash.com/photo-1693329900318-9686ec84b1cd?auto=format&fit=crop&q=80&w=300';
 const FALLBACK_POLICE_STATION = {
   id: 'fallback-police-station',
   name: 'Police Station Alexanderplatz',
@@ -360,7 +329,9 @@ export default {
         date: this.todayDateKey(),
         time: '',
         instructions: '',
-        status: 'Pending'
+        status: 'Pending',
+        frequency: 'DAILY',
+        intervalDays: 2
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
@@ -400,46 +371,6 @@ export default {
         lng
       };
     },
-    emergencySupportCards() {
-      const hospital = this.supportPoiByType('hospital');
-      const pharmacy = this.supportPoiByType('pharmacy');
-      const police = this.supportPoiByType('police');
-
-      return [
-        {
-          key: 'hospital',
-          icon: 'H',
-          title: 'Hospital',
-          name: hospital?.name || 'Nearest hospital',
-          distance: this.supportDistance(hospital),
-          eta: this.supportEta(hospital),
-          actionLabel: 'Show route',
-          action: () => this.routeToPoiType('hospital')
-        },
-        {
-          key: 'pharmacy',
-          icon: 'Rx',
-          title: 'Pharmacy',
-          name: pharmacy?.name || 'Nearest pharmacy',
-          distance: this.supportDistance(pharmacy),
-          eta: this.supportEta(pharmacy),
-          image: PHARMACY_IMAGE,
-          actionLabel: 'Show route',
-          action: () => this.routeToPoiType('pharmacy')
-        },
-        {
-          key: 'police',
-          icon: 'Police',
-          title: 'Police Station',
-          name: police?.name || 'Nearest police station',
-          distance: this.supportDistance(police),
-          eta: this.supportEta(police),
-          image: POLICE_IMAGE,
-          actionLabel: 'Show route',
-          action: () => this.routeToPoiType('police')
-        }
-      ];
-    },
     displayedEmergencyPOIs() {
       if (this.poiLoading) {
         return [];
@@ -470,7 +401,7 @@ export default {
       }));
     },
     filteredTasks() {
-      return this.tasks;
+      return this.tasks.filter((task) => task.scheduledToday);
     },
     medicationProgress() {
       const total = this.filteredTasks.length;
@@ -503,7 +434,7 @@ export default {
       return sections;
     },
     stats() {
-      return this.tasks.reduce((counts, task) => {
+      return this.filteredTasks.reduce((counts, task) => {
         const status = this.statusOptions.includes(task.status) ? task.status : 'Pending';
         counts[status] += 1;
         return counts;
@@ -524,30 +455,6 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
-    },
-    nearestPoiByType(type) {
-      return this.displayedEmergencyPOIs.find((poi) => poi.type === type) || null;
-    },
-    supportPoiByType(type) {
-      if (this.poiLoading) {
-        return null;
-      }
-
-      return this.nearestPoiByType(type);
-    },
-    supportDistance(poi) {
-      if (this.poiLoading) {
-        return 'Searching...';
-      }
-
-      return Number.isFinite(poi?.distance) ? formatDistanceMeters(poi.distance) : 'Route pending';
-    },
-    supportEta(poi) {
-      if (this.poiLoading) {
-        return 'ETA pending';
-      }
-
-      return Number.isFinite(poi?.distance) ? estimateDriveTimeMinutes(poi.distance) : 'ETA pending';
     },
     withDistance(poi) {
       return {
@@ -573,21 +480,13 @@ export default {
 
       return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     },
-    routeToPoiType(type) {
-      const poi = this.nearestPoiByType(type);
-
-      if (!poi) {
-        window.alert(`No ${type} route is available yet.`);
-        return;
-      }
-
-      window.open(buildEmergencyRouteLink(this.selectedEmergencyLocation, poi), '_blank', 'noreferrer');
-    },
     async confirmMedication(medicationId) {
       await markMedicationTaken(medicationId);
     },
     openEmergency() {
-      this.selectedEmergencyChildId = this.children?.[0]?.id || null;
+      if (!this.selectedEmergencyChildId) {
+        this.selectedEmergencyChildId = this.children?.[0]?.id || null;
+      }
       this.emergencyActive = true;
       addNotification({
         title: 'Emergency mode activation',
@@ -659,7 +558,9 @@ export default {
             date: task.scheduledDate || this.todayDateKey(),
             time: task.scheduledTime,
             instructions: task.instructions || '',
-            status: this.statusOptions.includes(task.status) ? task.status : 'Pending'
+            status: this.statusOptions.includes(task.status) ? task.status : 'Pending',
+            frequency: task.frequency || 'DAILY',
+            intervalDays: task.intervalDays || 2
           };
         }
       } else {
@@ -671,7 +572,9 @@ export default {
           date: selectedDate || this.todayDateKey(),
           time: '12:00',
           instructions: '',
-          status: 'Pending'
+          status: 'Pending',
+          frequency: 'DAILY',
+          intervalDays: 2
         };
       }
 
@@ -687,28 +590,36 @@ export default {
         return;
       }
 
-      this.closeTaskModal();
-
+      let saved;
       if (this.taskModalMode === 'edit' && this.taskForm.medicationId) {
-        await editMedication(this.taskForm.childId, this.taskForm.medicationId, {
+        saved = await editMedication(this.taskForm.childId, this.taskForm.medicationId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
           date: this.taskForm.date,
           time: this.taskForm.time,
           status: this.taskForm.status,
-          childId: this.taskForm.childId
+          childId: this.taskForm.childId,
+          frequency: this.taskForm.frequency,
+          intervalDays: this.taskForm.intervalDays
         });
       } else {
-        await addMedication(this.taskForm.childId, {
+        saved = await addMedication(this.taskForm.childId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
           instructions: this.taskForm.instructions,
           date: this.taskForm.date,
           time: this.taskForm.time,
-          status: this.taskForm.status
+          status: this.taskForm.status,
+          frequency: this.taskForm.frequency,
+          intervalDays: this.taskForm.intervalDays
         });
       }
+      if (!saved) {
+        this.taskError = 'The medication could not be saved. Check the displayed error and try again.';
+        return;
+      }
+      this.closeTaskModal();
     },
     async deleteTask(medicationId) {
       const task = this.tasks.find((item) => item.medicationId === medicationId);
@@ -1476,8 +1387,8 @@ select {
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .stats-row article {
@@ -1487,9 +1398,9 @@ select {
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 96px;
-  padding: 16px;
-  text-align: center;
+  min-height: 78px;
+  padding: 12px 14px;
+  text-align: left;
 }
 
 :global([data-theme="dark"]) .stats-row article {
@@ -1506,13 +1417,15 @@ select {
 
 .stats-row span {
   display: block;
-  font-size: 2rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  margin-bottom: 6px;
+  line-height: 1.1;
+  margin-bottom: 3px;
 }
 
 .stats-row p {
   color: var(--color-text-secondary);
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
@@ -1642,9 +1555,9 @@ select {
 }
 
 .progress-metrics span {
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 0.72rem;
   font-weight: 900;
 }
 

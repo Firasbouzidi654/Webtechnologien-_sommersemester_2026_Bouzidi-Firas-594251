@@ -38,5 +38,3 @@ export async function signup(fullName, email, password, role) {
   setAuth(user);
   return user;
 }
-
-export function logout() { clearAuth(); }

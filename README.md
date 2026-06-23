@@ -1,55 +1,56 @@
 # KinderCare Connect
 
-> Gesundheits- und Medikationsübersicht für Kindergärten
+KinderCare Connect is a university web project for coordinating child profiles, allergies, and medication schedules between parents and the care team. It is a prototype and must not be used with real personal or medical data.
 
-KinderCare Connect ist eine Webanwendung für Eltern und Kindergartenpersonal. Sie bündelt Kinderprofile, Allergien und Medikamentenaufgaben in einer klaren Tagesansicht.
+## Features
 
-## Hauptfunktionen
+- Parent and staff sign-in with role-based prototype access
+- Child profiles with allergy information
+- Medication plans with dosage, time, date, status, and recurrence: daily, weekly, weekdays only, or every X days
+- Parent medication entry and calendar-based staff medication management
+- Emergency map and nearby points of interest
+- Light/dark themes and English/German interface text
 
-- Registrierung und Anmeldung mit den Rollen **Parent** und **Staff**
-- Kinderprofile mit Name und Allergien anlegen, ändern und löschen
-- Medikamente mit Kind, Dosierung, Uhrzeit und Status verwalten
-- Persistente Tagesansicht mit `Upcoming`, `Pending`, `Taken` und `Missed`
-- Wetter, deutsche Feiertage, öffentliche Medikamenteninformationen und eine Notfallkarte
-- Heller/dunkler Modus sowie englische/deutsche Oberflächentexte
+## Technology
 
-## Rollen
+- Vue 3 + Vite frontend
+- Java 21, Spring Boot, Spring Data JPA backend
+- PostgreSQL database
+- Flyway schema migrations
+- Docker/Render deployment configuration
 
-| Rolle | Berechtigungen |
+## Database tables
+
+| Table | Purpose |
 | --- | --- |
-| **Parent** | Verwaltet Kinder und Allergien und sieht die Medikamenten-Tagesansicht. |
-| **Staff** | Sieht Kinder und verwaltet Medikamente einschließlich Uhrzeit und Status. |
-| **Admin** | Keine eigene registrierbare Rolle; das Admin-Dashboard ist die Arbeitsansicht für **Staff**. |
+| `users` | Stores sign-in email, BCrypt password hash, and prototype role. |
+| `children` | Stores registered child names and allergy information. |
+| `medications` | Stores medication plans, their child link, dosage, time, schedule frequency, interval, start date, and current status. |
+| `flyway_schema_history` | Flyway's migration record; required to apply schema changes safely. |
 
-Für dieses Kursprojekt prüft das Backend den vom Frontend gesendeten Header `X-User-Role`. Das ist bewusst einfach gehalten und kein Ersatz für produktive Authentifizierung.
+## External APIs Used
 
-## Persistierte Daten
+- [Nager.Date](https://date.nager.at/) for German public holidays
+- [openFDA](https://open.fda.gov/apis/drug-label/) for public medication-label lookups
+- [OpenStreetMap](https://www.openstreetmap.org/) tiles and directions, displayed with Leaflet
+- [Overpass API](https://overpass-api.de/) for nearby hospitals, pharmacies, and police stations
+- PostgreSQL for persistent application data
+- Spring Boot for the backend REST service
+- Vue and Vite for the browser application
+- Render for application deployment
 
-| Bereich | Daten |
-| --- | --- |
-| Benutzerkonto | E-Mail-Adresse, BCrypt-Passwort-Hash, Rolle |
-| Kind | Name, Allergien |
-| Medikament | Name, Kind, Dosierung, Uhrzeit, Status |
+The project does not use Google Maps or the Browser Geolocation API.
 
-Chronische Erkrankungen und Rezept-Dateinamen sind Oberflächen-Demonstrationen und werden nicht gespeichert. Notfallkontakte, Nachrichten und eine eigenständige Admin-Verwaltung sind nicht implementiert.
+## Run locally
 
-## Technologie
-
-- Vue 3 und Vite
-- Java 21, Spring Boot und Spring Data JPA
-- PostgreSQL 16
-- JUnit/Spring MockMvc und Vitest
-
-## Lokal starten
-
-Voraussetzungen: Java 21, Node.js mit npm, Docker Desktop und Docker Compose.
+Prerequisites: Java 21, Node.js/npm, Docker Desktop, and Docker Compose.
 
 ```powershell
 docker compose up -d db
 .\gradlew :backend:bootRun
 ```
 
-In einem zweiten Terminal:
+In a second terminal:
 
 ```powershell
 cd frontend
@@ -57,28 +58,29 @@ npm install
 npm run dev
 ```
 
-Das Backend läuft unter `http://localhost:8080`; Vite startet standardmäßig unter `http://localhost:5173`.
+The backend runs at `http://localhost:8080`; Vite normally runs at `http://localhost:5173`.
 
-## REST-Schnittstelle
+## REST API
 
-| Methode | Endpunkt | Zweck |
+| Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/auth/register` | Benutzerkonto registrieren |
-| `POST` | `/api/auth/login` | Benutzer anmelden |
-| `GET`, `POST` | `/api/children` | Kinder lesen bzw. anlegen |
-| `PUT`, `DELETE` | `/api/children/{id}` | Kind ändern bzw. löschen |
-| `GET`, `POST` | `/api/medications` | Medikamente lesen bzw. anlegen |
-| `PUT`, `DELETE` | `/api/medications/{id}` | Medikament ändern bzw. löschen |
+| `POST` | `/api/auth/register` | Register an account |
+| `POST` | `/api/auth/login` | Sign in |
+| `GET`, `POST` | `/api/children` | Read or create children |
+| `PUT`, `DELETE` | `/api/children/{id}` | Update or delete a child |
+| `GET`, `POST` | `/api/medications` | Read or create medication plans |
+| `PUT`, `DELETE` | `/api/medications/{id}` | Update or delete a medication plan |
 
-## Tests
+## Verification
 
 ```powershell
 .\gradlew :backend:test
 
 cd frontend
 npm test
+npm run build
 ```
 
-## Deployment auf Render
+## Render deployment
 
-[`render.yaml`](render.yaml) definiert ein Docker-Backend und ein statisches Frontend. Auf Render müssen `DATABASE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` und `VITE_API_BASE_URL` gesetzt werden. Die Platzhalter stehen in [`.env.example`](.env.example); echte Zugangsdaten gehören nicht ins Repository.
+[`render.yaml`](render.yaml) defines a Docker Spring Boot service and a static Vue service. Configure `DATABASE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `VITE_API_BASE_URL` in Render. The backend runs Flyway on startup before Hibernate validates the schema, so the same forward-only migration is used locally and on Render.

@@ -31,12 +31,12 @@ public class UserService {
 
     public User login(String email, String password) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
-        User user = repository.findByEmail(normalizedEmail).orElse(null);
-
-        if (user == null || password == null || !passwordEncoder.matches(password, user.getPassword())) {
+        if (password == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
         }
 
-        return user;
+        return repository.findByEmail(normalizedEmail)
+                .filter(user -> passwordEncoder.matches(password, user.getPassword()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password."));
     }
 }

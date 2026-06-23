@@ -3,6 +3,7 @@ package de.htw_berlin.kindercare.child;
 import de.htw_berlin.kindercare.config.RoleAccess;
 import de.htw_berlin.kindercare.medication.MedicationService;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +36,7 @@ public class ChildController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Child create(
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
             @RequestBody Child child
     ) {
         RoleAccess.require(role, "PARENT");
@@ -47,24 +48,21 @@ public class ChildController {
 
     @PutMapping("/{id}")
     public Child update(
-            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
             @PathVariable Long id,
             @RequestBody Child child
     ) {
         RoleAccess.require(role, "PARENT");
-        String previousName = service.findById(id).getName();
         Child updated = service.update(id, child);
-        if (!previousName.equals(updated.getName())) {
-            medicationService.renameChild(id, previousName, updated.getName());
-        }
+        medicationService.updateChildName(id, updated.getName());
         return updated;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long id) {
+    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable Long id) {
         RoleAccess.require(role, "PARENT");
-        medicationService.deleteByChildName(id, service.findById(id).getName());
+        medicationService.deleteByChildId(id);
         service.delete(id);
     }
 }

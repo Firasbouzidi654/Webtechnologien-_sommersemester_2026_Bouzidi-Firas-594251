@@ -163,6 +163,19 @@
             <span>Time</span>
             <input v-model="medicationForm.time" type="time" required />
           </label>
+          <label>
+            <span>Frequency</span>
+            <select v-model="medicationForm.frequency">
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="EVERY_X_DAYS">Every X days</option>
+              <option value="WEEKDAYS_ONLY">Weekdays only</option>
+            </select>
+          </label>
+          <label v-if="medicationForm.frequency === 'EVERY_X_DAYS'">
+            <span>Every how many days?</span>
+            <input v-model.number="medicationForm.intervalDays" type="number" min="2" required />
+          </label>
           <button type="submit" :disabled="medicationSubmitting">
             {{ medicationSubmitting ? 'Saving…' : 'Add medication' }}
           </button>
@@ -171,7 +184,7 @@
         <ul class="simple-medication-list">
           <li v-for="medication in parentMedications" :key="medication.medicationId">
             <strong>{{ medication.childName }}</strong>
-            <span>{{ medication.name }} - {{ medication.dosage }} - {{ medication.schedule.specificTime }}</span>
+            <span>{{ medication.name }} - {{ medication.dosage }} - {{ medication.schedule.specificTime }} - {{ medication.schedule.frequency }}</span>
             <span class="status-badge" :class="statusClass(medication.status)">{{ medication.status }}</span>
           </li>
           <p v-if="parentMedications.length === 0" class="empty-state">No medication added yet.</p>
@@ -306,7 +319,9 @@ export default {
         childId: parentChildren()[0]?.id || null,
         name: '',
         dosage: '',
-        time: '12:00'
+        time: '12:00',
+        frequency: 'DAILY',
+        intervalDays: 2
       },
       medicationSubmitting: false
     };
@@ -500,15 +515,18 @@ export default {
     },
     async submitParentMedication() {
       if (this.medicationSubmitting) return;
-      const { childId, name, dosage, time } = this.medicationForm;
+      const { childId, name, dosage, time, frequency, intervalDays } = this.medicationForm;
       if (!childId || !name || !dosage || !time) return;
 
       this.medicationSubmitting = true;
       try {
-        await storeAddMedication(childId, { name, dosage, time });
+        const saved = await storeAddMedication(childId, { name, dosage, time, frequency, intervalDays });
+        if (!saved) return;
         this.medicationForm.name = '';
         this.medicationForm.dosage = '';
         this.medicationForm.time = '12:00';
+        this.medicationForm.frequency = 'DAILY';
+        this.medicationForm.intervalDays = 2;
       } finally {
         this.medicationSubmitting = false;
       }

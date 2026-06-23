@@ -74,7 +74,7 @@ export const translations = {
     signin: {
       badge: 'Welcome back',
       title: 'Sign in to your account',
-      subtitle: 'Access the child and medication dashboards.',
+      subtitle: 'Use your account to continue to your care workspace.',
       emailLabel: 'Email address',
       emailPlaceholder: 'parent@example.com',
       passwordLabel: 'Password',
@@ -99,9 +99,7 @@ export const translations = {
       parentRole: 'Parent',
       parentRoleDescription: 'Family dashboard',
       staffRole: 'Staff',
-      staffRoleDescription: 'Care team workspace',
-      securityTitle: 'Security indicators',
-      securityBadges: ['Password-protected account', 'PostgreSQL data storage', 'Child and medication overview']
+      staffRoleDescription: 'Care team workspace'
     },
     features: {
       title: 'Key features',
@@ -114,24 +112,24 @@ export const translations = {
     },
     privacy: {
       badge: 'Privacy Policy',
-      title: 'How KinderCare Connect protects your information',
-      intro: 'KinderCare Connect is a course project for managing basic child and medication information.',
+      title: 'Privacy information for this university project',
+      intro: 'KinderCare Connect is a university prototype for coordinating child and medication information. It is not intended for real childcare or medical use.',
       sections: [
         {
-          heading: 'Information we collect',
-          text: 'The application stores an email address, a password hash, a role, child names, allergies, medication names, and dosages.'
+          heading: 'Data used in the prototype',
+          text: 'The app processes account details, child names, allergies, medication plans, schedules, and administration status entered by users.'
         },
         {
-          heading: 'How we use information',
-          text: 'The information is displayed in the parent and staff dashboards to support the course-project workflow.'
+          heading: 'Purpose and access',
+          text: 'Data is used only to demonstrate the parent and care-team workflows within this project. Access is limited by the role selected for the prototype account.'
         },
         {
-          heading: 'Security',
-          text: 'Passwords are stored as BCrypt hashes. This prototype is not intended for real childcare or production medical data.'
+          heading: 'Storage and security',
+          text: 'The application stores data in its project database. Passwords are stored as BCrypt hashes. No security measure can make this prototype suitable for sensitive real-world records.'
         },
         {
-          heading: 'Contact',
-          text: 'If you have questions about privacy or data handling, please contact the KinderCare Connect support team through your kindergarten administrator.'
+          heading: 'Your choices',
+          text: 'Do not enter real personal or health information. For questions about this coursework prototype or to request removal of test data, contact the project team through the course channel.'
         }
       ]
     }
@@ -211,7 +209,7 @@ export const translations = {
     signin: {
       badge: 'Willkommen zurück',
       title: 'In Ihr Konto einloggen',
-      subtitle: 'Greifen Sie auf das Kinder- und Medikamenten-Dashboard zu.',
+      subtitle: 'Melden Sie sich an, um Ihren Arbeitsbereich zu öffnen.',
       emailLabel: 'E-Mail-Adresse',
       emailPlaceholder: 'eltern@example.com',
       passwordLabel: 'Passwort',
@@ -236,9 +234,7 @@ export const translations = {
       parentRole: 'Elternteil',
       parentRoleDescription: 'Familien-Dashboard',
       staffRole: 'Team',
-      staffRoleDescription: 'Arbeitsbereich Betreuung',
-      securityTitle: 'Sicherheitsmerkmale',
-      securityBadges: ['Passwortgeschütztes Konto', 'PostgreSQL-Datenspeicherung', 'Kinder- und Medikationsübersicht']
+      staffRoleDescription: 'Arbeitsbereich Betreuung'
     },
     features: {
       title: 'Wichtige Funktionen',
@@ -251,24 +247,24 @@ export const translations = {
     },
     privacy: {
       badge: 'Datenschutzrichtlinie',
-      title: 'So schützt KinderCare Connect Ihre Informationen',
-      intro: 'KinderCare Connect ist ein Kursprojekt zur Verwaltung grundlegender Kinder- und Medikationsdaten.',
+      title: 'Datenschutzhinweise für dieses Hochschulprojekt',
+      intro: 'KinderCare Connect ist ein Hochschulprototyp zur Koordination von Kinder- und Medikationsinformationen. Er ist nicht für echte Betreuungs- oder Gesundheitsdaten bestimmt.',
       sections: [
         {
-          heading: 'Welche Informationen wir erfassen',
-          text: 'Die Anwendung speichert E-Mail-Adresse, Passwort-Hash, Rolle, Kindernamen, Allergien sowie Medikamentennamen und Dosierungen.'
+          heading: 'Daten im Prototyp',
+          text: 'Die Anwendung verarbeitet Kontodaten, Kindernamen, Allergien, Medikationspläne, Einnahmeintervalle und Statusangaben, die von Nutzenden eingegeben werden.'
         },
         {
-          heading: 'Wie wir Informationen verwenden',
-          text: 'Die Daten werden im Eltern- und Personal-Dashboard für den Ablauf des Kursprojekts angezeigt.'
+          heading: 'Zweck und Zugriff',
+          text: 'Die Daten dienen ausschließlich der Demonstration der Eltern- und Betreuungsabläufe in diesem Projekt. Der Zugriff richtet sich nach der für das Prototypkonto gewählten Rolle.'
         },
         {
-          heading: 'Sicherheit',
-          text: 'Passwörter werden als BCrypt-Hashes gespeichert. Der Prototyp ist nicht für echte Betreuungs- oder Gesundheitsdaten vorgesehen.'
+          heading: 'Speicherung und Sicherheit',
+          text: 'Die Daten werden in der Projektdatenbank gespeichert. Passwörter werden als BCrypt-Hashes abgelegt. Kein Sicherheitsmechanismus macht diesen Prototyp für sensible echte Daten geeignet.'
         },
         {
-          heading: 'Kontakt',
-          text: 'Bei Fragen zum Datenschutz oder zur Datenverarbeitung wenden Sie sich bitte über Ihre Kindergartenverwaltung an das Support-Team von KinderCare Connect.'
+          heading: 'Ihre Entscheidung',
+          text: 'Bitte geben Sie keine echten Personen- oder Gesundheitsdaten ein. Fragen zum Kursprojekt oder zur Löschung von Testdaten können über den Kurskanal an das Projektteam gerichtet werden.'
         }
       ]
     }

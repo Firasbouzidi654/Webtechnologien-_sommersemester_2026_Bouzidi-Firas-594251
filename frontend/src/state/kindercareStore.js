@@ -310,6 +310,7 @@ export function uploadPrescription(childId, fileName) {
 export async function addMedication(childId, data) {
   const child = findChild(childId);
   if (!child) return null;
+  const startDate = data.date || todayDateKey();
 
   try {
     const saved = await api.createMedication(childId, {
@@ -318,7 +319,9 @@ export async function addMedication(childId, data) {
       instructions: data.instructions || data.notes || '',
       scheduledTime: data.time || '12:00',
       status: data.status || 'Pending',
-      frequency: 'Daily',
+      frequency: data.frequency || 'DAILY',
+      intervalDays: data.intervalDays || null,
+      startDate,
       dayPart: 'Specific time'
     });
 
@@ -334,9 +337,11 @@ export async function addMedication(childId, data) {
       medicationName: data.name,
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',
-      scheduledDate: data.date || todayDateKey(),
+      scheduledDate: startDate,
       instructions: data.instructions || data.notes || '',
       status: 'Pending',
+      frequency: data.frequency || 'DAILY',
+      intervalDays: data.intervalDays || null,
       reminderDue: false
     });
 
@@ -348,8 +353,8 @@ export async function addMedication(childId, data) {
 
     await loadMedicationTasks();
     return saved;
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not add medication.', type: 'danger' });
+  } catch (error) {
+    addNotification({ title: 'Save failed', message: error.message || 'Could not add medication.', type: 'danger' });
     return null;
   }
 }
@@ -365,7 +370,9 @@ export async function editMedication(childId, medicationId, data) {
     instructions: data.instructions || data.notes || '',
     scheduledTime: data.time || medication.schedule?.specificTime || '12:00',
     status: data.status || medication.todayStatus || 'Pending',
-    frequency: medication.schedule?.frequency || 'Daily',
+    frequency: data.frequency || medication.schedule?.frequencyCode || 'DAILY',
+    intervalDays: data.intervalDays || medication.schedule?.intervalDays || null,
+    startDate: data.date || medication.schedule?.startDate || null,
     dayPart: medication.schedule?.dayPart || 'Specific time'
   };
 
@@ -373,7 +380,15 @@ export async function editMedication(childId, medicationId, data) {
     name: updates.name,
     dosage: updates.dosage,
     instructions: updates.instructions,
-    schedule: { ...medication.schedule, specificTime: updates.scheduledTime, dosage: updates.dosage, instructions: updates.instructions }
+    schedule: {
+      ...medication.schedule,
+      frequencyCode: updates.frequency,
+      intervalDays: updates.intervalDays,
+      startDate: updates.startDate,
+      specificTime: updates.scheduledTime,
+      dosage: updates.dosage,
+      instructions: updates.instructions
+    }
   });
 
   const task = kindercareStore.medicationTasks.find((item) => item.medicationId === medicationId);
@@ -382,6 +397,9 @@ export async function editMedication(childId, medicationId, data) {
       medicationName: data.name,
       dosage: data.dosage,
       scheduledTime: updates.scheduledTime,
+      frequency: updates.frequency,
+      intervalDays: updates.intervalDays,
+      scheduledDate: updates.startDate || task.scheduledDate,
       instructions: updates.instructions
     });
   }
@@ -390,9 +408,11 @@ export async function editMedication(childId, medicationId, data) {
     await api.updateMedication(medicationId, updates);
     await loadMedicationTasks();
     return medication;
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not update medication.', type: 'danger' });
-    return medication;
+  } catch (error) {
+    addNotification({ title: 'Save failed', message: error.message || 'Could not update medication.', type: 'danger' });
+    await loadChildren();
+    await loadMedicationTasks();
+    return null;
   }
 }
 

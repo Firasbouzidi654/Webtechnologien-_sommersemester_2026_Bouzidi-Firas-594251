@@ -38,6 +38,7 @@
       <article v-for="task in selectedTasks" :key="task.taskId || task.medicationId" class="calendar-task" :class="statusClass(task.status)">
         <strong>{{ task.scheduledTime || '--:--' }}</strong>
         <span>{{ task.childName || 'Unknown child' }} - {{ task.medicationName || 'Medication' }}</span>
+        <small>{{ frequencyLabel(task) }}</small>
         <em>{{ normalizedStatus(task.status) }}</em>
         <div class="task-actions">
           <button type="button" @click="$emit('edit-task', task.medicationId)">Edit</button>
@@ -131,11 +132,30 @@ export default {
     statusClass(status) {
       return this.normalizedStatus(status).toLowerCase();
     },
+    frequencyLabel(task) {
+      if (task.frequency === 'EVERY_X_DAYS') return `Every ${task.intervalDays || 2} days`;
+      return {
+        DAILY: 'Daily',
+        WEEKLY: 'Weekly',
+        WEEKDAYS_ONLY: 'Weekdays only'
+      }[task.frequency] || 'Daily';
+    },
+    isTaskScheduledForDate(task, dateKey) {
+      const startKey = task.scheduledDate || this.toDateKey(this.today);
+      const start = new Date(`${startKey}T00:00:00`);
+      const target = new Date(`${dateKey}T00:00:00`);
+      if (Number.isNaN(start.getTime()) || target < start) return false;
+      const days = Math.round((target - start) / 86400000);
+      if (task.frequency === 'WEEKLY') return days % 7 === 0;
+      if (task.frequency === 'EVERY_X_DAYS') return days % Math.max(Number(task.intervalDays) || 2, 2) === 0;
+      if (task.frequency === 'WEEKDAYS_ONLY') return target.getDay() !== 0 && target.getDay() !== 6;
+      return true;
+    },
 
     tasksForDate(dateKey) {
       if (!Array.isArray(this.tasks)) return [];
       return this.tasks
-        .filter((task) => (task?.scheduledDate || this.toDateKey(this.today)) === dateKey)
+        .filter((task) => this.isTaskScheduledForDate(task, dateKey))
         .sort((first, second) => (first.scheduledTime || '').localeCompare(second.scheduledTime || ''));
     }
   }
@@ -277,7 +297,7 @@ h3,
 
 .calendar-task {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto auto;
   gap: 8px;
   align-items: center;
   border-left: 4px solid var(--color-pending-border);
@@ -314,6 +334,7 @@ h3,
 }
 
 .calendar-task em,
+.calendar-task small,
 .empty {
   color: var(--color-text-tertiary);
   font-size: 0.76rem;
@@ -325,6 +346,11 @@ h3,
   border-radius: 999px;
   padding: 5px 9px;
   box-shadow: 0 5px 12px rgba(15, 23, 42, 0.06);
+}
+
+.calendar-task small {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .calendar-task.pending em {

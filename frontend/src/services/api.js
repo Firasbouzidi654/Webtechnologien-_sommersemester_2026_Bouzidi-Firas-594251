@@ -60,16 +60,50 @@ function apiStatus(status) {
   return String(status || 'Pending').trim().toUpperCase();
 }
 
+function displayFrequency(frequency, intervalDays) {
+  const labels = {
+    DAILY: 'Daily',
+    WEEKLY: 'Weekly',
+    WEEKDAYS_ONLY: 'Weekdays only'
+  };
+  if (String(frequency).toUpperCase() === 'EVERY_X_DAYS') {
+    return `Every ${intervalDays || 2} days`;
+  }
+  return labels[String(frequency || 'DAILY').toUpperCase()] || 'Daily';
+}
+
+function isScheduledForDate(medication, dateKey) {
+  const startDate = medication.startDate || dateKey;
+  const start = new Date(`${startDate}T00:00:00`);
+  const target = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || target < start) return false;
+
+  const days = Math.round((target - start) / 86400000);
+  switch (String(medication.frequency || 'DAILY').toUpperCase()) {
+    case 'WEEKLY': return days % 7 === 0;
+    case 'EVERY_X_DAYS': return days % Math.max(Number(medication.intervalDays) || 2, 2) === 0;
+    case 'WEEKDAYS_ONLY': return target.getDay() !== 0 && target.getDay() !== 6;
+    default: return true;
+  }
+}
+
 function toMedication(medication, child) {
   return {
     id: medication.id,
     medicationId: String(medication.id),
-    childId: child?.id || null,
-    childName: medication.childName,
+    childId: child?.id || medication.childId || null,
+    childName: child?.name || 'Unknown child',
     name: medication.name,
     dosage: medication.dosage || '',
     instructions: '',
-    schedule: { frequency: 'Daily', dayPart: 'Specific time', specificTime: medication.time || '12:00' },
+    schedule: {
+      frequency: displayFrequency(medication.frequency, medication.intervalDays),
+      frequencyCode: medication.frequency || 'DAILY',
+      intervalDays: medication.intervalDays || null,
+      dayPart: 'Specific time',
+      specificTime: medication.time || '12:00',
+      startDate: medication.startDate || null
+    },
     history: [],
     prescriptionUploaded: false,
     todayStatus: displayStatus(medication.status)
@@ -84,13 +118,8 @@ async function loadRawRecords() {
   return { children, medications };
 }
 
-// Match by childId when the medication has one (reliable even with duplicate child names).
-// Falls back to matching by name for older medications saved before childId existed.
 function belongsToChild(medication, child) {
-  if (medication.childId != null) {
-    return medication.childId === child.id;
-  }
-  return medication.childName === child.name;
+  return medication.childId === child.id;
 }
 
 async function getChildren() {
@@ -109,20 +138,24 @@ async function getChildren() {
 
 async function getTodayTasks() {
   const { children, medications } = await loadRawRecords();
+  const today = new Date().toISOString().slice(0, 10);
   return medications.map((medication) => {
     const child = children.find((item) => belongsToChild(medication, item));
     return {
       taskId: `TASK-${medication.id}`,
       medicationId: String(medication.id),
       childId: child?.id || null,
-      childName: medication.childName,
+      childName: child?.name || 'Unknown child',
       groupName: 'Sunflowers',
       medicationName: medication.name,
       dosage: medication.dosage || '',
       scheduledTime: medication.time || '12:00',
-      scheduledDate: new Date().toISOString().slice(0, 10),
+      scheduledDate: medication.startDate || today,
+      scheduledToday: isScheduledForDate(medication, today),
       instructions: '',
       status: displayStatus(medication.status),
+      frequency: medication.frequency || 'DAILY',
+      intervalDays: medication.intervalDays || null,
       reminderDue: false
     };
   });
@@ -148,16 +181,18 @@ export const api = {
   getTodayTasks,
   createMedication: async (childId, medication) => {
     const children = await request('/api/children');
-    const child = children.find((item) => item.id === childId);
+    const child = children.find((item) => String(item.id) === String(childId));
     const saved = await request('/api/medications', {
       method: 'POST',
       body: JSON.stringify({
         name: medication.name,
         childId: child?.id ?? childId,
-        childName: child?.name || '',
         dosage: medication.dosage || '',
         time: medication.scheduledTime || '12:00',
-        status: apiStatus(medication.status)
+        status: apiStatus(medication.status),
+        frequency: medication.frequency || 'DAILY',
+        intervalDays: medication.intervalDays || null,
+        startDate: medication.startDate || null
       })
     });
     return toMedication(saved, child);
@@ -166,10 +201,12 @@ export const api = {
     method: 'PUT',
     body: JSON.stringify({
       name: medication.name,
-      childName: medication.childName,
       dosage: medication.dosage,
       time: medication.scheduledTime || medication.time,
-      status: medication.status ? apiStatus(medication.status) : undefined
+      status: medication.status ? apiStatus(medication.status) : undefined,
+      frequency: medication.frequency,
+      intervalDays: medication.intervalDays || null,
+      startDate: medication.startDate || null
     })
   }),
   deleteMedication: (medicationId) => request(`/api/medications/${medicationId}`, { method: 'DELETE' }),

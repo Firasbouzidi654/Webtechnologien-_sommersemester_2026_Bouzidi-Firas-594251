@@ -26,7 +26,7 @@ class ChildControllerTest {
                 .andExpect(jsonPath("$.name").value("Emma"))
                 .andReturn().getResponse().getContentAsString();
 
-        Number idValue = com.jayway.jsonpath.JsonPath.read(response, "$.id");
+        Number idValue = com.jayway.jsonpath.JsonPath.<Number>read(response, "$.id");
         long id = idValue.longValue();
         mockMvc.perform(get("/api/children").header("X-User-Role", "STAFF"))
                 .andExpect(status().isOk());
