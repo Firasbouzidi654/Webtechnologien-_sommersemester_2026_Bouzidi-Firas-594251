@@ -2,6 +2,7 @@ package de.htw_berlin.kindercare.medication;
 
 import de.htw_berlin.kindercare.config.RoleAccess;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,15 +30,17 @@ public class MedicationController {
     public MedicationController(MedicationService service) { this.service = service; }
 
     @GetMapping
+    @NonNull
     public List<Medication> getAll() {
         return service.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @NonNull
     public Medication create(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
-            @RequestBody Medication medication
+            @RequestBody @NonNull Medication medication
     ) {
         requireMedicationDetails(medication);
         RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
@@ -47,10 +50,11 @@ public class MedicationController {
     }
 
     @PutMapping("/{id}")
+    @NonNull
     public Medication update(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
-            @PathVariable Long id,
-            @RequestBody Medication medication
+            @PathVariable @NonNull Long id,
+            @RequestBody @NonNull Medication medication
     ) {
         RoleAccess.require(role, "STAFF", "ADMIN");
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
@@ -63,7 +67,7 @@ public class MedicationController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable Long id) {
+    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable @NonNull Long id) {
         RoleAccess.require(role, "STAFF", "ADMIN");
         service.delete(id);
     }

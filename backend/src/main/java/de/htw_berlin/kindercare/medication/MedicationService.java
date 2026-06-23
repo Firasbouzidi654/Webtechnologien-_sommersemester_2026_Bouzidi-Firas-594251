@@ -4,6 +4,7 @@ import de.htw_berlin.kindercare.child.Child;
 import de.htw_berlin.kindercare.child.ChildRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -18,12 +19,19 @@ public class MedicationService {
         this.children = children;
     }
 
+    @NonNull
     public List<Medication> findAll() {
         return repository.findAllByOrderByIdAsc();
     }
 
-    public Medication create(Medication medication) {
-        Child linkedChild = children.findById(medication.getChildId())
+    @NonNull
+    public Medication create(@NonNull Medication medication) {
+        Long childId = medication.getChildId();
+        if (childId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
+        }
+
+        Child linkedChild = children.findById(childId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Child not found."));
 
         Medication toSave = new Medication(
@@ -42,7 +50,8 @@ public class MedicationService {
         return repository.save(toSave);
     }
 
-    public Medication update(Long id, Medication changes) {
+    @NonNull
+    public Medication update(@NonNull Long id, @NonNull Medication changes) {
         Medication medication = findById(id);
 
         if (changes.getName() != null && !changes.getName().isBlank()) medication.setName(changes.getName().trim());
@@ -56,23 +65,24 @@ public class MedicationService {
         return repository.save(medication);
     }
 
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         repository.delete(findById(id));
     }
 
     // Keep the existing display field in sync; medication ownership uses childId only.
-    public void updateChildName(Long childId, String newName) {
+    public void updateChildName(@NonNull Long childId, @NonNull String newName) {
         repository.findByChildId(childId).forEach(medication -> {
             medication.setChildName(newName);
             repository.save(medication);
         });
     }
 
-    public void deleteByChildId(Long childId) {
+    public void deleteByChildId(@NonNull Long childId) {
         repository.deleteAll(repository.findByChildId(childId));
     }
 
-    private Medication findById(Long id) {
+    @NonNull
+    private Medication findById(@NonNull Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found."));
     }

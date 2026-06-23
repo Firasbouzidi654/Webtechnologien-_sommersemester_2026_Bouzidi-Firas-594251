@@ -2,6 +2,8 @@ package de.htw_berlin.kindercare.user;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,7 +16,8 @@ public class UserService {
         this.repository = repository;
     }
 
-    public User register(String email, String password, String role) {
+    @NonNull
+    public User register(@Nullable String email, @Nullable String password, @Nullable String role) {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are required.");
         }
@@ -29,7 +32,8 @@ public class UserService {
         return repository.save(user);
     }
 
-    public User login(String email, String password) {
+    @NonNull
+    public User login(@Nullable String email, @Nullable String password) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
         if (password == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");

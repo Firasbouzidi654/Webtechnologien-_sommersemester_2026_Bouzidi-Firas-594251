@@ -3,6 +3,7 @@ package de.htw_berlin.kindercare.child;
 import de.htw_berlin.kindercare.config.RoleAccess;
 import de.htw_berlin.kindercare.medication.MedicationService;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,15 +30,17 @@ public class ChildController {
     }
 
     @GetMapping
+    @NonNull
     public List<Child> getAll() {
         return service.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @NonNull
     public Child create(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
-            @RequestBody Child child
+            @RequestBody @NonNull Child child
     ) {
         RoleAccess.require(role, "PARENT");
         if (child.getName() == null || child.getName().isBlank()) {
@@ -47,10 +50,11 @@ public class ChildController {
     }
 
     @PutMapping("/{id}")
+    @NonNull
     public Child update(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
-            @PathVariable Long id,
-            @RequestBody Child child
+            @PathVariable @NonNull Long id,
+            @RequestBody @NonNull Child child
     ) {
         RoleAccess.require(role, "PARENT");
         Child updated = service.update(id, child);
@@ -60,7 +64,7 @@ public class ChildController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable Long id) {
+    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable @NonNull Long id) {
         RoleAccess.require(role, "PARENT");
         medicationService.deleteByChildId(id);
         service.delete(id);
