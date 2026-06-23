@@ -43,44 +43,14 @@ The project does not use Google Maps or the Browser Geolocation API.
 
 ## Run locally
 
-Prerequisites: Java 21, Node.js/npm, Docker Desktop, and Docker Compose.
+Prerequisites: Java 21, Node.js/npm, and PostgreSQL. Docker Desktop and Docker
+Compose are the quickest way to start the local database.
 
 ```powershell
 docker compose up -d db
-.\gradlew :backend:bootRun
-```
+docker compose ps
+.\gradlew.bat bootRun
 
-In a second terminal:
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
 
-The backend runs at `http://localhost:8080`; Vite normally runs at `http://localhost:5173`.
 
-## REST API
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/auth/register` | Register an account |
-| `POST` | `/api/auth/login` | Sign in |
-| `GET`, `POST` | `/api/children` | Read or create children |
-| `PUT`, `DELETE` | `/api/children/{id}` | Update or delete a child |
-| `GET`, `POST` | `/api/medications` | Read or create medication plans |
-| `PUT`, `DELETE` | `/api/medications/{id}` | Update or delete a medication plan |
-
-## Verification
-
-```powershell
-.\gradlew :backend:test
-
-cd frontend
-npm test
-npm run build
-```
-
-## Render deployment
-
-[`render.yaml`](render.yaml) defines a Docker Spring Boot service and a static Vue service. Configure `DATABASE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `VITE_API_BASE_URL` in Render. The backend runs Flyway on startup before Hibernate validates the schema, so the same forward-only migration is used locally and on Render.

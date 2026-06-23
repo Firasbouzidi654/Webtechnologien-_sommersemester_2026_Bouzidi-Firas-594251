@@ -1,0 +1,6 @@
+// Run the Spring Boot application from the repository root.
+tasks.register('bootRun') {
+    group = 'application'
+    description = 'Runs the backend Spring Boot application.'
+    dependsOn(':backend:bootRun')
+}
