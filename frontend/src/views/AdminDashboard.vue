@@ -116,59 +116,10 @@
 
     <!-- Emergency modal -->
     <section v-if="emergencyActive" class="modal-backdrop" @click.self="closeEmergency" role="dialog" aria-modal="true">
-      <div class="modal emergency-modal">
-        <header class="modal-header">
-          <div>
-            <p class="eyebrow">Emergency mode</p>
-            <h2>Child safety instant response</h2>
-            <p class="modal-subtitle">Review medical context, locate nearby support, and contact help quickly.</p>
-          </div>
-          <button class="modal-close" type="button" aria-label="Close emergency dialog" @click="closeEmergency">x</button>
-        </header>
+      <div class="modal emergency-modal map-only-modal">
+        <button class="modal-close" type="button" aria-label="Close map" @click="closeEmergency">x</button>
 
-        <div class="emergency-body">
-          <div class="emergency-details">
-            <template v-if="selectedEmergencyChild">
-              <div class="map-card">
-                <div class="map-card-header">
-                  <p class="eyebrow">Live map</p>
-                </div>
-
-                <div id="emergency-map" class="emergency-map" aria-label="Emergency location map">
-                <template v-if="emergencyMapError">
-                  <div class="map-fallback">
-                    <p>{{ emergencyMapError }}</p>
-                    <p><strong>Coordinates:</strong> {{ selectedEmergencyLocation.lat }}, {{ selectedEmergencyLocation.lng }}</p>
-                  </div>
-                </template>
-                <template v-else>
-                  Map loading…
-                </template>
-                </div>
-              </div>
-
-            </template>
-          </div>
-
-          <aside class="emergency-poi-panel">
-            <div class="poi-list">
-              <div v-if="poiLoading" class="loading-state">
-                <span class="spinner" aria-hidden="true"></span>
-                <div>
-                  <strong>Searching nearby support</strong>
-                  <p>Looking for hospitals, pharmacies, and police stations...</p>
-                </div>
-              </div>
-              <div v-else-if="nearbyPOIs.length === 0" class="empty-state">No nearby emergency points found. Try again in a moment.</div>
-              <EmergencyPoiCard
-                v-for="poi in displayedEmergencyPOIs"
-                :key="poi.id"
-                :poi="poi"
-                :from="selectedEmergencyLocation"
-              />
-            </div>
-          </aside>
-        </div>
+        <div id="emergency-map" class="emergency-map" aria-label="Child location map"></div>
       </div>
     </section>
 
@@ -275,30 +226,18 @@
 <script>
 import AdminCalendar from '../components/AdminCalendar.vue';
 import ChildList from '../components/ChildList.vue';
-import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
-import { MEDICATION_STATUSES, addNotification, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
-import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
+import { MEDICATION_STATUSES, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
 import { getGermanPublicHolidays } from '../services/holidayService.js';
-
-const FALLBACK_POLICE_STATION = {
-  id: 'fallback-police-station',
-  name: 'Police Station Alexanderplatz',
-  type: 'police',
-  label: 'Police station',
-  lat: 52.5215,
-  lng: 13.4132
-};
 
 export default {
   name: 'AdminDashboard',
   components: {
     AdminCalendar,
     ChildList,
-    EmergencyPoiCard,
     MedicationAssistant,
     MedicationTaskCard,
     NotificationCenter
@@ -314,11 +253,8 @@ export default {
     return {
       emergencyActive: false,
       selectedEmergencyChildId: null,
-      nearbyPOIs: [],
-      poiLoading: false,
       emergencyMap: null,
-      emergencyMarkers: [],
-      emergencyMapError: '',
+      childLocationMarker: null,
       taskModalActive: false,
       taskModalMode: 'add',
       taskForm: {
@@ -359,6 +295,11 @@ export default {
   },
   beforeUnmount() {
     window.clearInterval(this.syncInterval);
+    if (this.emergencyMap) {
+      this.emergencyMap.remove();
+      this.emergencyMap = null;
+      this.childLocationMarker = null;
+    }
   },
   computed: {
     selectedEmergencyChild() {
@@ -371,18 +312,9 @@ export default {
         lng
       };
     },
-    displayedEmergencyPOIs() {
-      if (this.poiLoading) {
-        return [];
-      }
-
-      const pois = Array.isArray(this.nearbyPOIs) ? [...this.nearbyPOIs] : [];
-
-      if (!pois.some((poi) => poi.type === 'police')) {
-        pois.push(this.withDistance(FALLBACK_POLICE_STATION));
-      }
-
-      return pois;
+    hasSelectedEmergencyLocation() {
+      const location = this.selectedEmergencyChild?.location;
+      return Number.isFinite(location?.lat) && Number.isFinite(location?.lng);
     },
     children() {
       return kindercareStore.children;
@@ -456,30 +388,6 @@ export default {
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     },
-    withDistance(poi) {
-      return {
-        ...poi,
-        distance: Math.round(this.distanceBetweenMeters(this.selectedEmergencyLocation, poi)),
-        icon: 'Police',
-        label: 'Police station'
-      };
-    },
-    distanceBetweenMeters(from, to) {
-      if (!from || !to) {
-        return 0;
-      }
-
-      const toRad = (value) => (value * Math.PI) / 180;
-      const radius = 6371000;
-      const dLat = toRad(to.lat - from.lat);
-      const dLng = toRad(to.lng - from.lng);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-
-      return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    },
     async confirmMedication(medicationId) {
       await markMedicationTaken(medicationId);
     },
@@ -488,57 +396,35 @@ export default {
         this.selectedEmergencyChildId = this.children?.[0]?.id || null;
       }
       this.emergencyActive = true;
-      addNotification({
-        title: 'Emergency mode activation',
-        message: 'Staff opened Emergency Mode from the admin dashboard.',
-        type: 'danger'
-      });
       this.$nextTick(() => this.initEmergencyModal());
     },
-    async initEmergencyModal() {
-      if (!this.selectedEmergencyChild) {
-        this.emergencyMapError = 'No child location available.';
-        return;
-      }
-
+    initEmergencyModal() {
       const { lat, lng } = this.selectedEmergencyLocation;
       const mapEl = document.getElementById('emergency-map');
       if (!mapEl) {
         return;
       }
 
-      this.emergencyMapError = '';
-
       try {
         if (!this.emergencyMap) {
           this.emergencyMap = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 13);
-          const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19
-          });
-          tileLayer.on('tileerror', () => {
-            this.emergencyMapError = 'Map tiles failed to load. Emergency POIs are still listed below.';
-          });
-          tileLayer.addTo(this.emergencyMap);
+          }).addTo(this.emergencyMap);
         } else {
           this.emergencyMap.setView([lat, lng], 13);
         }
 
-        this.clearEmergencyMarkers();
-        this.addEmergencyMarker([lat, lng], `${this.selectedEmergencyChild.name || 'Child'} location`);
-        await this.loadNearbyPois(lat, lng);
+        if (this.childLocationMarker) {
+          this.emergencyMap.removeLayer(this.childLocationMarker);
+          this.childLocationMarker = null;
+        }
+        if (this.hasSelectedEmergencyLocation) {
+          this.childLocationMarker = L.marker([lat, lng]).addTo(this.emergencyMap);
+        }
       } catch (e) {
         console.warn('Leaflet map init error', e);
       }
-    },
-    clearEmergencyMarkers() {
-      if (!this.emergencyMap) {
-        return;
-      }
-
-      this.emergencyMarkers.forEach((marker) => {
-        this.emergencyMap.removeLayer(marker);
-      });
-      this.emergencyMarkers = [];
     },
     openCalendarTaskModal(date) {
       this.openTaskModal('add', null, date);
@@ -633,34 +519,13 @@ export default {
 
       await removeMedication(task.childId, medicationId);
     },
-    addEmergencyMarker(position, label) {
-      if (!this.emergencyMap) {
-        return;
-      }
-
-      const marker = L.marker(position).addTo(this.emergencyMap).bindPopup(label);
-      this.emergencyMarkers.push(marker);
-      return marker;
-    },
-    async loadNearbyPois(lat, lng) {
-      this.poiLoading = true;
-      this.nearbyPOIs = [];
-
-      const pois = await fetchNearbyEmergencyPOIs(lat, lng);
-      this.nearbyPOIs = Array.isArray(pois) ? pois : [];
-
-      if (this.emergencyMap && this.nearbyPOIs.length) {
-        this.nearbyPOIs.forEach((poi) => {
-          const marker = L.marker([poi.lat, poi.lng]).addTo(this.emergencyMap).bindPopup(`${poi.name} — ${poi.type} — ${poi.distance} m`);
-          this.emergencyMarkers.push(marker);
-        });
-      }
-
-      this.poiLoading = false;
-    },
     closeEmergency() {
       this.emergencyActive = false;
-      this.emergencyMapError = '';
+      if (this.emergencyMap) {
+        this.emergencyMap.remove();
+        this.emergencyMap = null;
+        this.childLocationMarker = null;
+      }
     },
     async changeTaskStatus({ medicationId, status }) {
       if (!medicationId || !this.statusOptions.includes(status)) {
@@ -854,52 +719,22 @@ select {
 }
 
 .emergency-modal {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  width: min(1120px, calc(100vw - 32px));
-  max-height: min(92vh, 880px);
+  position: relative;
+  width: min(900px, calc(100vw - 32px));
+  height: min(70vh, 620px);
+  max-height: 70vh;
   overflow: hidden;
   padding: 0;
   border-radius: 18px;
   animation: modal-rise 0.22s ease;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.emergency-modal .modal-header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin-bottom: 0;
-  padding: 22px 24px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
-}
-
-.emergency-modal .modal-header h2 {
-  margin-top: 4px;
-  color: var(--color-text-primary);
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
-  line-height: 1.15;
-}
-
-.modal-subtitle {
-  max-width: 560px;
-  margin-top: 6px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  line-height: 1.5;
-}
-
 .modal-close {
+  position: absolute;
+  z-index: 1001;
+  top: 10px;
+  right: 10px;
   display: grid;
-  flex: 0 0 40px;
   width: 40px;
   height: 40px;
   place-items: center;
@@ -919,313 +754,13 @@ select {
   color: var(--color-missed-text);
 }
 
-.emergency-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-  gap: 20px;
-  min-height: 0;
-  overflow: auto;
-  padding: 22px 24px 24px;
-  background: linear-gradient(180deg, var(--color-bg-primary), var(--color-bg-secondary));
-}
-
-.emergency-details,
-.emergency-poi-panel {
-  min-width: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-sm);
-}
-
-.emergency-details {
-  display: grid;
-  align-content: start;
-  gap: 16px;
-  padding: 18px;
-}
-
-.field-label {
-  display: grid;
-  gap: 8px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-
-.field-label span {
-  color: var(--color-text-secondary);
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.field-label select {
-  min-height: 46px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-.map-card-header h3,
-.panel-header h3 {
-  margin: 0;
-  color: var(--color-text-primary);
-}
-
-.support-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.support-card {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  gap: 12px;
-  align-items: start;
-  min-height: 150px;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 14px;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  text-align: left;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
-}
-
-.support-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(49, 130, 206, 0.25);
-  box-shadow: var(--shadow-lg);
-}
-
-.support-icon {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border-radius: 14px;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.support-photo {
-  display: block;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  object-fit: cover;
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
-  transition: transform 0.25s ease, filter 0.25s ease;
-}
-
-.support-card:hover .support-photo {
-  transform: scale(1.08);
-  filter: brightness(1.05) saturate(1.08);
-}
-
-.support-card strong,
-.support-card small,
-.support-card-copy span {
-  display: block;
-  overflow-wrap: anywhere;
-}
-
-.support-card-copy {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.support-card-copy > span {
-  color: var(--color-text-primary);
-  font-size: 0.92rem;
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.support-card small {
-  color: var(--color-text-secondary);
-  font-size: 0.76rem;
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.support-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.support-metrics small {
-  border: 1px solid var(--color-border-light);
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: var(--color-bg-secondary);
-}
-
-.support-card > button {
-  grid-column: 1 / -1;
-  min-height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-brand), #256db0);
-  color: #fff;
-  cursor: pointer;
-  font-weight: 900;
-  box-shadow: 0 10px 18px rgba(49, 130, 206, 0.18);
-}
-
-.support-card > button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 24px rgba(49, 130, 206, 0.24);
-}
-
-.support-card.hospital .support-icon {
-  background: var(--color-missed);
-  color: var(--color-missed-text);
-}
-
-.support-card.pharmacy .support-icon {
-  background: var(--color-taken);
-  color: var(--color-taken-text);
-}
-
-.support-card.police .support-icon {
-  background: var(--color-upcoming);
-  color: var(--color-upcoming-text);
-}
-
-.support-card.police {
-  border-color: color-mix(in srgb, var(--color-upcoming-border) 35%, var(--color-border));
-}
-
-.support-card.hospital {
-  border-color: color-mix(in srgb, var(--color-missed-border) 35%, var(--color-border));
-}
-
-.support-card.pharmacy {
-  border-color: color-mix(in srgb, var(--color-taken-border) 35%, var(--color-border));
-}
-
-.support-card.contacts {
-  border-color: color-mix(in srgb, var(--color-pending-border) 35%, var(--color-border));
-}
-
-.support-card.contacts .support-icon {
-  background: var(--color-pending);
-  color: var(--color-pending-text);
-}
-
-.map-card {
-  display: grid;
-  gap: 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 16px;
-  background: var(--color-bg-primary);
-}
-
-.map-card-header,
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.map-card-header span {
-  border-radius: 999px;
-  padding: 6px 10px;
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-  font-size: 0.76rem;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
 .emergency-map {
-  min-height: 280px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: var(--color-bg-tertiary);
-  margin-top: 18px;
-}
-
-.emergency-modal .emergency-map {
-  display: grid;
-  min-height: clamp(230px, 32vh, 360px);
-  place-items: center;
-  margin-top: 0;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  font-weight: 800;
-}
-
-.map-fallback {
-  padding: 24px;
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
-.map-fallback p {
-  margin: 0 0 12px;
-}
-
-.emergency-poi-panel {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 16px;
-  padding: 20px;
-}
-
-.panel-note {
-  max-width: 190px;
-  color: var(--color-text-secondary);
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1.35;
-  text-align: right;
-}
-
-.poi-list {
-  display: grid;
-  align-content: start;
-  gap: 14px;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.loading-state {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 16px;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-.loading-state p {
-  margin-top: 3px;
-  color: var(--color-text-secondary);
-  font-size: 0.88rem;
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 4px solid var(--color-bg-tertiary);
-  border-top-color: var(--color-brand);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
 }
 
 .modal-fields {
@@ -1288,14 +823,6 @@ select {
   border: 1px solid var(--color-missed-border);
   background: var(--color-missed);
   color: var(--color-missed-text);
-}
-
-.emergency-map {
-  min-height: 280px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: var(--color-bg-tertiary);
-  margin-top: 18px;
 }
 
 .hero-strip {
@@ -1809,25 +1336,6 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .emergency-modal {
-    max-height: calc(100vh - 24px);
-  }
-
-  .emergency-body {
-    grid-template-columns: 1fr;
-    overflow: auto;
-  }
-
-  .emergency-poi-panel {
-    min-height: auto;
-  }
-
-  .poi-list {
-    max-height: none;
-    overflow: visible;
-    padding-right: 0;
-  }
-
 }
 
 @media (max-width: 640px) {
@@ -1882,40 +1390,9 @@ select {
 
   .emergency-modal {
     width: 100%;
+    height: calc(100vh - 20px);
     max-height: calc(100vh - 20px);
     border-radius: 14px;
-  }
-
-  .emergency-modal .modal-header {
-    padding: 18px;
-  }
-
-  .emergency-body {
-    padding: 16px;
-  }
-
-  .support-grid,
-  .map-card-header,
-  .panel-header {
-    grid-template-columns: 1fr;
-  }
-
-  .support-card {
-    min-height: 70px;
-  }
-
-  .support-card > button {
-    width: 100%;
-  }
-
-  .panel-note {
-    max-width: none;
-    text-align: left;
-  }
-
-  .map-card-header,
-  .panel-header {
-    flex-direction: column;
   }
 }
 </style>

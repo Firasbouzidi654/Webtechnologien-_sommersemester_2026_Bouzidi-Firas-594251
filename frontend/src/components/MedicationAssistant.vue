@@ -1,14 +1,13 @@
 <template>
-  <section class="medication-assistant panel" :class="{ compact }">
+  <section class="medication-assistant" :class="{ compact }">
     <header>
       <div>
         <p class="eyebrow">OpenFDA</p>
         <h2>Medication Assistant</h2>
       </div>
-      <button type="button" @click="openAssistant">Open</button>
     </header>
 
-    <form v-if="compact" class="assistant-inline-search" @submit.prevent="openAndSearch">
+    <form class="assistant-inline-search" @submit.prevent="searchMedication">
       <label class="inline-search-field" aria-label="Search medication information">
         <span></span>
         <input
@@ -72,7 +71,7 @@
         </div>
 
         <div v-else-if="hasSearched && results.length === 0" class="assistant-message">
-          No results found. Try a brand or generic medication name.
+          No FDA label was found for "{{ query }}". Try a brand or generic medication name.
         </div>
 
         <div v-if="results.length" class="medication-results">
@@ -91,8 +90,8 @@
                 <dd>{{ result.genericName || 'Not listed' }}</dd>
               </div>
               <div>
-                <dt>Description</dt>
-                <dd>{{ result.description || 'Not listed in this label.' }}</dd>
+                <dt>Purpose</dt>
+                <dd>{{ result.purpose || 'Not listed in this label.' }}</dd>
               </div>
               <div>
                 <dt>Warnings</dt>
@@ -142,22 +141,13 @@ export default {
   },
   beforeUnmount() {
     this.activeController?.abort();
+    this.activeController = null;
   },
   methods: {
-    openAssistant() {
-      this.isOpen = true;
-      this.$nextTick(() => {
-        const input = this.$el.querySelector('.medication-search input');
-        input?.focus();
-      });
-    },
-    openAndSearch() {
-      this.isOpen = true;
-      this.searchMedication();
-    },
     closeAssistant() {
       this.isOpen = false;
       this.activeController?.abort();
+      this.activeController = null;
       this.loading = false;
     },
     async searchMedication() {
@@ -166,22 +156,28 @@ export default {
       }
 
       this.activeController?.abort();
-      this.activeController = new AbortController();
+      const controller = new AbortController();
+      this.activeController = controller;
+      this.isOpen = true;
       this.loading = true;
       this.errorMessage = '';
       this.hasSearched = true;
+      this.results = [];
 
       try {
         this.results = await searchMedicationInfo(this.query, {
-          signal: this.activeController.signal
+          signal: controller.signal
         });
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          this.errorMessage = 'OpenFDA is temporarily unavailable. Please try again in a moment.';
+        if (error.name !== 'AbortError' && this.activeController === controller) {
+          this.errorMessage = 'Could not retrieve medication information from OpenFDA. Please try again.';
           this.results = [];
         }
       } finally {
-        this.loading = false;
+        if (this.activeController === controller) {
+          this.loading = false;
+          this.activeController = null;
+        }
       }
     }
   }
@@ -192,13 +188,17 @@ export default {
 .medication-assistant {
   display: grid;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-self: start;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   background: var(--color-bg-secondary);
   box-shadow: var(--shadow-sm);
   color: var(--color-text-primary);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .medication-assistant.compact {
@@ -210,8 +210,8 @@ export default {
   font-size: 1.12rem;
 }
 
-.medication-assistant:hover {
-  transform: translateY(-3px);
+.medication-assistant:hover,
+.medication-assistant:focus-within {
   box-shadow: var(--shadow-lg);
 }
 
@@ -227,7 +227,6 @@ export default {
   color: var(--color-text-primary);
 }
 
-.medication-assistant header button,
 .medication-search button {
   min-height: 42px;
   border: none;
@@ -238,19 +237,16 @@ export default {
   cursor: pointer;
   font-weight: 800;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+  transition: box-shadow 0.22s ease, opacity 0.22s ease;
 }
 
-.medication-assistant header button:hover,
 .medication-search button:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
 .medication-search button:disabled {
   cursor: not-allowed;
   opacity: 0.62;
-  transform: none;
 }
 
 .assistant-summary,
@@ -326,6 +322,11 @@ export default {
   cursor: pointer;
   font-weight: 900;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.22s ease, opacity 0.22s ease;
+}
+
+.assistant-inline-search button:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
 }
 
 .assistant-inline-search button:disabled {
@@ -491,11 +492,10 @@ export default {
   padding: 16px;
   background: var(--color-bg-primary);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: box-shadow 0.22s ease;
 }
 
 .medication-result-card:hover {
-  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
 }
 
