@@ -5,7 +5,13 @@
       <span v-if="unreadCount" class="notification-count">{{ unreadCount }}</span>
     </button>
 
-    <section v-if="dropdownOpen" class="notification-dropdown" aria-label="Recent notifications">
+    <section
+      v-if="dropdownOpen"
+      ref="dropdown"
+      class="notification-dropdown"
+      :style="{ '--notification-max-height': `${dropdownMaxHeight}px` }"
+      aria-label="Recent notifications"
+    >
       <header>
         <div>
           <p class="eyebrow">Alerts</p>
@@ -44,6 +50,7 @@ export default {
   data() {
     return {
       dropdownOpen: false,
+      dropdownMaxHeight: 390,
       dismissedToastIds: new Set()
     };
   },
@@ -52,7 +59,9 @@ export default {
       return kindercareStore.notifications || [];
     },
     recentNotifications() {
-      return this.notifications.slice(0, 8);
+      // Keep the full, newest-first notification history available in the
+      // scrollable panel. The panel height determines how many are visible.
+      return this.notifications;
     },
     unreadCount() {
       return this.notifications.filter((notification) => !notification.read).length;
@@ -76,9 +85,32 @@ export default {
       }
     }
   },
+  mounted() {
+    window.addEventListener('resize', this.updateDropdownMaxHeight);
+    window.addEventListener('scroll', this.updateDropdownMaxHeight, true);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateDropdownMaxHeight);
+    window.removeEventListener('scroll', this.updateDropdownMaxHeight, true);
+  },
   methods: {
     toggleDropdown() {
       this.dropdownOpen = !this.dropdownOpen;
+
+      if (this.dropdownOpen) {
+        this.$nextTick(this.updateDropdownMaxHeight);
+      }
+    },
+    updateDropdownMaxHeight() {
+      const dropdown = this.$refs.dropdown;
+
+      if (!dropdown) {
+        return;
+      }
+
+      const viewportPadding = 16;
+      const availableHeight = window.innerHeight - dropdown.getBoundingClientRect().top - viewportPadding;
+      this.dropdownMaxHeight = Math.max(0, Math.min(390, availableHeight));
     },
     markNotificationsRead() {
       markNotificationsRead();
@@ -148,13 +180,14 @@ export default {
   top: calc(100% + 12px);
   right: 0;
   z-index: 1300;
-  width: min(400px, calc(100vw - 32px));
-  max-height: min(480px, calc(100vh - 120px));
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 32px));
+  max-height: var(--notification-max-height, 390px);
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-border);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 12px;
   background: var(--color-bg-secondary);
   box-shadow: var(--shadow-xl);
   animation: dropdown-in 0.18s ease;
@@ -163,9 +196,9 @@ export default {
 .notification-dropdown header {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .notification-dropdown h3,
@@ -175,14 +208,14 @@ export default {
 
 .notification-dropdown h3 {
   color: var(--color-text-primary);
-  font-size: 1.02rem;
+  font-size: 0.98rem;
 }
 
 .notification-dropdown header button {
   flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 9px 12px;
+  padding: 7px 10px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   cursor: pointer;
@@ -196,29 +229,32 @@ export default {
 }
 
 .notification-list {
+  flex: 1 1 auto;
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 8px;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-right: 2px;
+  scrollbar-gutter: stable;
 }
 
 .notification-item {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 8px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
   border: 1px solid var(--color-border-light);
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 10px;
   background: var(--color-bg-primary);
 }
 
 .notification-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
   border-radius: 999px;
   background: var(--color-upcoming-border);
 }
@@ -238,28 +274,32 @@ export default {
 .notification-item > div {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .notification-item strong {
   color: var(--color-text-primary);
-  font-size: 0.94rem;
-  line-height: 1.3;
+  font-size: 0.9rem;
+  line-height: 1.25;
 }
 
 .notification-item p {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 0.88rem;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.82rem;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.35;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .notification-item time,
 .empty-note {
   color: var(--color-text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
@@ -334,7 +374,8 @@ export default {
 
 @media (max-width: 520px) {
   .notification-dropdown {
-    right: -72px;
+    right: auto;
+    left: 0;
   }
 
   .toast-stack {
