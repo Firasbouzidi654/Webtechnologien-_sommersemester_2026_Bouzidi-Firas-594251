@@ -116,10 +116,25 @@
 
     <!-- Emergency modal -->
     <section v-if="emergencyActive" class="modal-backdrop" @click.self="closeEmergency" role="dialog" aria-modal="true">
-      <div class="modal emergency-modal map-only-modal">
+      <div class="modal emergency-modal">
         <button class="modal-close" type="button" aria-label="Close map" @click="closeEmergency">x</button>
 
-        <div id="emergency-map" class="emergency-map" aria-label="Child location map"></div>
+        <div class="emergency-body">
+          <aside class="emergency-poi-panel" aria-label="Nearby emergency support">
+            <div v-if="poiLoading" class="poi-state">Searching for nearby support…</div>
+            <div v-else-if="displayedEmergencyPOIs.length === 0" class="poi-state">No nearby emergency support found.</div>
+            <div v-else class="poi-list">
+              <EmergencyPoiCard
+                v-for="poi in displayedEmergencyPOIs"
+                :key="poi.id"
+                :poi="poi"
+                :from="selectedEmergencyLocation"
+              />
+            </div>
+          </aside>
+
+          <div id="emergency-map" class="emergency-map" aria-label="Child location map"></div>
+        </div>
       </div>
     </section>
 
@@ -226,18 +241,30 @@
 <script>
 import AdminCalendar from '../components/AdminCalendar.vue';
 import ChildList from '../components/ChildList.vue';
+import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
+import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
 import { getGermanPublicHolidays } from '../services/holidayService.js';
+
+const FALLBACK_POLICE_STATION = {
+  id: 'fallback-police-station',
+  name: 'Police Station Alexanderplatz',
+  type: 'police',
+  label: 'Police station',
+  lat: 52.5215,
+  lng: 13.4132
+};
 
 export default {
   name: 'AdminDashboard',
   components: {
     AdminCalendar,
     ChildList,
+    EmergencyPoiCard,
     MedicationAssistant,
     MedicationTaskCard,
     NotificationCenter
@@ -253,6 +280,8 @@ export default {
     return {
       emergencyActive: false,
       selectedEmergencyChildId: null,
+      nearbyPOIs: [],
+      poiLoading: false,
       emergencyMap: null,
       childLocationMarker: null,
       taskModalActive: false,
@@ -315,6 +344,13 @@ export default {
     hasSelectedEmergencyLocation() {
       const location = this.selectedEmergencyChild?.location;
       return Number.isFinite(location?.lat) && Number.isFinite(location?.lng);
+    },
+    displayedEmergencyPOIs() {
+      const pois = [...this.nearbyPOIs];
+      if (!pois.some((poi) => poi.type === 'police')) {
+        pois.push(this.withDistance(FALLBACK_POLICE_STATION));
+      }
+      return pois;
     },
     children() {
       return kindercareStore.children;
@@ -398,6 +434,23 @@ export default {
       this.emergencyActive = true;
       this.$nextTick(() => this.initEmergencyModal());
     },
+    withDistance(poi) {
+      return {
+        ...poi,
+        distance: Math.round(this.distanceBetweenMeters(this.selectedEmergencyLocation, poi))
+      };
+    },
+    distanceBetweenMeters(from, to) {
+      const toRadians = (value) => (value * Math.PI) / 180;
+      const radius = 6371000;
+      const deltaLat = toRadians(to.lat - from.lat);
+      const deltaLng = toRadians(to.lng - from.lng);
+      const value =
+        Math.sin(deltaLat / 2) ** 2 +
+        Math.cos(toRadians(from.lat)) * Math.cos(toRadians(to.lat)) * Math.sin(deltaLng / 2) ** 2;
+
+      return radius * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
+    },
     initEmergencyModal() {
       const { lat, lng } = this.selectedEmergencyLocation;
       const mapEl = document.getElementById('emergency-map');
@@ -422,8 +475,19 @@ export default {
         if (this.hasSelectedEmergencyLocation) {
           this.childLocationMarker = L.marker([lat, lng]).addTo(this.emergencyMap);
         }
+        this.loadNearbyPois(lat, lng);
       } catch (e) {
         console.warn('Leaflet map init error', e);
+      }
+    },
+    async loadNearbyPois(lat, lng) {
+      this.poiLoading = true;
+      try {
+        this.nearbyPOIs = await fetchNearbyEmergencyPOIs(lat, lng);
+      } catch {
+        this.nearbyPOIs = [];
+      } finally {
+        this.poiLoading = false;
       }
     },
     openCalendarTaskModal(date) {
@@ -720,9 +784,9 @@ select {
 
 .emergency-modal {
   position: relative;
-  width: min(900px, calc(100vw - 32px));
-  height: min(70vh, 620px);
-  max-height: 70vh;
+  width: min(1120px, calc(100vw - 32px));
+  height: min(76vh, 680px);
+  max-height: 76vh;
   overflow: hidden;
   padding: 0;
   border-radius: 18px;
@@ -761,6 +825,35 @@ select {
   border: 0;
   border-radius: 0;
   margin: 0;
+}
+
+.emergency-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background: var(--color-bg-primary);
+}
+
+.emergency-poi-panel {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--color-bg-secondary);
+}
+
+.poi-list {
+  display: grid;
+  gap: 10px;
+}
+
+.poi-state {
+  color: var(--color-text-secondary);
+  font-weight: 700;
 }
 
 .modal-fields {
@@ -1336,6 +1429,21 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .emergency-body {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: auto;
+  }
+
+  .emergency-modal {
+    height: min(86vh, 900px);
+    max-height: 86vh;
+  }
+
+  .emergency-map {
+    min-height: 360px;
+  }
+
 }
 
 @media (max-width: 640px) {
@@ -1393,6 +1501,10 @@ select {
     height: calc(100vh - 20px);
     max-height: calc(100vh - 20px);
     border-radius: 14px;
+  }
+
+  .emergency-body {
+    padding: 10px;
   }
 }
 </style>

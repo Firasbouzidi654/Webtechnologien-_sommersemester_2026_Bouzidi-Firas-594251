@@ -33,6 +33,7 @@ KinderCare Connect is a university web project for coordinating child profiles, 
 - [Nager.Date](https://date.nager.at/) for German public holidays
 - [openFDA](https://open.fda.gov/apis/drug-label/) for public medication-label lookups
 - [OpenStreetMap](https://www.openstreetmap.org/) tiles, displayed with Leaflet
+- [Overpass API](https://overpass-api.de/) for nearby hospitals, pharmacies, and police stations
 - PostgreSQL for persistent application data
 - Spring Boot for the backend REST service
 - Vue and Vite for the browser application
