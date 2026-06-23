@@ -158,21 +158,6 @@
     </section>
 
     <section class="operations-row">
-      <article class="progress-panel">
-        <div>
-          <p class="eyebrow">Daily medication progress</p>
-          <h2>{{ medicationProgress.completed }} of {{ medicationProgress.total }} completed</h2>
-        </div>
-        <div class="progress-track" aria-label="Medication completion progress">
-          <span :style="{ width: `${medicationProgress.percent}%` }"></span>
-        </div>
-        <div class="progress-metrics">
-          <span class="taken">{{ medicationProgress.completed }} taken</span>
-          <span class="pending">{{ medicationProgress.pending }} pending/upcoming</span>
-          <span class="missed">{{ medicationProgress.missed }} missed</span>
-        </div>
-      </article>
-
       <article class="day-timeline-panel">
         <div class="timeline-section" v-for="section in medicationTimelineSections" :key="section.key">
           <header>
@@ -371,21 +356,6 @@ export default {
     filteredTasks() {
       return this.tasks.filter((task) => task.scheduledToday);
     },
-    medicationProgress() {
-      const total = this.filteredTasks.length;
-      const completed = this.filteredTasks.filter((task) => task.status === 'Taken').length;
-      const pending = this.filteredTasks.filter((task) => ['Pending', 'Upcoming'].includes(task.status)).length;
-      const missed = this.filteredTasks.filter((task) => task.status === 'Missed').length;
-      const percent = total ? Math.round((completed / total) * 100) : 0;
-
-      return {
-        total,
-        completed,
-        pending,
-        missed,
-        percent
-      };
-    },
     medicationTimelineSections() {
       const sections = [
         { key: 'morning', label: 'Morning', range: 'Before 12:00', tasks: [] },
@@ -402,7 +372,7 @@ export default {
       return sections;
     },
     stats() {
-      return this.filteredTasks.reduce((counts, task) => {
+      return this.tasks.reduce((counts, task) => {
         const status = this.statusOptions.includes(task.status) ? task.status : 'Pending';
         counts[status] += 1;
         return counts;
@@ -1093,7 +1063,6 @@ select {
   margin: 16px auto 0;
 }
 
-.progress-panel,
 .day-timeline-panel,
 .holiday-panel {
   border: 1px solid var(--color-border);
@@ -1109,12 +1078,6 @@ select {
   gap: 14px;
 }
 
-.progress-panel {
-  display: grid;
-  gap: 14px;
-}
-
-.progress-panel h2,
 .holiday-panel h2 {
   margin-top: 6px;
   color: var(--color-text-primary);
@@ -1151,49 +1114,6 @@ select {
   color: var(--color-text-primary);
   font-weight: 700;
   text-align: right;
-}
-
-.progress-track {
-  height: 12px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--color-bg-tertiary);
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-taken-border), var(--color-upcoming-border));
-  transition: width 0.35s ease;
-}
-
-.progress-metrics {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.progress-metrics span {
-  border-radius: 6px;
-  padding: 4px 7px;
-  font-size: 0.72rem;
-  font-weight: 900;
-}
-
-.progress-metrics .taken {
-  background: var(--color-taken);
-  color: var(--color-taken-text);
-}
-
-.progress-metrics .pending {
-  background: var(--color-pending);
-  color: var(--color-pending-text);
-}
-
-.progress-metrics .missed {
-  background: var(--color-missed);
-  color: var(--color-missed-text);
 }
 
 .day-timeline-panel {
@@ -1304,7 +1224,6 @@ select {
 }
 
 :global([data-theme="dark"]) .admin-dashboard .hero-strip,
-:global([data-theme="dark"]) .admin-dashboard .progress-panel,
 :global([data-theme="dark"]) .admin-dashboard .day-timeline-panel,
 :global([data-theme="dark"]) .admin-dashboard .holiday-panel,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section,

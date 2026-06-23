@@ -339,7 +339,7 @@ export async function addMedication(childId, data) {
       scheduledTime: data.time || '12:00',
       scheduledDate: startDate,
       instructions: data.instructions || data.notes || '',
-      status: 'Pending',
+      status: data.status || 'Pending',
       frequency: data.frequency || 'DAILY',
       intervalDays: data.intervalDays || null,
       reminderDue: false
@@ -400,7 +400,8 @@ export async function editMedication(childId, medicationId, data) {
       frequency: updates.frequency,
       intervalDays: updates.intervalDays,
       scheduledDate: updates.startDate || task.scheduledDate,
-      instructions: updates.instructions
+      instructions: updates.instructions,
+      status: updates.status
     });
   }
 
