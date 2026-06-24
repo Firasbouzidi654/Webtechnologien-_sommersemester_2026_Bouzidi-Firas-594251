@@ -4,7 +4,7 @@
       <div class="task-heading">
         <span class="time">{{ task.scheduledTime || '--:--' }}</span>
         <h3>{{ task.childName || 'Unknown child' }}</h3>
-        <p>{{ task.groupName || 'No group' }} - {{ task.medicationName || 'Medication' }}</p>
+        <p>{{ task.medicationName || 'Medication' }}</p>
       </div>
       <span class="status">{{ normalizedStatus }}</span>
     </header>

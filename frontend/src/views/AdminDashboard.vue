@@ -63,7 +63,7 @@
           <label>
             <span>Child name</span>
             <select v-model.number="taskForm.childId" required>
-              <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }} — {{ child.groupName }}</option>
+              <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }}</option>
             </select>
           </label>
           <label>

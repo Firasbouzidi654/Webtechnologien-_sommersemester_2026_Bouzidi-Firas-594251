@@ -70,13 +70,7 @@ function statusNotificationType(status) {
 }
 
 function mergeChildrenFromApi(apiChildren) {
-  const existing = {};
-  kindercareStore.children.forEach((c) => { existing[c.id] = c; });
-
-  kindercareStore.children = apiChildren.map((apiChild) => ({
-    prescriptionFileName: existing[apiChild.id]?.prescriptionFileName || null,
-    ...apiChild
-  }));
+  kindercareStore.children = apiChildren;
 }
 
 // ─── Data loading ────────────────────────────────────────────────────────────
@@ -164,18 +158,11 @@ export function setParentAvatar(dataUrl) {
 // ─── Children CRUD ───────────────────────────────────────────────────────────
 
 export async function addChild(data) {
-  const user = currentUser();
   let child;
   try {
     child = await api.createChild({
       name: data.name,
-      groupName: data.groupName || '',
-      dateOfBirth: data.dateOfBirth || null,
-      parentName: user?.fullName || '',
-      parentEmail: user?.email || '',
-      // Allergies use a comma-separated string in the persisted model.
-      allergies: '',
-      chronicDiseases: ''
+      allergies: ''
     });
   } catch {
     addNotification({
@@ -185,8 +172,6 @@ export async function addChild(data) {
     });
     return null;
   }
-
-  child.prescriptionFileName = null;
 
   if (!kindercareStore.children.find((c) => c.id === child.id)) {
     kindercareStore.children.push(child);
@@ -256,55 +241,6 @@ export async function removeAllergy(childId, index) {
   }
 }
 
-// ─── Chronic diseases ────────────────────────────────────────────────────────
-
-export async function addDisease(childId, name) {
-  const child = findChild(childId);
-  if (!child) return null;
-  const updated = [...(child.chronicDiseases || []).filter((item) => item !== 'None'), name];
-  child.chronicDiseases = updated;
-  try {
-    await api.updateChild(childId, { chronicDiseases: updated });
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not save chronic disease.', type: 'danger' });
-  }
-}
-
-export async function editDisease(childId, index, name) {
-  const child = findChild(childId);
-  if (!child) return;
-  child.chronicDiseases ||= [];
-  child.chronicDiseases.splice(index, 1, name);
-  try {
-    await api.updateChild(childId, { chronicDiseases: child.chronicDiseases });
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not update chronic disease.', type: 'danger' });
-  }
-}
-
-export async function removeDisease(childId, index) {
-  const child = findChild(childId);
-  if (!child) return;
-  child.chronicDiseases.splice(index, 1);
-  try {
-    await api.updateChild(childId, { chronicDiseases: child.chronicDiseases });
-  } catch {
-    addNotification({ title: 'Save failed', message: 'Could not remove chronic disease.', type: 'danger' });
-  }
-}
-
-// ─── Prescriptions (UI-only) ─────────────────────────────────────────────────
-
-export function uploadPrescription(childId, fileName) {
-  const child = findChild(childId);
-  if (!child) return;
-  child.prescriptionFileName = fileName;
-  child.medications = (child.medications || []).map((medication) => ({
-    ...medication,
-    prescriptionUploaded: true
-  }));
-}
-
 // ─── Medications ─────────────────────────────────────────────────────────────
 
 export async function addMedication(childId, data) {
@@ -333,7 +269,6 @@ export async function addMedication(childId, data) {
       medicationId: saved.medicationId,
       childId,
       childName: child.name,
-      groupName: child.groupName,
       medicationName: data.name,
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',

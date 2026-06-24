@@ -55,7 +55,7 @@
         <span>Selected child</span>
         <select v-model.number="selectedChildId">
           <option v-for="child in parentChildren" :key="child.id" :value="child.id">
-            {{ child.name }} - {{ child.groupName }}
+            {{ child.name }}
           </option>
         </select>
       </label>
@@ -82,16 +82,6 @@
         <strong>{{ meaningfulItems(selectedChild.allergies).length }}</strong>
         <span>{{ allergySummary }}</span>
       </article>
-      <article :class="{ 'panel-dark': isDark }">
-        <p>Chronic diseases</p>
-        <strong>{{ meaningfulItems(selectedChild.chronicDiseases).length }}</strong>
-        <span>{{ chronicDiseaseSummary }}</span>
-      </article>
-      <article :class="{ 'panel-dark': isDark }">
-        <p>Prescription status</p>
-        <strong>{{ prescriptionStatus.label }}</strong>
-        <span>{{ prescriptionStatus.detail }}</span>
-      </article>
     </section>
 
     <section class="manage-grid">
@@ -115,25 +105,6 @@
         </p>
       </section>
 
-      <section class="panel compact-list">
-        <header>
-          <div>
-            <p class="eyebrow">Manage</p>
-            <h2>Chronic diseases</h2>
-          </div>
-          <button type="button" @click="openDialog('disease')">Add disease</button>
-        </header>
-        <article v-for="(disease, index) in meaningfulItems(selectedChild.chronicDiseases)" :key="`${disease}-${index}`">
-          <strong>{{ disease }}</strong>
-          <span class="item-actions">
-            <button type="button" @click="editDiseaseItem(index, disease)">Edit</button>
-            <button type="button" @click="removeDiseaseItem(index)">Remove</button>
-          </span>
-        </article>
-        <p v-if="meaningfulItems(selectedChild.chronicDiseases).length === 0" class="empty-state">
-          No chronic disease recorded yet.
-        </p>
-      </section>
     </section>
 
     <section class="dashboard-grid">
@@ -194,14 +165,6 @@
 
     </template><!-- /v-if="hasChildren" -->
 
-    <input
-      ref="prescriptionInput"
-      class="hidden-input"
-      type="file"
-      accept=".pdf,.png,.jpg,.jpeg"
-      @change="handlePrescriptionFile"
-    />
-
     <section v-if="activeDialog" class="modal-backdrop" @click.self="closeDialog">
       <form class="modal" @submit.prevent="submitDialog">
         <header>
@@ -213,14 +176,6 @@
           <label>
             <span>Child name</span>
             <input v-model.trim="forms.child.name" type="text" required />
-          </label>
-          <label>
-            <span>Group / class</span>
-            <input v-model.trim="forms.child.groupName" type="text" required />
-          </label>
-          <label>
-            <span>Date of birth</span>
-            <input v-model="forms.child.dateOfBirth" type="date" required />
           </label>
         </template>
 
@@ -240,21 +195,6 @@
           </label>
         </template>
 
-        <template v-if="activeDialog === 'disease'">
-          <label>
-            <span>Suggested chronic disease</span>
-            <select v-model="forms.disease.suggestion" @change="applySuggestion('disease')">
-              <option value="">Choose a suggestion</option>
-              <option v-for="suggestion in diseaseSuggestions" :key="suggestion" :value="suggestion">
-                {{ suggestion }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>Chronic disease name or custom value</span>
-            <input v-model.trim="forms.disease.name" type="text" required />
-          </label>
-        </template>
 
         <footer>
           <button class="secondary-button" type="button" :disabled="submitting" @click="closeDialog">Cancel</button>
@@ -273,17 +213,13 @@ import {
   MEDICATION_STATUSES,
   addAllergy as storeAddAllergy,
   addChild as storeAddChild,
-  addDisease as storeAddDisease,
   addMedication as storeAddMedication,
   editAllergy as storeEditAllergy,
-  editDisease as storeEditDisease,
   loadChildren,
   kindercareStore,
   parentChildren,
   removeAllergy as storeRemoveAllergy,
   setParentAvatar,
-  removeDisease as storeRemoveDisease,
-  uploadPrescription as storeUploadPrescription,
   deleteChild as storeDeleteChild
 } from '../state/kindercareStore';
 
@@ -310,11 +246,9 @@ export default {
       forms: this.emptyForms(),
       quickActions: [
         { key: 'child', label: 'Add child', icon: 'Kid' },
-        { key: 'allergy', label: 'Add allergy', icon: 'All' },
-        { key: 'disease', label: 'Add chronic disease', icon: 'Doc' }
+        { key: 'allergy', label: 'Add allergy', icon: 'All' }
       ],
       allergySuggestions: ['Peanuts', 'Milk', 'Eggs', 'Bee stings', 'Gluten', 'Dust', 'Other'],
-      diseaseSuggestions: ['Asthma', 'Diabetes', 'Epilepsy', 'Heart condition', 'Food allergy', 'Other'],
       medicationForm: {
         childId: parentChildren()[0]?.id || null,
         name: '',
@@ -333,11 +267,8 @@ export default {
     selectedChild() {
       return this.parentChildren.find((child) => child.id === this.selectedChildId) || this.parentChildren[0] || {
         name: 'No child selected',
-        groupName: '—',
         allergies: [],
-        chronicDiseases: [],
         medications: [],
-        prescriptionFileName: null,
         location: { lat: 0, lng: 0 }
       };
     },
@@ -366,37 +297,10 @@ export default {
       const allergies = this.meaningfulItems(this.selectedChild.allergies);
       return allergies.length ? allergies.join(', ') : 'No allergy recorded yet.';
     },
-    chronicDiseaseSummary() {
-      const diseases = this.meaningfulItems(this.selectedChild.chronicDiseases);
-      return diseases.length ? diseases.join(', ') : 'No chronic disease recorded yet.';
-    },
-    prescriptionStatus() {
-      if (this.selectedChild.prescriptionFileName) {
-        return {
-          label: 'Uploaded',
-          detail: this.selectedChild.prescriptionFileName
-        };
-      }
-
-      const uploadedMedication = (this.selectedChild.medications || []).find((medication) => medication.prescriptionUploaded);
-
-      if (uploadedMedication) {
-        return {
-          label: 'Ready',
-          detail: `${uploadedMedication.name} prescription available`
-        };
-      }
-
-      return {
-        label: 'Missing',
-        detail: 'No prescription uploaded yet.'
-      };
-    },
     dialogTitle() {
       const titles = {
         child: 'Add child',
-        allergy: 'Add allergy',
-        disease: 'Add chronic disease'
+        allergy: 'Add allergy'
       };
 
       return titles[this.activeDialog] || '';
@@ -419,15 +323,9 @@ export default {
     emptyForms() {
       return {
         child: {
-          name: '',
-          groupName: '',
-          dateOfBirth: ''
-        },
-        allergy: {
-          suggestion: '',
           name: ''
         },
-        disease: {
+        allergy: {
           suggestion: '',
           name: ''
         }
@@ -462,10 +360,6 @@ export default {
       return MEDICATION_STATUSES.includes(medication.todayStatus) ? medication.todayStatus : 'Upcoming';
     },
     handleQuickAction(actionKey) {
-      if (actionKey === 'prescription') {
-        this.$refs.prescriptionInput.click();
-        return;
-      }
       this.openDialog(actionKey);
     },
     openDialog(dialogName) {
@@ -484,16 +378,13 @@ export default {
       try {
         if (dialog === 'child') await this.addChild();
         if (dialog === 'allergy') await this.addAllergy();
-        if (dialog === 'disease') await this.addDisease();
       } finally {
         this.submitting = false;
       }
     },
     async addChild() {
       const newChild = await storeAddChild({
-        name: this.forms.child.name,
-        groupName: this.forms.child.groupName,
-        dateOfBirth: this.forms.child.dateOfBirth
+        name: this.forms.child.name
       });
 
       if (newChild) {
@@ -509,9 +400,6 @@ export default {
     },
     async addAllergy() {
       await storeAddAllergy(this.selectedChildId, this.forms.allergy.name);
-    },
-    async addDisease() {
-      await storeAddDisease(this.selectedChildId, this.forms.disease.name);
     },
     async submitParentMedication() {
       if (this.medicationSubmitting) return;
@@ -531,17 +419,6 @@ export default {
         this.medicationSubmitting = false;
       }
     },
-    handlePrescriptionFile(event) {
-      const [file] = event.target.files;
-
-      if (!file) {
-        return;
-      }
-
-      storeUploadPrescription(this.selectedChildId, file.name);
-
-      event.target.value = '';
-    },
     async editAllergyItem(index, allergy) {
       const nextValue = window.prompt('Edit allergy', allergy);
 
@@ -551,16 +428,6 @@ export default {
     },
     async removeAllergyItem(index) {
       await storeRemoveAllergy(this.selectedChildId, index);
-    },
-    async editDiseaseItem(index, disease) {
-      const nextValue = window.prompt('Edit chronic disease', disease);
-
-      if (nextValue) {
-        await storeEditDisease(this.selectedChildId, index, nextValue);
-      }
-    },
-    async removeDiseaseItem(index) {
-      await storeRemoveDisease(this.selectedChildId, index);
     },
     handleParentAvatar(event) {
       const [file] = event.target.files;
@@ -882,7 +749,7 @@ textarea {
 
 .health-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
   margin-top: 16px;
 }
@@ -912,14 +779,6 @@ textarea {
 
 .health-summary article:nth-child(1) {
   background: var(--gradient-live-card);
-}
-
-.health-summary article:nth-child(2) {
-  background: var(--gradient-weather-card);
-}
-
-.health-summary article:nth-child(3) {
-  background: var(--gradient-children-card);
 }
 
 .health-summary p {
@@ -1245,18 +1104,8 @@ textarea {
   background: var(--gradient-live-card);
 }
 
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(2) span,
-:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(2) {
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(2) span {
   background: var(--gradient-weather-card);
-}
-
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(3) span {
-  background: var(--gradient-today-card);
-}
-
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(4) span,
-:global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(3) {
-  background: var(--gradient-children-card);
 }
 
 @media (max-width: 980px) {

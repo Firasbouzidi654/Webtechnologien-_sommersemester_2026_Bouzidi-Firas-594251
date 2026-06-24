@@ -17,7 +17,7 @@
       <span v-else class="avatar">{{ initials(child.name) }}</span>
       <span>
         <strong>{{ child.name || 'Unnamed child' }}</strong>
-        <small>{{ child.groupName || 'No group' }} - {{ medicationCount(child) }} medication(s)</small>
+        <small>{{ medicationCount(child) }} medication(s)</small>
       </span>
     </button>
   </section>

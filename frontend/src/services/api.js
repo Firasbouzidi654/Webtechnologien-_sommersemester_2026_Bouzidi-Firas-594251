@@ -105,7 +105,6 @@ function toMedication(medication, child) {
       startDate: medication.startDate || null
     },
     history: [],
-    prescriptionUploaded: false,
     todayStatus: displayStatus(medication.status)
   };
 }
@@ -126,12 +125,7 @@ async function getChildren() {
   const { children, medications } = await loadRawRecords();
   return children.map((child) => ({
     ...child,
-    groupName: 'Sunflowers',
-    dateOfBirth: null,
-    parentName: 'Parent',
-    parentEmail: '',
     allergies: asList(child.allergies),
-    chronicDiseases: [],
     medications: medications.filter((medication) => belongsToChild(medication, child)).map((medication) => toMedication(medication, child))
   }));
 }
@@ -146,7 +140,6 @@ async function getTodayTasks() {
       medicationId: String(medication.id),
       childId: child?.id || null,
       childName: child?.name || 'Unknown child',
-      groupName: 'Sunflowers',
       medicationName: medication.name,
       dosage: medication.dosage || '',
       scheduledTime: medication.time || '12:00',
@@ -166,8 +159,9 @@ export const api = {
   createChild: async (child) => {
     const saved = await request('/api/children', { method: 'POST', body: JSON.stringify(child) });
     return {
-      ...saved, groupName: child.groupName || 'Sunflowers', allergies: asList(saved.allergies),
-      chronicDiseases: [], medications: []
+      ...saved,
+      allergies: asList(saved.allergies),
+      medications: []
     };
   },
   updateChild: async (childId, child) => {
