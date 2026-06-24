@@ -15,9 +15,15 @@
     >
       <img v-if="child.photoUrl" :src="child.photoUrl" :alt="child.name" class="avatar avatar-photo" />
       <span v-else class="avatar">{{ initials(child.name) }}</span>
-      <span>
+      <span class="child-details">
         <strong>{{ child.name || 'Unnamed child' }}</strong>
         <small>{{ medicationCount(child) }} medication(s)</small>
+        <span class="allergy-list" aria-label="Allergies">
+          <template v-if="allergiesFor(child).length">
+            <span v-for="allergy in allergiesFor(child)" :key="allergy" class="allergy-chip">{{ allergy }}</span>
+          </template>
+          <span v-else class="no-allergies">No allergies recorded</span>
+        </span>
       </span>
     </button>
   </section>
@@ -55,6 +61,12 @@ export default {
     },
     medicationCount(child) {
       return Array.isArray(child?.medications) ? child.medications.length : 0;
+    },
+    allergiesFor(child) {
+      const allergies = Array.isArray(child?.allergies)
+        ? child.allergies
+        : String(child?.allergies || '').split(',');
+      return allergies.map((allergy) => allergy.trim()).filter(Boolean);
     }
   }
 };
@@ -125,8 +137,39 @@ small {
   display: block;
 }
 
+.child-details {
+  min-width: 0;
+}
+
 small {
   margin-top: 3px;
   color: var(--text-secondary);
+}
+
+.allergy-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.allergy-chip,
+.no-allergies {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.allergy-chip {
+  border: 1px solid color-mix(in srgb, var(--color-pending-border) 45%, transparent);
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+.no-allergies {
+  color: var(--text-secondary);
+  background: var(--color-bg-tertiary);
 }
 </style>
