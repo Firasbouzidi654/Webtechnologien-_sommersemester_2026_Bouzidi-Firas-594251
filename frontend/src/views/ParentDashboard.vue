@@ -29,10 +29,10 @@
     <section class="welcome-panel" :class="{ 'panel-dark': isDark }">
       <div class="welcome-copy">
         <p class="eyebrow">Welcome back, {{ loggedInFirstName }}</p>
-        <h2 v-if="hasChildren">Health overview for {{ selectedChild.name }}</h2>
+        <h2 v-if="hasChildren">A safe, happy and engaging day for {{ selectedChild.name }}</h2>
         <h2 v-else>Your KinderCare dashboard is ready.</h2>
         <p>
-          A simple place to keep medication and allergy information ready for the kindergarten team.
+          A shared space for everyday care, learning moments and wellbeing at kindergarten.
         </p>
         <p class="care-welcome-message">Helping children stay safe, healthy and happy every day.</p>
       </div>
@@ -66,13 +66,20 @@
 
     <template v-if="hasChildren">
     <section class="quick-actions" aria-label="Parent quick actions">
+      <header>
+        <div>
+          <p class="eyebrow">Everyday care</p>
+          <h2>Quick Actions</h2>
+        </div>
+        <p>Keep your child’s information ready for the care team.</p>
+      </header>
       <button
         v-for="action in quickActions"
         :key="action.key"
         type="button"
         @click="handleQuickAction(action.key)"
       >
-        <span>{{ action.icon }}</span>
+        <span><CareIcon :name="action.icon" /></span>
         {{ action.label }}
       </button>
     </section>
@@ -186,7 +193,7 @@
     </template><!-- /v-if="hasChildren" -->
 
     <section v-if="activeDialog" class="modal-backdrop" @click.self="closeDialog">
-      <form class="modal" @submit.prevent="submitDialog">
+      <form v-if="activeDialog !== 'calendar'" class="modal" @submit.prevent="submitDialog">
         <header>
           <h2>{{ dialogTitle }}</h2>
           <button type="button" aria-label="Close dialog" @click="closeDialog">x</button>
@@ -221,6 +228,21 @@
           <button type="submit" :disabled="submitting">{{ submitting ? 'Saving…' : 'Save' }}</button>
         </footer>
       </form>
+      <article v-else class="modal calendar-preview" aria-label="Medication calendar">
+        <header>
+          <div><p class="eyebrow">Schedule</p><h2>Medication Calendar</h2></div>
+          <button type="button" aria-label="Close calendar" @click="closeDialog">x</button>
+        </header>
+        <p class="calendar-preview-summary">Today’s medication plan for your children.</p>
+        <ul v-if="parentMedications.length" class="calendar-preview-list">
+          <li v-for="medication in parentMedications" :key="medication.medicationId">
+            <time>{{ medication.schedule.specificTime }}</time>
+            <span><strong>{{ medication.name }}</strong><small>{{ medication.childName }} · {{ medication.dosage }}</small></span>
+          </li>
+        </ul>
+        <p v-else class="empty-state">No medication is scheduled at the moment.</p>
+        <footer><button type="button" @click="closeDialog">Close</button></footer>
+      </article>
     </section>
   </main>
 </template>
@@ -229,6 +251,7 @@
 import heroImage from '../assets/hero.png';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import CareHighlights from '../components/CareHighlights.vue';
+import CareIcon from '../components/CareIcon.vue';
 import { currentUser } from '../state/authStore';
 import {
   MEDICATION_STATUSES,
@@ -248,7 +271,8 @@ export default {
   name: 'ParentDashboard',
   components: {
     NotificationCenter,
-    CareHighlights
+    CareHighlights,
+    CareIcon
   },
   props: {
     isDark: {
@@ -267,8 +291,10 @@ export default {
       activeDialog: '',
       forms: this.emptyForms(),
       quickActions: [
-        { key: 'child', label: 'Add child', icon: 'Kid' },
-        { key: 'allergy', label: 'Add allergy', icon: 'All' }
+        { key: 'child', label: 'Add Child', icon: 'children' },
+        { key: 'medication', label: 'Add Medication', icon: 'health' },
+        { key: 'allergy', label: 'Add Allergy', icon: 'wellness' },
+        { key: 'calendar', label: 'Open Calendar', icon: 'calendar' }
       ],
       allergySuggestions: ['Peanuts', 'Milk', 'Eggs', 'Bee stings', 'Gluten', 'Dust', 'Other'],
       medicationForm: {
@@ -324,7 +350,8 @@ export default {
     dialogTitle() {
       const titles = {
         child: 'Add child',
-        allergy: 'Add allergy'
+        allergy: 'Add allergy',
+        calendar: 'Medication calendar'
       };
 
       return titles[this.activeDialog] || '';
@@ -384,6 +411,10 @@ export default {
       return MEDICATION_STATUSES.includes(medication.todayStatus) ? medication.todayStatus : 'Upcoming';
     },
     handleQuickAction(actionKey) {
+      if (actionKey === 'medication') {
+        document.querySelector('.medication-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
       this.openDialog(actionKey);
     },
     openDialog(dialogName) {
@@ -726,6 +757,26 @@ textarea {
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 10px;
   margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--pastel-blue));
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-actions header {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quick-actions header h2 { margin-top: 3px; font-size: 1.08rem; }
+.quick-actions header > p { max-width: 340px; color: var(--color-text-secondary); font-size: .82rem; line-height: 1.4; text-align: right; }
+
+.quick-actions button {
+  border-radius: 12px;
 }
 
 .quick-actions button {
@@ -757,6 +808,8 @@ textarea {
   font-size: 0.875rem;
   font-weight: 700;
 }
+
+.quick-actions span svg { width: 20px; height: 20px; }
 
 .quick-actions button:nth-child(1) span {
   background: rgba(34, 197, 94, 0.18);
@@ -915,6 +968,14 @@ textarea {
   align-items: end;
   margin-top: 16px;
 }
+
+.calendar-preview { display: grid; gap: 14px; }
+.calendar-preview header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.calendar-preview header button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 10px; background: var(--color-bg-tertiary); color: var(--color-text-primary); cursor: pointer; }
+.calendar-preview-summary { color: var(--color-text-secondary); }
+.calendar-preview-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.calendar-preview-list li { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: center; border: 1px solid var(--color-border-light); border-radius: 12px; padding: 10px; background: var(--color-bg-primary); }
+.calendar-preview-list time { color: var(--color-brand); font-size: .85rem; font-weight: 900; }.calendar-preview-list span { display: grid; gap: 2px; }.calendar-preview-list small { color: var(--color-text-secondary); }
 
 .care-welcome-message {
   margin-top: 10px !important;
@@ -1214,6 +1275,11 @@ textarea {
 
 .child-toolbar {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+@media (max-width: 640px) {
+  .quick-actions header { align-items: flex-start; flex-direction: column; }
+  .quick-actions header > p { text-align: left; }
 }
 
 .child-toolbar-photo {

@@ -20,9 +20,9 @@
     <section class="hero-strip" :class="{ 'panel-dark': isDark }">
       <div>
         <p class="eyebrow">Live care operations</p>
-        <h2>Clear schedule, quick confirmations, safer handovers</h2>
-        <p class="care-welcome-message">Helping children stay safe, healthy and happy every day.</p>
-        <p>Staff can scan the plan, confirm medication, see missed alerts, and check the daily calendar without leaving the dashboard.</p>
+        <h2>Supporting children’s health, learning and wellbeing every day.</h2>
+        <p class="care-welcome-message">A shared workspace for safe care, engaging activities and confident handovers.</p>
+        <p>Staff can review the day, coordinate routines and keep each child’s information ready when it matters.</p>
       </div>
     </section>
 

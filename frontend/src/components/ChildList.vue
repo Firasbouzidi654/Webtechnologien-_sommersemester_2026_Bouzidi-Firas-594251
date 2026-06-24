@@ -17,7 +17,11 @@
       <span v-else class="avatar">{{ initials(child.name) }}</span>
       <span class="child-details">
         <strong>{{ child.name || 'Unnamed child' }}</strong>
-        <small>Health plan · {{ medicationCount(child) }} medication(s)</small>
+        <small class="health-plan"><CareIcon name="health" />{{ medicationCount(child) }} Medication{{ medicationCount(child) === 1 ? '' : 's' }}</small>
+        <span class="child-statuses">
+          <span class="wellness-chip"><CareIcon name="wellness" />Healthy Day</span>
+          <span v-if="groupName(child)" class="group-chip"><CareIcon name="children" />{{ groupName(child) }}</span>
+        </span>
         <span class="allergy-list" aria-label="Allergies">
           <template v-if="allergiesFor(child).length">
             <span v-for="allergy in allergiesFor(child)" :key="allergy" class="allergy-chip">{{ allergy }}</span>
@@ -30,8 +34,11 @@
 </template>
 
 <script>
+import CareIcon from './CareIcon.vue';
+
 export default {
   name: 'ChildList',
+  components: { CareIcon },
   props: {
     children: {
       type: Array,
@@ -67,6 +74,9 @@ export default {
         ? child.allergies
         : String(child?.allergies || '').split(',');
       return allergies.map((allergy) => allergy.trim()).filter(Boolean);
+    },
+    groupName(child) {
+      return child?.group || child?.classroom || child?.groupName || '';
     }
   }
 };
@@ -145,6 +155,19 @@ strong,
 small {
   display: block;
 }
+
+.health-plan,
+.child-statuses,
+.wellness-chip,
+.group-chip { display: flex; align-items: center; gap: 5px; }
+
+.health-plan { margin-top: 4px; font-size: .74rem; font-weight: 750; }
+.health-plan svg { width: 14px; color: #397bb7; }
+.child-statuses { flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.wellness-chip,
+.group-chip { border-radius: 999px; padding: 4px 8px; font-size: .7rem; font-weight: 800; line-height: 1.2; }
+.wellness-chip { background: var(--pastel-green); color: #23724f; }.group-chip { background: var(--pastel-blue); color: #295987; }
+.wellness-chip svg,.group-chip svg { width: 13px; }
 
 .child-row:nth-of-type(3n) .avatar { background: linear-gradient(135deg, #daf4e6, #dcedff); color: #23724f; }
 .child-row:nth-of-type(3n + 1) .avatar { background: linear-gradient(135deg, #ffe6eb, #fff0cf); color: #9f4a5d; }
