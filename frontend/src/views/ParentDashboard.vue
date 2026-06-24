@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="parent-top-actions">
-        <NotificationCenter />
+        <NotificationCenter audience="parent" />
         <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
         <button class="logout-button" type="button" @click="$emit('logout')">Log out</button>
       </div>
@@ -586,7 +586,6 @@ h1 {
 .logout-button,
 .child-toolbar button,
 .quick-actions button,
-.note-card button,
 .modal footer button {
   min-height: 44px;
   border: none;
@@ -691,14 +690,12 @@ textarea {
 }
 
 .child-toolbar button,
-.note-card button,
 .modal footer button:not(.secondary-button) {
   background: linear-gradient(135deg, var(--color-success), #2f855a);
   color: #fff;
 }
 
 .child-toolbar button:hover,
-.note-card button:hover,
 .modal footer button:not(.secondary-button):hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(56, 161, 105, 0.3);
@@ -971,24 +968,13 @@ textarea {
   color: var(--color-missed-text);
 }
 
-.note-card {
-  display: grid;
-  gap: 12px;
-}
-
 .feedback,
-.saved-note,
 .empty-state {
   border-radius: 10px;
   padding: 12px 16px;
   background: var(--color-taken);
   color: var(--color-taken-text);
   font-weight: 600;
-}
-
-.saved-note {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
 }
 
 .compact-list {
@@ -1111,8 +1097,7 @@ textarea {
 
 :global([data-theme="dark"]) .parent-dashboard select,
 :global([data-theme="dark"]) .parent-dashboard input,
-:global([data-theme="dark"]) .parent-dashboard textarea,
-:global([data-theme="dark"]) .parent-dashboard .saved-note {
+:global([data-theme="dark"]) .parent-dashboard textarea {
   border-color: rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;

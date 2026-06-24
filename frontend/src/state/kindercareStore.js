@@ -127,9 +127,11 @@ export function clearToast(id) {
   kindercareStore.toasts = kindercareStore.toasts.filter((toast) => toast.id !== id);
 }
 
-export function markNotificationsRead() {
+export function markNotificationsRead(filter = () => true) {
   kindercareStore.notifications.forEach((notification) => {
-    notification.read = true;
+    if (filter(notification)) {
+      notification.read = true;
+    }
   });
 }
 
@@ -219,6 +221,11 @@ export async function addAllergy(childId, name) {
   child.allergies = updated;
   try {
     await api.updateChild(childId, { allergies: updated });
+    addNotification({
+      title: 'New allergy recorded',
+      message: `${allergy} was recorded for ${child.name}.`,
+      type: 'warning'
+    });
   } catch {
     addNotification({ title: 'Save failed', message: 'Could not save allergy. Changes may not persist.', type: 'danger' });
   }
@@ -258,7 +265,6 @@ export async function addMedication(childId, data) {
     const saved = await api.createMedication(childId, {
       name: data.name,
       dosage: data.dosage || '',
-      instructions: data.instructions || data.notes || '',
       scheduledTime: data.time || '12:00',
       status: data.status || 'Pending',
       frequency: data.frequency || 'DAILY',
@@ -280,7 +286,6 @@ export async function addMedication(childId, data) {
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',
       scheduledDate: startDate,
-      instructions: data.instructions || data.notes || '',
       status: data.status || 'Pending',
       frequency: data.frequency || 'DAILY',
       intervalDays: data.intervalDays || null,
@@ -289,8 +294,8 @@ export async function addMedication(childId, data) {
     });
 
     addNotification({
-      title: 'Medication added',
-      message: `${data.name} was added for ${child.name}.`,
+      title: 'Medication scheduled',
+      message: `${data.name} was scheduled for ${child.name}.`,
       type: 'info'
     });
 
@@ -310,7 +315,6 @@ export async function editMedication(childId, medicationId, data) {
   const updates = {
     name: data.name,
     dosage: data.dosage,
-    instructions: data.instructions || data.notes || '',
     scheduledTime: data.time || medication.schedule?.specificTime || '12:00',
     status: data.status || medication.todayStatus || 'Pending',
     frequency: data.frequency || medication.schedule?.frequencyCode || 'DAILY',
@@ -323,7 +327,6 @@ export async function editMedication(childId, medicationId, data) {
   Object.assign(medication, {
     name: updates.name,
     dosage: updates.dosage,
-    instructions: updates.instructions,
     schedule: {
       ...medication.schedule,
       frequencyCode: updates.frequency,
@@ -332,7 +335,6 @@ export async function editMedication(childId, medicationId, data) {
       startDate: updates.startDate,
       specificTime: updates.scheduledTime,
       dosage: updates.dosage,
-      instructions: updates.instructions
     }
   });
 
@@ -346,7 +348,6 @@ export async function editMedication(childId, medicationId, data) {
       intervalDays: updates.intervalDays,
       dayOfWeek: updates.dayOfWeek,
       scheduledDate: updates.startDate || task.scheduledDate,
-      instructions: updates.instructions,
       status: updates.status
     });
   }
@@ -394,13 +395,12 @@ export async function markMedicationTaken(medicationId) {
       status: 'Taken',
       adminName: 'Admin',
       loggedAt: new Date().toISOString(),
-      note: 'Confirmed by staff'
     });
   }
 
   addNotification({
-    title: 'Medication taken',
-    message: `${task?.medicationName || 'Medication'} confirmed for ${task?.childName || 'child'}.`,
+    title: 'Medication administered',
+    message: `${task?.medicationName || 'Medication'} was administered to ${task?.childName || 'child'}.`,
     type: 'success'
   });
 
@@ -429,7 +429,7 @@ export async function setMedicationStatus(medicationId, status) {
 
   if (previousStatus !== nextStatus && ['Taken', 'Missed'].includes(nextStatus)) {
     addNotification({
-      title: nextStatus === 'Taken' ? 'Medication taken' : 'Missed medication',
+      title: nextStatus === 'Taken' ? 'Medication administered' : 'Medication missed',
       message: `${task.medicationName || 'Medication'} for ${task.childName || 'child'} marked ${nextStatus}.`,
       type: statusNotificationType(nextStatus)
     });

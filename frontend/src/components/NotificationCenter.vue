@@ -17,7 +17,12 @@
           <p class="eyebrow">Alerts</p>
           <h3>Recent notifications</h3>
         </div>
-        <button type="button" @click="markNotificationsRead">Mark read</button>
+        <div class="notification-actions">
+          <button v-if="hasMoreNotifications" type="button" @click="showAll = !showAll">
+            {{ showAll ? 'Show recent' : 'View All' }}
+          </button>
+          <button type="button" @click="markNotificationsRead">Mark read</button>
+        </div>
       </header>
 
       <div class="notification-list">
@@ -45,12 +50,29 @@
 <script>
 import { clearToast, kindercareStore, markNotificationsRead } from '../state/kindercareStore';
 
+const PARENT_NOTIFICATION_TITLES = new Set([
+  'Medication scheduled',
+  'Medication administered',
+  'Medication missed',
+  'New allergy recorded',
+  'Health update',
+  'Incident report available',
+  'Parent message received'
+]);
+
 export default {
   name: 'NotificationCenter',
+  props: {
+    audience: {
+      type: String,
+      default: 'staff'
+    }
+  },
   data() {
     return {
       dropdownOpen: false,
-      dropdownMaxHeight: 390,
+      dropdownMaxHeight: 310,
+      showAll: false,
       dismissedToastIds: new Set()
     };
   },
@@ -58,16 +80,20 @@ export default {
     notifications() {
       return kindercareStore.notifications || [];
     },
+    audienceNotifications() {
+      return this.notifications.filter((notification) => this.isVisibleToAudience(notification));
+    },
     recentNotifications() {
-      // Keep the full, newest-first notification history available in the
-      // scrollable panel. The panel height determines how many are visible.
-      return this.notifications;
+      return this.showAll ? this.audienceNotifications : this.audienceNotifications.slice(0, 5);
+    },
+    hasMoreNotifications() {
+      return this.audienceNotifications.length > 5;
     },
     unreadCount() {
-      return this.notifications.filter((notification) => !notification.read).length;
+      return this.audienceNotifications.filter((notification) => !notification.read).length;
     },
     toasts() {
-      return kindercareStore.toasts || [];
+      return (kindercareStore.toasts || []).filter((notification) => this.isVisibleToAudience(notification));
     }
   },
   watch: {
@@ -96,6 +122,7 @@ export default {
   methods: {
     toggleDropdown() {
       this.dropdownOpen = !this.dropdownOpen;
+      this.showAll = false;
 
       if (this.dropdownOpen) {
         this.$nextTick(this.updateDropdownMaxHeight);
@@ -110,10 +137,13 @@ export default {
 
       const viewportPadding = 16;
       const availableHeight = window.innerHeight - dropdown.getBoundingClientRect().top - viewportPadding;
-      this.dropdownMaxHeight = Math.max(0, Math.min(390, availableHeight));
+      this.dropdownMaxHeight = Math.max(0, Math.min(310, availableHeight));
     },
     markNotificationsRead() {
-      markNotificationsRead();
+      markNotificationsRead((notification) => this.isVisibleToAudience(notification));
+    },
+    isVisibleToAudience(notification) {
+      return this.audience !== 'parent' || PARENT_NOTIFICATION_TITLES.has(notification.title);
     },
     formatTime(value) {
       const date = value ? new Date(value) : new Date();
@@ -181,8 +211,8 @@ export default {
   right: 0;
   z-index: 1300;
   box-sizing: border-box;
-  width: min(360px, calc(100vw - 32px));
-  max-height: var(--notification-max-height, 390px);
+  width: min(336px, calc(100vw - 32px));
+  max-height: var(--notification-max-height, 310px);
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-border);
@@ -240,6 +270,12 @@ export default {
   scrollbar-gutter: stable;
 }
 
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .notification-item {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr);
@@ -247,7 +283,7 @@ export default {
   align-items: start;
   border: 1px solid var(--color-border-light);
   border-radius: 12px;
-  padding: 10px;
+  padding: 9px;
   background: var(--color-bg-primary);
 }
 

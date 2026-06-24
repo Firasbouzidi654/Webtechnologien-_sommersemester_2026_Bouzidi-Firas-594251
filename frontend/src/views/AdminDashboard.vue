@@ -114,10 +114,6 @@
             <span>Every how many days?</span>
             <input v-model.number="taskForm.intervalDays" type="number" min="2" required />
           </label>
-          <label>
-            <span>Notes</span>
-            <textarea v-model="taskForm.instructions" placeholder="Take with food or water" rows="3"></textarea>
-          </label>
           <p v-if="taskError" class="form-error">{{ taskError }}</p>
           <div class="modal-actions">
             <button type="submit">{{ taskModalMode === 'edit' ? 'Save changes' : 'Create task' }}</button>
@@ -232,7 +228,6 @@
       <aside class="control-stack">
         <MedicationAssistant compact />
         <ChildCareAssistant />
-        <ParentMessageGenerator />
       </aside>
     </section>
   </main>
@@ -244,7 +239,6 @@ import ChildList from '../components/ChildList.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import ChildCareAssistant from '../components/ChildCareAssistant.vue';
-import ParentMessageGenerator from '../components/ParentMessageGenerator.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
@@ -269,7 +263,6 @@ export default {
     EmergencyPoiCard,
     MedicationAssistant,
     ChildCareAssistant,
-    ParentMessageGenerator,
     MedicationTaskCard,
     NotificationCenter
   },
@@ -297,7 +290,6 @@ export default {
         dosage: '',
         date: this.todayDateKey(),
         time: '',
-        instructions: '',
         status: 'Pending',
         frequency: 'DAILY',
         intervalDays: 2,
@@ -497,7 +489,6 @@ export default {
             dosage: task.dosage,
             date: task.scheduledDate || this.todayDateKey(),
             time: task.scheduledTime,
-            instructions: task.instructions || '',
             status: this.statusOptions.includes(task.status) ? task.status : 'Pending',
             frequency: task.frequency || 'DAILY',
             intervalDays: task.intervalDays || 2,
@@ -512,7 +503,6 @@ export default {
           dosage: '',
           date: selectedDate || this.todayDateKey(),
           time: '12:00',
-          instructions: '',
           status: 'Pending',
           frequency: 'DAILY',
           intervalDays: 2,
@@ -537,7 +527,6 @@ export default {
         saved = await editMedication(this.taskForm.childId, this.taskForm.medicationId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
-          instructions: this.taskForm.instructions,
           date: this.taskForm.date,
           time: this.taskForm.time,
           status: this.taskForm.status,
@@ -550,7 +539,6 @@ export default {
         saved = await addMedication(this.taskForm.childId, {
           name: this.taskForm.medicationName,
           dosage: this.taskForm.dosage,
-          instructions: this.taskForm.instructions,
           date: this.taskForm.date,
           time: this.taskForm.time,
           status: this.taskForm.status,

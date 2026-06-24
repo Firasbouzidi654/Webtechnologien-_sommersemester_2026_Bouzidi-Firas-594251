@@ -102,7 +102,6 @@ function toMedication(medication, child) {
     childName: child?.name || 'Unknown child',
     name: medication.name,
     dosage: medication.dosage || '',
-    instructions: '',
     schedule: {
       frequency: displayFrequency(medication.frequency, medication.intervalDays, medication.dayOfWeek),
       frequencyCode: medication.frequency || 'DAILY',
@@ -153,7 +152,6 @@ async function getTodayTasks() {
       scheduledTime: medication.time || '12:00',
       scheduledDate: medication.startDate || today,
       scheduledToday: isScheduledForDate(medication, today),
-      instructions: '',
       status: displayStatus(medication.status),
       frequency: medication.frequency || 'DAILY',
       intervalDays: medication.intervalDays || null,

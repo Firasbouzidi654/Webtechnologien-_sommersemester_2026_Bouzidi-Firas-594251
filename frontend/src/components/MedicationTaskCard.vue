@@ -20,7 +20,6 @@
       </div>
     </dl>
 
-    <p class="instructions">{{ task.instructions || 'No notes added.' }}</p>
     <p class="schedule-frequency">{{ frequencyLabel }}</p>
     <p v-if="task.reminderDue" class="reminder">Reminder: scheduled medication time has arrived.</p>
 
@@ -229,14 +228,6 @@ dt {
 dd {
   font-weight: 800;
   overflow-wrap: anywhere;
-}
-
-.instructions {
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
 }
 
 .schedule-frequency {
