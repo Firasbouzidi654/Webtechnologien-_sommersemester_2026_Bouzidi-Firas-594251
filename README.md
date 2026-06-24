@@ -50,7 +50,71 @@ Compose are the quickest way to start the local database.
 docker compose up -d db
 docker compose ps
 .\gradlew.bat bootRun
+```
 
+In a second terminal, start the frontend:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+## AI Child Care Assistant
+
+The staff dashboard includes an AI Child Care Assistant below the OpenFDA Medication Assistant. It provides concise educational support for medication questions, child symptoms, allergy concerns, and incident reports. It is not a medical service and always reminds staff to follow their local procedures, check the child record, contact parents when appropriate, and seek professional medical support when needed.
+
+For emergency references in Berlin, the assistant is configured to use **112** for medical or fire emergencies and **110** for police emergencies. It does not recommend calling 911.
+
+### AI Parent Message Generator
+
+Directly below the AI Child Care Assistant, staff can use the **AI Parent Message Generator** to turn a factual childcare update into a clear, friendly, professional parent message. The generated message uses this format:
+
+```text
+Dear Parent,
+
+[message]
+
+Kind regards,
+KinderCare Staff
+```
+
+The generator does not diagnose, give medical advice, invent missing facts, or create unnecessary alarm. Generated messages can be copied directly from the dashboard.
+
+### AI configuration
+
+Both AI features use the Groq API through the backend only. Create a local `.env` file or define the following environment variables before starting the backend. Never commit a real API key.
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+### AI API endpoints
+
+Both endpoints require a staff or admin role through the existing `X-User-Role` request header.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/ai/childcare-assistant` | Returns a concise, safety-focused answer for a staff question. |
+| `POST` | `/api/ai/parent-message` | Generates a professional parent message from a staff description. |
+| `GET` | `/api/ai/test` | Shows whether Groq is configured and the configured model; it never returns the API key. |
+
+Example parent-message request:
+
+```json
+{
+  "message": "Emma had a fever at 14:00. Parents were informed and Emma rested."
+}
+```
+
+Example response:
+
+```json
+{
+  "parentMessage": "Dear Parent,\n\nToday Emma experienced a mild fever at approximately 14:00...\n\nKind regards,\nKinderCare Staff"
+}
+```
 
 
 

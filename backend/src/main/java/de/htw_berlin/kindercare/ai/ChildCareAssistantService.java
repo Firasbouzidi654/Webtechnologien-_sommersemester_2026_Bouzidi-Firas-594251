@@ -20,7 +20,30 @@ import java.util.Map;
 public class ChildCareAssistantService {
     private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
     private static final String SYSTEM_PROMPT = """
-            You are an AI Child Care Assistant for a childcare management system. You support staff with general educational information about medications, child symptoms, allergies, and incident reporting. You are not a doctor. Do not diagnose. Do not provide emergency medical instructions beyond advising staff to follow local emergency procedures, contact parents, and seek professional medical help when needed. Always answer clearly, safely, and professionally.
+            You are an AI Child Care Assistant for a childcare management system. You provide concise, general educational support about medications, child symptoms, allergies, and incident reporting for childcare staff.
+
+            You are not a doctor. Do not diagnose, prescribe treatment, provide dosage guidance, or give detailed medical treatment instructions. Do not mention specific diseases unless the staff explicitly asks about one. For urgent concerns in Berlin, Germany, advise staff to follow local emergency procedures, contact parents, and seek professional medical help when needed. Use 112 for medical or fire emergencies and 110 for police emergencies. Never mention or recommend calling 911.
+
+            Always use exactly these four short sections:
+            1. Summary
+            2. Safe next steps for staff
+            3. When to contact parents/medical help
+            4. Documentation note
+
+            Keep the response concise, practical, clear, and professional. Always end with: "AI support is for educational purposes only and does not replace professional medical advice."
+            """;
+    private static final String PARENT_MESSAGE_SYSTEM_PROMPT = """
+            You are an assistant helping childcare staff write professional parent communications.
+
+            Write clear, friendly, professional, and reassuring messages in simple language. Focus only on facts provided by staff. Do not diagnose medical conditions, provide medical advice, create panic, or invent missing details. Keep the message between 50 and 120 words.
+
+            Always use exactly this format:
+            Dear Parent,
+
+            [message]
+
+            Kind regards,
+            KinderCare Staff
             """;
 
     private final String apiKey;
@@ -36,6 +59,14 @@ public class ChildCareAssistantService {
     }
 
     public String ask(ChildCareAssistantRequest request) {
+        return requestCompletion(SYSTEM_PROMPT, "Request type: " + request.type() + "\n\n" + request.message());
+    }
+
+    public String generateParentMessage(String message) {
+        return requestCompletion(PARENT_MESSAGE_SYSTEM_PROMPT, message);
+    }
+
+    private String requestCompletion(String systemPrompt, String userMessage) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "AI support is not configured. Please contact an administrator.");
@@ -49,8 +80,8 @@ public class ChildCareAssistantService {
                 "model", model,
                 "temperature", 0.2,
                 "messages", List.of(
-                        Map.of("role", "system", "content", SYSTEM_PROMPT),
-                        Map.of("role", "user", "content", "Request type: " + request.type() + "\n\n" + request.message())
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userMessage)
                 )
         );
 
@@ -76,5 +107,13 @@ public class ChildCareAssistantService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "AI support is temporarily unavailable. Please try again later.");
         }
+    }
+
+    public boolean isGroqConfigured() {
+        return apiKey != null && !apiKey.isBlank();
+    }
+
+    public String getModel() {
+        return model;
     }
 }

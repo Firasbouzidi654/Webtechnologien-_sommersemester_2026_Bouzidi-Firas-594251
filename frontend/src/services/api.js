@@ -227,6 +227,10 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ type, message })
   }),
+  generateParentMessage: ({ message }) => request('/api/ai/parent-message', {
+    method: 'POST',
+    body: JSON.stringify({ message })
+  }),
   registerUser: (user) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(user) }),
   loginUser: (credentials) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(credentials) })
 };

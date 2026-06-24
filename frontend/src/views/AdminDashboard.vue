@@ -232,6 +232,7 @@
       <aside class="control-stack">
         <MedicationAssistant compact />
         <ChildCareAssistant />
+        <ParentMessageGenerator />
       </aside>
     </section>
   </main>
@@ -243,6 +244,7 @@ import ChildList from '../components/ChildList.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import ChildCareAssistant from '../components/ChildCareAssistant.vue';
+import ParentMessageGenerator from '../components/ParentMessageGenerator.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
@@ -267,6 +269,7 @@ export default {
     EmergencyPoiCard,
     MedicationAssistant,
     ChildCareAssistant,
+    ParentMessageGenerator,
     MedicationTaskCard,
     NotificationCenter
   },
