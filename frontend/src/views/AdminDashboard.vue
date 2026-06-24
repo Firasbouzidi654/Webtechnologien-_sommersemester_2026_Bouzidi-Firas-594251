@@ -21,6 +21,7 @@
       <div>
         <p class="eyebrow">Live care operations</p>
         <h2>Clear schedule, quick confirmations, safer handovers</h2>
+        <p class="care-welcome-message">Helping children stay safe, healthy and happy every day.</p>
         <p>Staff can scan the plan, confirm medication, see missed alerts, and check the daily calendar without leaving the dashboard.</p>
       </div>
     </section>
@@ -166,6 +167,8 @@
       </article>
     </section>
 
+    <CareHighlights class="care-highlights-panel" :medication-count="stats.Pending + stats.Upcoming" />
+
     <section class="operations-row">
       <article class="day-timeline-panel">
         <div class="timeline-section" v-for="section in medicationTimelineSections" :key="section.key">
@@ -239,6 +242,7 @@ import ChildList from '../components/ChildList.vue';
 import EmergencyPoiCard from '../components/EmergencyPoiCard.vue';
 import MedicationAssistant from '../components/MedicationAssistant.vue';
 import ChildCareAssistant from '../components/ChildCareAssistant.vue';
+import CareHighlights from '../components/CareHighlights.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import L from 'leaflet';
@@ -263,6 +267,7 @@ export default {
     EmergencyPoiCard,
     MedicationAssistant,
     ChildCareAssistant,
+    CareHighlights,
     MedicationTaskCard,
     NotificationCenter
   },
@@ -592,6 +597,22 @@ export default {
   color: var(--color-text-primary);
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.dashboard::before {
+  position: absolute;
+  z-index: -1;
+  top: 90px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(157, 210, 255, .22), rgba(157, 210, 255, 0) 68%);
+  content: '';
+  pointer-events: none;
 }
 
 :global([data-theme="dark"]) .dashboard {
@@ -928,6 +949,13 @@ select {
   line-height: 1.5;
 }
 
+.care-welcome-message {
+  margin: 8px 0 4px;
+  color: var(--color-brand-dark) !important;
+  font-size: .9rem !important;
+  font-weight: 750;
+}
+
 :global([data-theme="dark"]) .hero-strip {
   border-color: rgba(255, 255, 255, 0.06);
   background:
@@ -991,6 +1019,11 @@ select {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-top: 12px;
+}
+
+.care-highlights-panel {
+  max-width: 1240px;
+  margin: 12px auto 0;
 }
 
 .stats-row article {

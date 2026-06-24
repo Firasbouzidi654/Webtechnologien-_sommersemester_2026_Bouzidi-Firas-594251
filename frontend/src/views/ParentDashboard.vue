@@ -34,6 +34,7 @@
         <p>
           A simple place to keep medication and allergy information ready for the kindergarten team.
         </p>
+        <p class="care-welcome-message">Helping children stay safe, healthy and happy every day.</p>
       </div>
     </section>
 
@@ -83,6 +84,8 @@
         <span>{{ allergySummary }}</span>
       </article>
     </section>
+
+    <CareHighlights :medication-count="parentMedications.length" />
 
     <section class="manage-grid">
       <section class="panel compact-list">
@@ -225,6 +228,7 @@
 <script>
 import heroImage from '../assets/hero.png';
 import NotificationCenter from '../components/NotificationCenter.vue';
+import CareHighlights from '../components/CareHighlights.vue';
 import { currentUser } from '../state/authStore';
 import {
   MEDICATION_STATUSES,
@@ -243,7 +247,8 @@ import {
 export default {
   name: 'ParentDashboard',
   components: {
-    NotificationCenter
+    NotificationCenter,
+    CareHighlights
   },
   props: {
     isDark: {
@@ -495,6 +500,21 @@ export default {
 .dashboard-grid {
   max-width: 1240px;
   margin: 0 auto;
+  position: relative;
+  isolation: isolate;
+}
+
+.parent-dashboard::before {
+  position: fixed;
+  z-index: -1;
+  right: -100px;
+  bottom: -100px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 207, 219, .18), rgba(255, 207, 219, 0) 68%);
+  content: '';
+  pointer-events: none;
 }
 
 .topbar {
@@ -896,6 +916,18 @@ textarea {
   margin-top: 16px;
 }
 
+.care-welcome-message {
+  margin-top: 10px !important;
+  color: var(--color-brand-dark) !important;
+  font-size: .92rem;
+  font-weight: 750;
+}
+
+:deep(.care-highlights) {
+  max-width: 1240px;
+  margin: 14px auto 0;
+}
+
 .simple-medication-form button {
   min-height: 44px;
   border: 1px solid var(--color-success);
@@ -1182,6 +1214,16 @@ textarea {
 
 .child-toolbar {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.child-toolbar-photo {
+  border-radius: 16px;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--pastel-blue), var(--pastel-pink));
+}
+
+.child-toolbar-initials {
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.74);
 }
 
 .child-toolbar-photo {

@@ -17,7 +17,7 @@
       <span v-else class="avatar">{{ initials(child.name) }}</span>
       <span class="child-details">
         <strong>{{ child.name || 'Unnamed child' }}</strong>
-        <small>{{ medicationCount(child) }} medication(s)</small>
+        <small>Health plan · {{ medicationCount(child) }} medication(s)</small>
         <span class="allergy-list" aria-label="Allergies">
           <template v-if="allergiesFor(child).length">
             <span v-for="allergy in allergiesFor(child)" :key="allergy" class="allergy-chip">{{ allergy }}</span>
@@ -102,12 +102,20 @@ h2 {
   align-items: center;
   gap: 12px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 12px;
-  background: var(--bg-card);
+  background: linear-gradient(135deg, var(--bg-card), #f8fbff);
   color: var(--text-primary);
   text-align: left;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.child-row:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-brand) 38%, var(--color-border));
+  box-shadow: var(--shadow-md);
 }
 
 .child-row.active {
@@ -122,8 +130,9 @@ h2 {
   height: 44px;
   place-items: center;
   border-radius: 50%;
-  background: #ffe8a8;
-  color: #5d4b12;
+  background: linear-gradient(135deg, #dcedff, #e9dcff);
+  color: #295987;
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.72);
   font-weight: 900;
 }
 
@@ -136,6 +145,9 @@ strong,
 small {
   display: block;
 }
+
+.child-row:nth-of-type(3n) .avatar { background: linear-gradient(135deg, #daf4e6, #dcedff); color: #23724f; }
+.child-row:nth-of-type(3n + 1) .avatar { background: linear-gradient(135deg, #ffe6eb, #fff0cf); color: #9f4a5d; }
 
 .child-details {
   min-width: 0;

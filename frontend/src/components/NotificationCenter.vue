@@ -15,7 +15,7 @@
       <header>
         <div>
           <p class="eyebrow">Alerts</p>
-          <h3>Recent notifications</h3>
+          <h3>{{ audience === 'parent' ? 'Family updates' : 'Care updates' }}</h3>
         </div>
         <div class="notification-actions">
           <button v-if="hasMoreNotifications" type="button" @click="showAll = !showAll">
