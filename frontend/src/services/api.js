@@ -223,6 +223,10 @@ export const api = {
     method: 'PUT',
     body: JSON.stringify({ status: apiStatus(status) })
   }),
+  askChildCareAssistant: ({ type, message }) => request('/api/ai/childcare-assistant', {
+    method: 'POST',
+    body: JSON.stringify({ type, message })
+  }),
   registerUser: (user) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(user) }),
   loginUser: (credentials) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(credentials) })
 };
