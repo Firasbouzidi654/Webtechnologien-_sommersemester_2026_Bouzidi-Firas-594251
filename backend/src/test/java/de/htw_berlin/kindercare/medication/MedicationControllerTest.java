@@ -154,6 +154,21 @@ class MedicationControllerTest {
     }
 
     @Test
+    void medicationRejectsBlankNameOrDosage() throws Exception {
+        long childId = createChildNamed("Validation Child");
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\" \",\"childId\":" + childId + ",\"dosage\":\"5 drops\"}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\" \"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void parentAndStaffCanSaveMedicationSchedules() throws Exception {
         long childId = createChildNamed("Schedule Child");
 

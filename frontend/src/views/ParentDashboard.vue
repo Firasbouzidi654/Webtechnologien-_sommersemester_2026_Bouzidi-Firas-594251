@@ -29,7 +29,7 @@
     <section class="welcome-panel" :class="{ 'panel-dark': isDark }">
       <div class="welcome-copy">
         <p class="eyebrow">Welcome back, {{ loggedInFirstName }}</p>
-        <h2 v-if="hasChildren">Here is {{ firstName(selectedChild.name) }}'s health overview for today.</h2>
+        <h2 v-if="hasChildren">Health overview for {{ selectedChild.name }}</h2>
         <h2 v-else>Your KinderCare dashboard is ready.</h2>
         <p>
           A simple place to keep medication and allergy information ready for the kindergarten team.
@@ -88,8 +88,8 @@
       <section class="panel compact-list">
         <header>
           <div>
-            <p class="eyebrow">Manage</p>
             <h2>Allergies</h2>
+            <p>Manage allergy information for the selected child.</p>
           </div>
           <button type="button" @click="openDialog('allergy')">Add allergy</button>
         </header>
@@ -101,7 +101,7 @@
           </span>
         </article>
         <p v-if="meaningfulItems(selectedChild.allergies).length === 0" class="empty-state">
-          No allergy recorded yet.
+          No allergies added for this child.
         </p>
       </section>
 
@@ -876,6 +876,30 @@ textarea {
   gap: 12px;
   align-items: end;
   margin-top: 16px;
+}
+
+.simple-medication-form button {
+  min-height: 44px;
+  border: 1px solid var(--color-success);
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--color-success), #2f855a);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(56, 161, 105, 0.18);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.simple-medication-form button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.simple-medication-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .simple-medication-list {

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -46,6 +47,7 @@ public class ChildController {
         if (child.getName() == null || child.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child name is required.");
         }
+        validateAllergies(child);
         return service.create(child);
     }
 
@@ -57,6 +59,7 @@ public class ChildController {
             @RequestBody @NonNull Child child
     ) {
         RoleAccess.require(role, "PARENT");
+        validateAllergies(child);
         Child updated = service.update(id, child);
         medicationService.updateChildName(id, updated.getName());
         return updated;
@@ -68,5 +71,17 @@ public class ChildController {
         RoleAccess.require(role, "PARENT");
         medicationService.deleteByChildId(id);
         service.delete(id);
+    }
+
+    private void validateAllergies(Child child) {
+        String allergies = child.getAllergies();
+        if (allergies == null || allergies.isBlank()) {
+            return;
+        }
+
+        boolean hasEmptyEntry = Arrays.stream(allergies.split(",", -1)).anyMatch(entry -> entry.trim().isEmpty());
+        if (hasEmptyEntry) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Allergy entries cannot be blank.");
+        }
     }
 }

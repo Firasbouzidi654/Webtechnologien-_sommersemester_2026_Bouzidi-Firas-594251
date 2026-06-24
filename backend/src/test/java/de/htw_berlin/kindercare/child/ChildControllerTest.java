@@ -42,6 +42,14 @@ class ChildControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    @Test
+    void childRejectsBlankAllergyEntries() throws Exception {
+        mockMvc.perform(post("/api/children").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Emma\",\"allergies\":\"Peanuts, \"}"))
+                .andExpect(status().isBadRequest());
+    }
+
     private long responseId(String response) {
         Object value = com.jayway.jsonpath.JsonPath.read(response, "$.id");
         if (value instanceof Number number) {

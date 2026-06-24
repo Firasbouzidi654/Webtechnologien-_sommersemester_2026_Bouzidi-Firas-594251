@@ -57,6 +57,7 @@ public class MedicationController {
             @RequestBody @NonNull Medication medication
     ) {
         RoleAccess.require(role, "STAFF", "ADMIN");
+        requireNonBlankUpdateFields(medication);
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
         }
@@ -76,11 +77,23 @@ public class MedicationController {
         if (medication.getName() == null || medication.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication name is required.");
         }
+        if (medication.getDosage() == null || medication.getDosage().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication dosage is required.");
+        }
         if (medication.getChildId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
         }
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
+        }
+    }
+
+    private void requireNonBlankUpdateFields(Medication medication) {
+        if (medication.getName() != null && medication.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication name cannot be blank.");
+        }
+        if (medication.getDosage() != null && medication.getDosage().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication dosage cannot be blank.");
         }
     }
 

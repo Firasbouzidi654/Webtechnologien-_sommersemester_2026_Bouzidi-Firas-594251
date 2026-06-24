@@ -209,7 +209,13 @@ export async function deleteChild(childId) {
 export async function addAllergy(childId, name) {
   const child = findChild(childId);
   if (!child) return null;
-  const updated = [...(child.allergies || []).filter((item) => item !== 'None known'), name];
+  const allergy = String(name || '').trim();
+  if (!allergy) {
+    addNotification({ title: 'Allergy required', message: 'Enter an allergy before saving.', type: 'warning' });
+    return null;
+  }
+
+  const updated = [...(child.allergies || []).filter((item) => item !== 'None known'), allergy];
   child.allergies = updated;
   try {
     await api.updateChild(childId, { allergies: updated });
