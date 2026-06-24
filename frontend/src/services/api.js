@@ -60,14 +60,17 @@ function apiStatus(status) {
   return String(status || 'Pending').trim().toUpperCase();
 }
 
-function displayFrequency(frequency, intervalDays) {
+function displayFrequency(frequency, intervalDays, dayOfWeek) {
   const labels = {
     DAILY: 'Daily',
     WEEKLY: 'Weekly',
-    WEEKDAYS_ONLY: 'Weekdays only'
+    ONE_TIME: 'One-time'
   };
   if (String(frequency).toUpperCase() === 'EVERY_X_DAYS') {
     return `Every ${intervalDays || 2} days`;
+  }
+  if (String(frequency).toUpperCase() === 'SPECIFIC_DAY') {
+    return `Every ${String(dayOfWeek || 'MONDAY').toLowerCase().replace(/^./, (letter) => letter.toUpperCase())}`;
   }
   return labels[String(frequency || 'DAILY').toUpperCase()] || 'Daily';
 }
@@ -82,7 +85,11 @@ function isScheduledForDate(medication, dateKey) {
   switch (String(medication.frequency || 'DAILY').toUpperCase()) {
     case 'WEEKLY': return days % 7 === 0;
     case 'EVERY_X_DAYS': return days % Math.max(Number(medication.intervalDays) || 2, 2) === 0;
-    case 'WEEKDAYS_ONLY': return target.getDay() !== 0 && target.getDay() !== 6;
+    case 'SPECIFIC_DAY': {
+      const weekdayNumbers = { SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6 };
+      return target.getDay() === weekdayNumbers[String(medication.dayOfWeek || 'MONDAY').toUpperCase()];
+    }
+    case 'ONE_TIME': return days === 0;
     default: return true;
   }
 }
@@ -97,9 +104,10 @@ function toMedication(medication, child) {
     dosage: medication.dosage || '',
     instructions: '',
     schedule: {
-      frequency: displayFrequency(medication.frequency, medication.intervalDays),
+      frequency: displayFrequency(medication.frequency, medication.intervalDays, medication.dayOfWeek),
       frequencyCode: medication.frequency || 'DAILY',
       intervalDays: medication.intervalDays || null,
+      dayOfWeek: medication.dayOfWeek || null,
       dayPart: 'Specific time',
       specificTime: medication.time || '12:00',
       startDate: medication.startDate || null
@@ -149,6 +157,7 @@ async function getTodayTasks() {
       status: displayStatus(medication.status),
       frequency: medication.frequency || 'DAILY',
       intervalDays: medication.intervalDays || null,
+      dayOfWeek: medication.dayOfWeek || null,
       reminderDue: false
     };
   });
@@ -186,6 +195,7 @@ export const api = {
         status: apiStatus(medication.status),
         frequency: medication.frequency || 'DAILY',
         intervalDays: medication.intervalDays || null,
+        dayOfWeek: medication.dayOfWeek || null,
         startDate: medication.startDate || null
       })
     });
@@ -200,6 +210,7 @@ export const api = {
       status: medication.status ? apiStatus(medication.status) : undefined,
       frequency: medication.frequency,
       intervalDays: medication.intervalDays || null,
+      dayOfWeek: medication.dayOfWeek || null,
       startDate: medication.startDate || null
     })
   }),

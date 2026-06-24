@@ -22,6 +22,7 @@ public class Medication {
     private String status;
     private String frequency;
     private Integer intervalDays;
+    private String dayOfWeek;
     @Column(name = "start_date")
     private String startDate;
 
@@ -60,6 +61,8 @@ public class Medication {
     public void setFrequency(String frequency) { this.frequency = frequency; }
     public Integer getIntervalDays() { return intervalDays; }
     public void setIntervalDays(Integer intervalDays) { this.intervalDays = intervalDays; }
+    public String getDayOfWeek() { return dayOfWeek; }
+    public void setDayOfWeek(String dayOfWeek) { this.dayOfWeek = dayOfWeek; }
     public String getStartDate() { return startDate; }
     public void setStartDate(String startDate) { this.startDate = startDate; }
 }

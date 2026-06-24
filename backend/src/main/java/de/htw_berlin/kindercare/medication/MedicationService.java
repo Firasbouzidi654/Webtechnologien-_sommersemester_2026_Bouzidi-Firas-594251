@@ -46,6 +46,7 @@ public class MedicationService {
         );
 
         toSave.setChildId(linkedChild.getId());
+        toSave.setDayOfWeek(medication.getDayOfWeek());
 
         return repository.save(toSave);
     }
@@ -58,8 +59,13 @@ public class MedicationService {
         if (changes.getDosage() != null) medication.setDosage(changes.getDosage());
         if (changes.getTime() != null) medication.setTime(changes.getTime());
         if (changes.getStatus() != null) medication.setStatus(changes.getStatus());
-        if (changes.getFrequency() != null) medication.setFrequency(changes.getFrequency());
-        if (changes.getIntervalDays() != null) medication.setIntervalDays(changes.getIntervalDays());
+        if (changes.getFrequency() != null) {
+            medication.setFrequency(changes.getFrequency());
+            medication.setIntervalDays(changes.getIntervalDays());
+            medication.setDayOfWeek(changes.getDayOfWeek());
+        } else if (changes.getIntervalDays() != null) {
+            medication.setIntervalDays(changes.getIntervalDays());
+        }
         if (changes.getStartDate() != null) medication.setStartDate(changes.getStartDate());
 
         return repository.save(medication);

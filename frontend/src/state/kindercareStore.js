@@ -263,6 +263,7 @@ export async function addMedication(childId, data) {
       status: data.status || 'Pending',
       frequency: data.frequency || 'DAILY',
       intervalDays: data.intervalDays || null,
+      dayOfWeek: data.dayOfWeek || null,
       startDate,
       dayPart: 'Specific time'
     });
@@ -283,6 +284,7 @@ export async function addMedication(childId, data) {
       status: data.status || 'Pending',
       frequency: data.frequency || 'DAILY',
       intervalDays: data.intervalDays || null,
+      dayOfWeek: data.dayOfWeek || null,
       reminderDue: false
     });
 
@@ -313,6 +315,7 @@ export async function editMedication(childId, medicationId, data) {
     status: data.status || medication.todayStatus || 'Pending',
     frequency: data.frequency || medication.schedule?.frequencyCode || 'DAILY',
     intervalDays: data.intervalDays || medication.schedule?.intervalDays || null,
+    dayOfWeek: data.dayOfWeek || medication.schedule?.dayOfWeek || null,
     startDate: data.date || medication.schedule?.startDate || null,
     dayPart: medication.schedule?.dayPart || 'Specific time'
   };
@@ -325,6 +328,7 @@ export async function editMedication(childId, medicationId, data) {
       ...medication.schedule,
       frequencyCode: updates.frequency,
       intervalDays: updates.intervalDays,
+      dayOfWeek: updates.dayOfWeek,
       startDate: updates.startDate,
       specificTime: updates.scheduledTime,
       dosage: updates.dosage,
@@ -340,6 +344,7 @@ export async function editMedication(childId, medicationId, data) {
       scheduledTime: updates.scheduledTime,
       frequency: updates.frequency,
       intervalDays: updates.intervalDays,
+      dayOfWeek: updates.dayOfWeek,
       scheduledDate: updates.startDate || task.scheduledDate,
       instructions: updates.instructions,
       status: updates.status

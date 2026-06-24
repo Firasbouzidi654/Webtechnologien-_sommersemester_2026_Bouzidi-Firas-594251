@@ -134,10 +134,14 @@ export default {
     },
     frequencyLabel(task) {
       if (task.frequency === 'EVERY_X_DAYS') return `Every ${task.intervalDays || 2} days`;
+      if (task.frequency === 'SPECIFIC_DAY') {
+        const day = String(task.dayOfWeek || 'MONDAY').toLowerCase();
+        return `Every ${day.replace(/^./, (letter) => letter.toUpperCase())}`;
+      }
       return {
         DAILY: 'Daily',
         WEEKLY: 'Weekly',
-        WEEKDAYS_ONLY: 'Weekdays only'
+        ONE_TIME: 'One-time'
       }[task.frequency] || 'Daily';
     },
     isTaskScheduledForDate(task, dateKey) {
@@ -148,7 +152,11 @@ export default {
       const days = Math.round((target - start) / 86400000);
       if (task.frequency === 'WEEKLY') return days % 7 === 0;
       if (task.frequency === 'EVERY_X_DAYS') return days % Math.max(Number(task.intervalDays) || 2, 2) === 0;
-      if (task.frequency === 'WEEKDAYS_ONLY') return target.getDay() !== 0 && target.getDay() !== 6;
+      if (task.frequency === 'SPECIFIC_DAY') {
+        const weekdayNumbers = { SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6 };
+        return target.getDay() === weekdayNumbers[String(task.dayOfWeek || 'MONDAY').toUpperCase()];
+      }
+      if (task.frequency === 'ONE_TIME') return days === 0;
       return true;
     },
 

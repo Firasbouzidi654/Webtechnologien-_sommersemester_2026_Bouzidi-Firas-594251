@@ -24,7 +24,8 @@ import java.time.format.DateTimeParseException;
 @RequestMapping("/api/medications")
 public class MedicationController {
     private static final Set<String> STATUSES = Set.of("UPCOMING", "PENDING", "TAKEN", "MISSED");
-    private static final Set<String> FREQUENCIES = Set.of("DAILY", "WEEKLY", "EVERY_X_DAYS", "WEEKDAYS_ONLY");
+    private static final Set<String> FREQUENCIES = Set.of("DAILY", "WEEKLY", "EVERY_X_DAYS", "SPECIFIC_DAY", "ONE_TIME");
+    private static final Set<String> DAYS_OF_WEEK = Set.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
     private final MedicationService service;
 
     public MedicationController(MedicationService service) { this.service = service; }
@@ -112,7 +113,7 @@ public class MedicationController {
             String frequency = medication.getFrequency().trim().toUpperCase();
             if (!FREQUENCIES.contains(frequency)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Frequency must be DAILY, WEEKLY, EVERY_X_DAYS, or WEEKDAYS_ONLY.");
+                        "Frequency must be DAILY, WEEKLY, EVERY_X_DAYS, SPECIFIC_DAY, or ONE_TIME.");
             }
             medication.setFrequency(frequency);
             if ("EVERY_X_DAYS".equals(frequency)) {
@@ -122,6 +123,17 @@ public class MedicationController {
                 }
             } else {
                 medication.setIntervalDays(null);
+            }
+
+            if ("SPECIFIC_DAY".equals(frequency)) {
+                String dayOfWeek = medication.getDayOfWeek() == null ? "" : medication.getDayOfWeek().trim().toUpperCase();
+                if (!DAYS_OF_WEEK.contains(dayOfWeek)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "A valid day of the week is required for a specific-day schedule.");
+                }
+                medication.setDayOfWeek(dayOfWeek);
+            } else {
+                medication.setDayOfWeek(null);
             }
         }
 

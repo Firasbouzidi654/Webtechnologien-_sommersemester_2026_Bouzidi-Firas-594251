@@ -139,9 +139,26 @@
             <select v-model="medicationForm.frequency">
               <option value="DAILY">Daily</option>
               <option value="WEEKLY">Weekly</option>
+              <option value="SPECIFIC_DAY">Specific day</option>
+              <option value="ONE_TIME">One-time</option>
               <option value="EVERY_X_DAYS">Every X days</option>
-              <option value="WEEKDAYS_ONLY">Weekdays only</option>
             </select>
+          </label>
+          <label v-if="medicationForm.frequency === 'SPECIFIC_DAY'">
+            <span>Day</span>
+            <select v-model="medicationForm.dayOfWeek" required>
+              <option value="MONDAY">Monday</option>
+              <option value="TUESDAY">Tuesday</option>
+              <option value="WEDNESDAY">Wednesday</option>
+              <option value="THURSDAY">Thursday</option>
+              <option value="FRIDAY">Friday</option>
+              <option value="SATURDAY">Saturday</option>
+              <option value="SUNDAY">Sunday</option>
+            </select>
+          </label>
+          <label v-if="medicationForm.frequency === 'ONE_TIME'">
+            <span>Date</span>
+            <input v-model="medicationForm.date" type="date" required />
           </label>
           <label v-if="medicationForm.frequency === 'EVERY_X_DAYS'">
             <span>Every how many days?</span>
@@ -255,7 +272,9 @@ export default {
         dosage: '',
         time: '12:00',
         frequency: 'DAILY',
-        intervalDays: 2
+        intervalDays: 2,
+        dayOfWeek: 'MONDAY',
+        date: ''
       },
       medicationSubmitting: false
     };
@@ -403,18 +422,20 @@ export default {
     },
     async submitParentMedication() {
       if (this.medicationSubmitting) return;
-      const { childId, name, dosage, time, frequency, intervalDays } = this.medicationForm;
+      const { childId, name, dosage, time, frequency, intervalDays, dayOfWeek, date } = this.medicationForm;
       if (!childId || !name || !dosage || !time) return;
 
       this.medicationSubmitting = true;
       try {
-        const saved = await storeAddMedication(childId, { name, dosage, time, frequency, intervalDays });
+        const saved = await storeAddMedication(childId, { name, dosage, time, frequency, intervalDays, dayOfWeek, date });
         if (!saved) return;
         this.medicationForm.name = '';
         this.medicationForm.dosage = '';
         this.medicationForm.time = '12:00';
         this.medicationForm.frequency = 'DAILY';
         this.medicationForm.intervalDays = 2;
+        this.medicationForm.dayOfWeek = 'MONDAY';
+        this.medicationForm.date = '';
       } finally {
         this.medicationSubmitting = false;
       }

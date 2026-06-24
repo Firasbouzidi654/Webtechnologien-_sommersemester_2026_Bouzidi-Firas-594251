@@ -176,9 +176,10 @@ class MedicationControllerTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .content("{\"name\":\"Vitamin D\",\"childId\":" + childId
                         + ",\"dosage\":\"5 drops\",\"time\":\"08:00\","
-                        + "\"frequency\":\"WEEKDAYS_ONLY\",\"startDate\":\"2026-06-23\"}"))
+                        + "\"frequency\":\"SPECIFIC_DAY\",\"dayOfWeek\":\"WEDNESDAY\",\"startDate\":\"2026-06-23\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.frequency").value("WEEKDAYS_ONLY"))
+                .andExpect(jsonPath("$.frequency").value("SPECIFIC_DAY"))
+                .andExpect(jsonPath("$.dayOfWeek").value("WEDNESDAY"))
                 .andExpect(jsonPath("$.startDate").value("2026-06-23"));
 
         mockMvc.perform(post("/api/medications").header("X-User-Role", "STAFF")
@@ -189,6 +190,15 @@ class MedicationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.frequency").value("EVERY_X_DAYS"))
                 .andExpect(jsonPath("$.intervalDays").value(3));
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"One-time dose\",\"childId\":" + childId
+                        + ",\"dosage\":\"10 ml\",\"time\":\"12:00\","
+                        + "\"frequency\":\"ONE_TIME\",\"startDate\":\"2026-06-24\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.frequency").value("ONE_TIME"))
+                .andExpect(jsonPath("$.startDate").value("2026-06-24"));
     }
 
     private long responseId(String response) {

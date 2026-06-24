@@ -93,8 +93,21 @@
             <select v-model="taskForm.frequency" required>
               <option value="DAILY">Daily</option>
               <option value="WEEKLY">Weekly</option>
+              <option value="SPECIFIC_DAY">Specific day</option>
+              <option value="ONE_TIME">One-time</option>
               <option value="EVERY_X_DAYS">Every X days</option>
-              <option value="WEEKDAYS_ONLY">Weekdays only</option>
+            </select>
+          </label>
+          <label v-if="taskForm.frequency === 'SPECIFIC_DAY'">
+            <span>Day</span>
+            <select v-model="taskForm.dayOfWeek" required>
+              <option value="MONDAY">Monday</option>
+              <option value="TUESDAY">Tuesday</option>
+              <option value="WEDNESDAY">Wednesday</option>
+              <option value="THURSDAY">Thursday</option>
+              <option value="FRIDAY">Friday</option>
+              <option value="SATURDAY">Saturday</option>
+              <option value="SUNDAY">Sunday</option>
             </select>
           </label>
           <label v-if="taskForm.frequency === 'EVERY_X_DAYS'">
@@ -281,7 +294,8 @@ export default {
         instructions: '',
         status: 'Pending',
         frequency: 'DAILY',
-        intervalDays: 2
+        intervalDays: 2,
+        dayOfWeek: 'MONDAY'
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
@@ -480,7 +494,8 @@ export default {
             instructions: task.instructions || '',
             status: this.statusOptions.includes(task.status) ? task.status : 'Pending',
             frequency: task.frequency || 'DAILY',
-            intervalDays: task.intervalDays || 2
+            intervalDays: task.intervalDays || 2,
+            dayOfWeek: task.dayOfWeek || 'MONDAY'
           };
         }
       } else {
@@ -494,7 +509,8 @@ export default {
           instructions: '',
           status: 'Pending',
           frequency: 'DAILY',
-          intervalDays: 2
+          intervalDays: 2,
+          dayOfWeek: 'MONDAY'
         };
       }
 
@@ -521,7 +537,8 @@ export default {
           status: this.taskForm.status,
           childId: this.taskForm.childId,
           frequency: this.taskForm.frequency,
-          intervalDays: this.taskForm.intervalDays
+          intervalDays: this.taskForm.intervalDays,
+          dayOfWeek: this.taskForm.dayOfWeek
         });
       } else {
         saved = await addMedication(this.taskForm.childId, {
@@ -532,7 +549,8 @@ export default {
           time: this.taskForm.time,
           status: this.taskForm.status,
           frequency: this.taskForm.frequency,
-          intervalDays: this.taskForm.intervalDays
+          intervalDays: this.taskForm.intervalDays,
+          dayOfWeek: this.taskForm.dayOfWeek
         });
       }
       if (!saved) {
