@@ -592,9 +592,64 @@ export default {
   }
 }
 
+@media (max-width: 480px) {
+  .medication-assistant {
+    gap: 9px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .medication-assistant.compact {
+    padding: 12px;
+  }
+
+  .assistant-summary,
+  .assistant-disclaimer {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .assistant-inline-search input,
+  .medication-search input {
+    min-height: 40px;
+    padding-block: 9px;
+  }
+
+  .assistant-inline-search button,
+  .medication-search button {
+    min-height: 40px;
+    padding: 9px 12px;
+  }
+
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    gap: 11px;
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .medication-result-card {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .result-grid {
+    gap: 8px;
+  }
+
+  .result-grid > div {
+    padding: 9px 10px;
+  }
+}
+
 @media (max-width: 420px) {
   .medication-result-card {
-    padding: 13px;
+    padding: 12px;
   }
 
   .modal > header {

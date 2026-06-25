@@ -746,15 +746,87 @@ export default {
 
 @media (max-width: 640px) {
   .page-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.38rem;
   }
 
   .auth-form {
-    gap: 14px;
+    margin-top: 16px;
+    gap: 12px;
   }
 
   .security-badges {
     justify-content: flex-start;
+  }
+
+  .page-header p {
+    margin-top: 7px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .field input {
+    border-radius: 13px;
+    padding: 12px 14px;
+  }
+
+  .primary-button {
+    min-height: 48px;
+    border-radius: 15px;
+    padding: 13px 16px;
+  }
+}
+
+@media (max-width: 430px) {
+  .page-header h3 {
+    font-size: 1.28rem;
+  }
+
+  .page-header p {
+    font-size: 0.86rem;
+  }
+
+  .auth-form {
+    margin-top: 12px;
+    gap: 10px;
+  }
+
+  .field label,
+  .field-error,
+  .field-hint,
+  .checkbox,
+  .auth-footer {
+    font-size: 0.82rem;
+  }
+
+  .field input {
+    padding: 10px 12px;
+  }
+
+  .password-control input {
+    padding-right: 48px;
+  }
+
+  .password-toggle {
+    right: 6px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .checkbox {
+    gap: 8px;
+  }
+
+  .security-badges {
+    gap: 6px;
+  }
+
+  .security-badges li {
+    padding: 6px 8px;
+    font-size: 0.68rem;
   }
 }
 

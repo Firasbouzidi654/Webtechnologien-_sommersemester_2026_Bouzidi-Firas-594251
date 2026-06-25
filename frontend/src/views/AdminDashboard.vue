@@ -1802,6 +1802,172 @@ select {
   }
 }
 
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 10px;
+  }
+
+  .topbar,
+  .hero-strip,
+  .children-panel,
+  .day-timeline-panel,
+  .holiday-panel {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .topbar {
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .hero-strip {
+    margin-top: 8px;
+  }
+
+  .hero-strip h2 {
+    font-size: 1.08rem;
+  }
+
+  .hero-strip p:not(.eyebrow) {
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .children-panel {
+    margin-top: 10px;
+  }
+
+  .stats-row,
+  .care-highlights-panel,
+  .operations-row,
+  .admin-grid {
+    margin-top: 10px;
+  }
+
+  .stats-row {
+    gap: 8px;
+  }
+
+  .stats-row article {
+    min-height: 64px;
+    padding: 10px;
+  }
+
+  .stats-row span {
+    font-size: 1.2rem;
+  }
+
+  .operations-row,
+  .day-timeline-panel,
+  .task-stack,
+  .control-stack {
+    gap: 10px;
+  }
+
+  .timeline-section {
+    padding: 10px;
+  }
+
+  .mini-timeline {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .top-actions button {
+    min-height: 40px;
+    padding: 9px 11px;
+    border-radius: 11px;
+  }
+
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+  }
+
+  .medication-task-modal {
+    border-radius: 18px;
+  }
+
+  .medication-task-header {
+    padding: 14px;
+  }
+
+  .medication-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .medication-icon :deep(.care-icon) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .medication-task-header h2 {
+    font-size: 1.22rem;
+  }
+
+  .modal-intro {
+    margin-top: 4px;
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .medication-close-button {
+    min-height: 38px;
+    padding: 8px 11px;
+    font-size: 0.82rem;
+  }
+
+  .medication-task-content {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .medication-form-card {
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .section-heading {
+    margin-bottom: 10px;
+  }
+
+  .form-field small,
+  .medication-safety-note span {
+    font-size: 0.74rem;
+  }
+
+  .medication-safety-note {
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .primary-medication-button,
+  .medication-cancel-button {
+    min-height: 42px;
+    padding: 10px 14px;
+  }
+
+  .emergency-modal {
+    height: calc(100dvh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .emergency-map {
+    min-height: 240px;
+  }
+}
+
 @media (max-width: 420px) {
   .stats-row {
     grid-template-columns: 1fr;

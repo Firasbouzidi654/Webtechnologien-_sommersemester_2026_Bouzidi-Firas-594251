@@ -1312,6 +1312,120 @@ textarea {
   }
 }
 
+@media (max-width: 480px) {
+  .parent-dashboard {
+    padding: 10px;
+  }
+
+  .topbar {
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .parent-heading {
+    gap: 9px;
+  }
+
+  .parent-avatar-image,
+  .initials {
+    width: 44px;
+    height: 44px;
+  }
+
+  h1 {
+    margin-top: 2px;
+    font-size: 1.55rem;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+  }
+
+  .parent-top-actions {
+    gap: 8px;
+  }
+
+  .logout-button,
+  .child-toolbar button,
+  .quick-actions button,
+  .modal footer button {
+    min-height: 40px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .welcome-panel,
+  .child-toolbar,
+  .quick-actions,
+  .manage-grid,
+  .health-summary,
+  .dashboard-grid {
+    margin-top: 10px;
+  }
+
+  .welcome-panel,
+  .child-toolbar,
+  .quick-actions,
+  .panel,
+  .health-summary article {
+    padding: 12px;
+  }
+
+  .welcome-copy h2 {
+    margin-top: 5px;
+    font-size: 1.22rem;
+  }
+
+  .welcome-copy p:not(.eyebrow) {
+    margin-top: 7px;
+    line-height: 1.45;
+  }
+
+  .quick-actions {
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-actions button {
+    min-height: 58px;
+    gap: 5px;
+  }
+
+  .quick-actions span {
+    width: 32px;
+    height: 32px;
+  }
+
+  .quick-actions span svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .health-summary article {
+    min-height: 82px;
+  }
+
+  .simple-medication-form {
+    gap: 10px;
+  }
+
+  select,
+  input,
+  textarea {
+    padding: 10px;
+  }
+
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+  }
+}
+
 /* ─── Child toolbar photo + delete ──────────────────────────────────────── */
 
 .child-toolbar {
@@ -1326,7 +1440,7 @@ textarea {
   .child-toolbar button { width: 100%; }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 380px) {
   .quick-actions {
     grid-template-columns: 1fr;
   }

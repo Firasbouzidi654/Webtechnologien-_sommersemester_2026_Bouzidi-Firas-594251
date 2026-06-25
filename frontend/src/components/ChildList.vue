@@ -207,4 +207,45 @@ small {
   color: var(--text-secondary);
   background: var(--color-bg-tertiary);
 }
+
+@media (max-width: 480px) {
+  .child-list {
+    gap: 8px;
+  }
+
+  h2 {
+    font-size: 1rem;
+  }
+
+  .child-row {
+    min-height: 64px;
+    gap: 9px;
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .avatar {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .health-plan,
+  .allergy-list {
+    margin-top: 5px;
+  }
+
+  .child-statuses,
+  .allergy-list {
+    gap: 5px;
+  }
+
+  .wellness-chip,
+  .group-chip,
+  .allergy-chip,
+  .no-allergies {
+    padding: 3px 7px;
+    font-size: 0.66rem;
+  }
+}
 </style>

@@ -497,37 +497,175 @@ export default {
 
 @media (max-width: 640px) {
   .hero-panel {
-    padding: 20px 16px 0;
+    padding: 12px 12px 0;
   }
 
   .content-panel {
-    padding: 18px 16px 16px;
+    padding: 10px 12px 14px;
   }
 
   .content-card,
   .hero-card {
-    padding: 24px;
-    border-radius: 24px;
+    border-radius: 22px;
+  }
+
+  .hero-card {
+    padding: 15px 16px;
+  }
+
+  .content-card {
+    padding: 16px;
   }
 
   .card-toolbar {
     justify-content: stretch;
+    margin-bottom: 12px;
   }
 
   .card-controls {
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .theme-toggle,
   .language-picker {
-    width: 100%;
+    width: auto;
     justify-content: space-between;
+    min-height: 36px;
   }
 
   .control-label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
+  }
+
+  .language-picker {
+    flex: 1 1 132px;
+    padding: 4px 6px 4px 10px;
+  }
+
+  .language-picker select {
+    min-width: 94px;
+    padding: 6px 26px 6px 9px;
+    font-size: 0.86rem;
+    background-position:
+      calc(100% - 13px) calc(50% - 3px),
+      calc(100% - 8px) calc(50% - 3px);
+    background-size: 5px 5px, 5px 5px;
+  }
+
+  .theme-toggle {
+    flex: 0 1 auto;
+    padding: 8px 10px;
+    font-size: 0.86rem;
+  }
+
+  .brand-block {
+    margin-bottom: 14px;
+  }
+
+  .brand-kicker {
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+  }
+
+  .brand-title {
+    font-size: clamp(1.55rem, 9vw, 2rem);
+  }
+
+  .brand-tagline {
+    margin-top: 8px;
+    gap: 2px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+
+  .hero-title {
+    margin: 7px 0 6px;
+    font-size: clamp(1.2rem, 8vw, 1.55rem);
+    line-height: 1.08;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+  }
+
+  .hero-text {
+    font-size: 0.86rem;
+    line-height: 1.38;
+  }
+
+  .hero-highlights {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .hero-highlights li {
+    flex: 1 1 0;
+    gap: 6px;
+    min-width: 0;
+    padding: 7px 8px;
+    border-radius: 12px;
+    font-size: 0.74rem;
+    line-height: 1.2;
+  }
+
+  .hero-icon {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .auth-shell {
+    min-height: 100dvh;
+  }
+
+  .hero-panel {
+    padding-top: 8px;
+  }
+
+  .hero-card {
+    padding: 12px 14px;
+    border-radius: 18px;
+  }
+
+  .hero-text {
+    display: none;
+  }
+
+  .hero-highlights {
+    margin-top: 8px;
+  }
+
+  .hero-highlights li:nth-child(n + 3) {
+    display: none;
+  }
+
+  .content-panel {
+    padding-top: 8px;
+  }
+
+  .content-card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .card-toolbar {
+    margin-bottom: 10px;
+  }
+
+  .theme-toggle span:last-child {
+    display: none;
+  }
+
+  .theme-toggle {
+    min-width: 42px;
+    justify-content: center;
+    padding-inline: 9px;
   }
 }
 

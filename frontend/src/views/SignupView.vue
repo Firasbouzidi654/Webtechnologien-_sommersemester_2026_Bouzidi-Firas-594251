@@ -1202,11 +1202,46 @@ export default {
 
 @media (max-width: 640px) {
   .page-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.38rem;
+  }
+
+  .page-header p {
+    margin-top: 7px;
+    font-size: 0.92rem;
+    line-height: 1.45;
   }
 
   .auth-form {
-    gap: 15px;
+    margin-top: 16px;
+    gap: 12px;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .field input {
+    border-radius: 13px;
+    padding: 12px 14px;
+  }
+
+  .role-cards {
+    min-height: 46px;
+  }
+
+  .role-card {
+    min-height: 40px;
+    padding: 7px 10px;
+  }
+
+  .primary-button {
+    min-height: 48px;
+    border-radius: 15px;
+    padding: 13px 16px;
   }
 
   .password-meter,
@@ -1224,6 +1259,80 @@ export default {
   .meter-label {
     min-width: 0;
     text-align: left;
+  }
+}
+
+@media (max-width: 430px) {
+  .page-header h3 {
+    font-size: 1.28rem;
+  }
+
+  .page-header p {
+    font-size: 0.86rem;
+  }
+
+  .auth-form {
+    margin-top: 12px;
+    gap: 10px;
+  }
+
+  .role-select {
+    gap: 6px;
+  }
+
+  .role-card {
+    gap: 6px;
+    font-size: 0.82rem;
+  }
+
+  .role-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .field label,
+  .field-error,
+  .field-hint,
+  .checkbox,
+  .auth-footer,
+  .helper-heading p,
+  .helper-heading span,
+  .password-helper li {
+    font-size: 0.82rem;
+  }
+
+  .field input {
+    padding: 10px 12px;
+  }
+
+  .password-control input {
+    padding-right: 48px;
+  }
+
+  .password-toggle {
+    right: 6px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .password-helper,
+  .helper-panel {
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .password-helper ul {
+    margin-top: 8px;
+    gap: 6px;
+  }
+
+  .helper-panel {
+    margin-top: 14px;
+  }
+
+  .helper-panel ul {
+    gap: 6px;
+    font-size: 0.82rem;
   }
 }
 

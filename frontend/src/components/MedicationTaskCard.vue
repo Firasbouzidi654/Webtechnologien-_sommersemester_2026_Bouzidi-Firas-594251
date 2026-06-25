@@ -372,9 +372,54 @@ dd {
   }
 }
 
+@media (max-width: 480px) {
+  .task-card {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  header {
+    gap: 10px;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  dl {
+    gap: 8px;
+  }
+
+  dl > div {
+    padding: 8px 10px;
+  }
+
+  .status-control {
+    gap: 6px;
+  }
+
+  .status-option {
+    min-height: 34px;
+    padding: 7px 8px;
+    font-size: 0.76rem;
+  }
+
+  .card-actions {
+    gap: 8px;
+  }
+
+  .confirm-button,
+  .secondary-button,
+  .delete-button {
+    min-height: 38px;
+    padding: 8px 12px;
+  }
+}
+
 @media (max-width: 420px) {
   .task-card {
-    padding: 14px;
+    padding: 12px;
   }
 
   .status-control,

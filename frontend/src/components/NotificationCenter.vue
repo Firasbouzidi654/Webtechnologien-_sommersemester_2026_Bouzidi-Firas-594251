@@ -410,30 +410,56 @@ export default {
 }
 
 @media (max-width: 520px) {
+  .notification-bell {
+    width: 40px;
+    height: 40px;
+  }
+
   .notification-dropdown {
     position: fixed;
-    top: 74px;
-    right: 12px;
-    left: 12px;
+    top: 62px;
+    right: 10px;
+    left: 10px;
     width: auto;
-    max-height: min(var(--notification-max-height, 310px), calc(100vh - 92px));
+    max-height: min(var(--notification-max-height, 310px), calc(100dvh - 76px));
+    padding: 10px;
+    border-radius: 14px;
   }
 
   .toast-stack {
-    right: 16px;
-    left: 16px;
-    bottom: 16px;
+    right: 10px;
+    left: 10px;
+    bottom: 10px;
     width: auto;
   }
 
   .notification-dropdown header {
     align-items: stretch;
     flex-direction: column;
+    gap: 8px;
   }
 
   .notification-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .notification-dropdown header button {
+    min-height: 34px;
+    padding: 6px 8px;
+  }
+
+  .notification-list {
+    gap: 6px;
+  }
+
+  .notification-item {
+    padding: 8px;
+  }
+
+  .toast {
+    padding: 10px 12px;
   }
 }
 </style>

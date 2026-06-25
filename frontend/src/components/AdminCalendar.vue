@@ -434,6 +434,41 @@ h3,
   }
 }
 
+@media (max-width: 480px) {
+  .calendar-panel {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  header,
+  .day-plan-header {
+    gap: 8px;
+  }
+
+  .calendar-actions {
+    gap: 6px;
+  }
+
+  .calendar-actions button,
+  .day-plan-header button,
+  .task-actions button {
+    min-height: 34px;
+    padding: 6px 9px;
+  }
+
+  .day-cell {
+    min-height: 44px;
+    border-radius: 8px;
+  }
+
+  .selected-task,
+  .calendar-task {
+    gap: 7px;
+    padding: 8px;
+  }
+}
+
 @media (max-width: 420px) {
   .weekdays,
   .calendar-grid {

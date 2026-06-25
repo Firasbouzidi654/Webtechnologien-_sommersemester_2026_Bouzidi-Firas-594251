@@ -322,4 +322,48 @@ textarea:focus { outline: 2px solid color-mix(in srgb, var(--color-brand) 36%, t
   .secondary-button { width: 100%; }
   .ai-badge { display: none; }
 }
+
+@media (max-width: 480px) {
+  .ai-care-hub {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  h2 {
+    font-size: 1rem;
+  }
+
+  .hub-summary {
+    font-size: 0.8rem;
+  }
+
+  .ai-tabs {
+    gap: 6px;
+  }
+
+  .ai-tabs button {
+    min-height: 36px;
+    padding: 7px 9px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+
+  textarea {
+    min-height: 86px;
+    padding: 9px 10px;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-height: 38px;
+    padding: 8px 11px;
+  }
+
+  .ai-answer-card,
+  .assistant-disclaimer,
+  .status-message {
+    padding: 10px;
+  }
+}
 </style>

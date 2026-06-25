@@ -29,4 +29,14 @@ header { display:flex; gap:10px; align-items:center; }.highlight-icon { display:
 ul { display:grid; gap:8px; margin:0; padding:0; list-style:none; } li { display:flex; align-items:center; gap:8px; color:var(--color-text-primary); font-size:.84rem; font-weight:700; }.status-dot { width:8px; height:8px; border-radius:50%; }.healthy { background:#44ad7b; }.current { background:#5799d8; }.scheduled { background:#d79c37; }.activity-list svg { width:17px; color:#9a5b1c; }.theme-focus { display:grid; gap:3px; border:1px solid rgba(85,89,167,.16); border-radius:12px; padding:11px; background:rgba(255,255,255,.45); }.theme-focus span { color:var(--color-text-secondary); font-size:.75rem; font-weight:750; }.theme-focus strong { color:var(--color-text-primary); font-size:.92rem; }
 :global([data-theme="dark"]) .wellness-highlight, :global([data-theme="dark"]) .activity-highlight, :global([data-theme="dark"]) .classroom-highlight { border-color:rgba(255,255,255,.06); background:linear-gradient(135deg,#182536 0%,#1e293b 100%); }:global([data-theme="dark"]) h2, :global([data-theme="dark"]) li, :global([data-theme="dark"]) .theme-focus strong { color:#f8fafc; }:global([data-theme="dark"]) .theme-focus { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.08); }
 @media (max-width:900px) { .care-highlights { grid-template-columns:1fr; } }
+@media (max-width:480px) {
+  .care-highlights { gap:8px; }
+  .care-highlight { gap:10px; padding:12px; border-radius:13px; }
+  header { gap:8px; }
+  .highlight-icon { width:32px; height:32px; border-radius:10px; }
+  h2 { font-size:.92rem; }
+  ul { gap:6px; }
+  li { font-size:.78rem; }
+  .theme-focus { padding:9px; }
+}
 </style>
