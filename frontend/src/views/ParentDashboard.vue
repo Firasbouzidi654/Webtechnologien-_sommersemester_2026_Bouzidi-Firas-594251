@@ -505,11 +505,12 @@ export default {
 <style scoped>
 .parent-dashboard {
   min-height: 100vh;
-  padding: 28px;
+  padding: clamp(14px, 2.2vw, 28px);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 :global([data-theme="dark"]) .parent-dashboard {
@@ -560,6 +561,7 @@ export default {
   margin-bottom: 20px;
   border: 1px solid var(--color-border);
   backdrop-filter: blur(10px);
+  min-width: 0;
 }
 
 .parent-heading,
@@ -567,6 +569,7 @@ export default {
   display: flex;
   gap: 12px;
   align-items: center;
+  min-width: 0;
 }
 
 .parent-avatar {
@@ -596,7 +599,9 @@ export default {
   display: flex;
   gap: 12px;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .error-banner {
@@ -754,7 +759,7 @@ textarea {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr));
   gap: 10px;
   margin-top: 12px;
   border: 1px solid var(--color-border);
@@ -890,7 +895,7 @@ textarea {
 
 .manage-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -963,7 +968,7 @@ textarea {
 
 .simple-medication-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   gap: 12px;
   align-items: end;
   margin-top: 16px;
@@ -1022,8 +1027,8 @@ textarea {
 }
 
 .simple-medication-list li {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   border: 1px solid var(--color-border);
@@ -1095,7 +1100,7 @@ textarea {
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: clamp(10px, 3vw, 20px);
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
   z-index: 10;
@@ -1105,6 +1110,8 @@ textarea {
   display: grid;
   gap: 16px;
   width: min(480px, 100%);
+  max-height: min(90vh, 760px);
+  overflow: auto;
   border-radius: 16px;
   padding: 24px;
   background: var(--color-bg-secondary);
@@ -1241,20 +1248,30 @@ textarea {
   .quick-actions {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
+
+  .simple-medication-list li {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
   .parent-dashboard {
-    padding: 20px;
+    padding: 14px;
   }
 
   .topbar,
   .child-toolbar {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .parent-top-actions {
     width: 100%;
+    justify-content: stretch;
+  }
+
+  .parent-top-actions > * {
+    flex: 1 1 120px;
   }
 
   .quick-actions {
@@ -1268,6 +1285,30 @@ textarea {
   .modal {
     width: 100%;
     margin: 0 auto;
+    padding: 18px;
+  }
+
+  .modal header,
+  .modal footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal header button {
+    align-self: flex-end;
+  }
+
+  .modal footer button {
+    width: 100%;
+  }
+
+  .calendar-preview-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .item-actions button,
+  .inline-actions button {
+    flex: 1 1 120px;
   }
 }
 
@@ -1280,6 +1321,24 @@ textarea {
 @media (max-width: 640px) {
   .quick-actions header { align-items: flex-start; flex-direction: column; }
   .quick-actions header > p { text-align: left; }
+  .child-toolbar { grid-template-columns: 1fr; }
+  .child-toolbar-photo { justify-self: center; }
+  .child-toolbar button { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-panel,
+  .child-toolbar,
+  .quick-actions,
+  .health-summary article,
+  .panel,
+  .empty-dashboard-state {
+    border-radius: 12px;
+  }
 }
 
 .child-toolbar-photo {

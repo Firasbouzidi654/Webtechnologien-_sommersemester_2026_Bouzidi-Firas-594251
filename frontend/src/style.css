@@ -394,10 +394,13 @@ body,
 #app {
   min-height: 100vh;
   margin: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 body {
   min-width: 320px;
+  overflow-x: hidden;
 }
 
 button,
@@ -445,6 +448,28 @@ canvas {
 body {
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+#app {
+  overflow-x: clip;
+}
+
+:is(main, section, article, aside, nav, header, footer, form, fieldset, div) {
+  min-width: 0;
+}
+
+:is(button, input, select, textarea) {
+  max-width: 100%;
+}
+
+:is(button, input, select, textarea, a) {
+  touch-action: manipulation;
+}
+
+@media (max-width: 768px) {
+  :is(button, input, select, textarea) {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 1440px) {

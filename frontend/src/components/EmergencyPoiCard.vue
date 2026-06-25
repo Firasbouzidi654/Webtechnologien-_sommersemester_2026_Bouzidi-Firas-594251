@@ -75,6 +75,7 @@ export default {
 .poi-card {
   display: grid;
   gap: 8px;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px;
@@ -112,6 +113,7 @@ export default {
   margin-top: 3px;
   color: var(--color-text-primary);
   font-size: 0.98rem;
+  overflow-wrap: anywhere;
 }
 
 .poi-card a {

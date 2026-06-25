@@ -50,75 +50,116 @@
       <p v-if="filteredChildren.length === 0" class="empty-state">No children match your search.</p>
     </section>
 
-    <section v-if="taskModalActive" class="modal-backdrop" @click.self="closeTaskModal">
-      <form class="modal" @submit.prevent="saveTask">
-        <header>
-          <div>
-            <p class="eyebrow">Medication task</p>
-            <h2>{{ taskModalMode === 'edit' ? 'Edit medication task' : 'Add medication task' }}</h2>
+    <section v-if="taskModalActive" class="modal-backdrop medication-task-backdrop" @click.self="closeTaskModal" role="dialog" aria-modal="true">
+      <form class="modal medication-task-modal" @submit.prevent="saveTask">
+        <header class="medication-task-header">
+          <div class="medication-title-group">
+            <span class="medication-icon" aria-hidden="true"><CareIcon name="health" /></span>
+            <div>
+              <p class="eyebrow">Medication task</p>
+              <h2>{{ taskModalMode === 'edit' ? 'Edit medication task' : 'Add medication task' }}</h2>
+              <p class="modal-intro">Plan a clear, safe care reminder for the classroom team.</p>
+            </div>
           </div>
-          <button type="button" aria-label="Close" @click="closeTaskModal">x</button>
+          <button class="medication-close-button" type="button" aria-label="Close medication task form" @click="closeTaskModal">
+            <span aria-hidden="true">Close</span>
+          </button>
         </header>
 
-        <div class="modal-fields">
-          <label>
-            <span>Child name</span>
-            <select v-model.number="taskForm.childId" required>
-              <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }}</option>
-            </select>
-          </label>
-          <label>
-            <span>Medication</span>
-            <input v-model="taskForm.medicationName" placeholder="E.g. Amoxicillin" required />
-          </label>
-          <label>
-            <span>Dosage</span>
-            <input v-model="taskForm.dosage" placeholder="E.g. 5 ml" required />
-          </label>
-          <label>
-            <span>Date</span>
-            <input v-model="taskForm.date" type="date" required />
-          </label>
-          <label>
-            <span>Hour</span>
-            <input v-model="taskForm.time" type="time" required />
-          </label>
-          <label>
-            <span>Status</span>
-            <select v-model="taskForm.status" required>
-              <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
-            </select>
-          </label>
-          <label>
-            <span>Frequency</span>
-            <select v-model="taskForm.frequency" required>
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="SPECIFIC_DAY">Specific day</option>
-              <option value="ONE_TIME">One-time</option>
-              <option value="EVERY_X_DAYS">Every X days</option>
-            </select>
-          </label>
-          <label v-if="taskForm.frequency === 'SPECIFIC_DAY'">
-            <span>Day</span>
-            <select v-model="taskForm.dayOfWeek" required>
-              <option value="MONDAY">Monday</option>
-              <option value="TUESDAY">Tuesday</option>
-              <option value="WEDNESDAY">Wednesday</option>
-              <option value="THURSDAY">Thursday</option>
-              <option value="FRIDAY">Friday</option>
-              <option value="SATURDAY">Saturday</option>
-              <option value="SUNDAY">Sunday</option>
-            </select>
-          </label>
-          <label v-if="taskForm.frequency === 'EVERY_X_DAYS'">
-            <span>Every how many days?</span>
-            <input v-model.number="taskForm.intervalDays" type="number" min="2" required />
-          </label>
-          <p v-if="taskError" class="form-error">{{ taskError }}</p>
-          <div class="modal-actions">
-            <button type="submit">{{ taskModalMode === 'edit' ? 'Save changes' : 'Create task' }}</button>
-            <button type="button" class="secondary-button" @click="closeTaskModal">Cancel</button>
+        <div class="medication-task-content">
+          <section class="medication-form-card">
+            <div class="section-heading">
+              <p class="eyebrow">Child and medicine</p>
+              <h3>Care details</h3>
+            </div>
+
+            <div class="modal-fields medication-field-grid">
+              <label class="form-field form-field-wide">
+                <span>Child name</span>
+                <select v-model.number="taskForm.childId" required>
+                  <option v-for="child in children" :key="child.id" :value="child.id">{{ child.name }}</option>
+                </select>
+                <small>Choose the child this care task belongs to.</small>
+              </label>
+              <label class="form-field">
+                <span>Medication</span>
+                <input v-model="taskForm.medicationName" placeholder="E.g. Amoxicillin" required />
+                <small>Use the exact medication name from the parent note or package.</small>
+              </label>
+              <label class="form-field">
+                <span>Dosage</span>
+                <input v-model="taskForm.dosage" placeholder="E.g. 5 ml" required />
+                <small>Include the unit, for example ml, drops or tablet count.</small>
+              </label>
+            </div>
+          </section>
+
+          <section class="medication-form-card">
+            <div class="section-heading">
+              <p class="eyebrow">Schedule</p>
+              <h3>When should it happen?</h3>
+            </div>
+
+            <div class="modal-fields medication-field-grid">
+              <label class="form-field">
+                <span>Date</span>
+                <input v-model="taskForm.date" type="date" required />
+                <small>Double-check the planned care date before saving.</small>
+              </label>
+              <label class="form-field">
+                <span>Hour</span>
+                <input v-model="taskForm.time" type="time" required />
+                <small>Use the time agreed with the parent or care plan.</small>
+              </label>
+              <label class="form-field">
+                <span>Status</span>
+                <select v-model="taskForm.status" required>
+                  <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
+                </select>
+                <small>New tasks usually start as Pending.</small>
+              </label>
+              <label class="form-field">
+                <span>Frequency</span>
+                <select v-model="taskForm.frequency" required>
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="SPECIFIC_DAY">Specific day</option>
+                  <option value="ONE_TIME">One-time</option>
+                  <option value="EVERY_X_DAYS">Every X days</option>
+                </select>
+                <small>Set how often the care team should see this reminder.</small>
+              </label>
+              <label v-if="taskForm.frequency === 'SPECIFIC_DAY'" class="form-field">
+                <span>Day</span>
+                <select v-model="taskForm.dayOfWeek" required>
+                  <option value="MONDAY">Monday</option>
+                  <option value="TUESDAY">Tuesday</option>
+                  <option value="WEDNESDAY">Wednesday</option>
+                  <option value="THURSDAY">Thursday</option>
+                  <option value="FRIDAY">Friday</option>
+                  <option value="SATURDAY">Saturday</option>
+                  <option value="SUNDAY">Sunday</option>
+                </select>
+                <small>Select the weekday for recurring tasks.</small>
+              </label>
+              <label v-if="taskForm.frequency === 'EVERY_X_DAYS'" class="form-field">
+                <span>Every how many days?</span>
+                <input v-model.number="taskForm.intervalDays" type="number" min="2" required />
+                <small>Use at least 2 days between repeated reminders.</small>
+              </label>
+            </div>
+          </section>
+
+          <aside class="medication-safety-note" aria-label="Medication safety note">
+            <strong>Safety note</strong>
+            <span>Confirm medication, dosage, date and time with the parent record before administration.</span>
+          </aside>
+
+          <p v-if="taskError" class="form-error medication-form-error">{{ taskError }}</p>
+
+          <div class="modal-actions medication-task-actions">
+            <button type="submit" class="primary-medication-button">{{ taskModalMode === 'edit' ? 'Save changes' : 'Create task' }}</button>
+            <button type="button" class="secondary-button medication-cancel-button" @click="closeTaskModal">Cancel</button>
           </div>
         </div>
       </form>
@@ -245,6 +286,7 @@ import ChildCareAssistant from '../components/ChildCareAssistant.vue';
 import CareHighlights from '../components/CareHighlights.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
+import CareIcon from '../components/CareIcon.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
 import { fetchNearbyEmergencyPOIs } from '../services/emergencyService';
@@ -269,7 +311,8 @@ export default {
     ChildCareAssistant,
     CareHighlights,
     MedicationTaskCard,
-    NotificationCenter
+    NotificationCenter,
+    CareIcon
   },
   props: {
     isDark: {
@@ -592,7 +635,7 @@ export default {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  padding: 24px;
+  padding: clamp(14px, 2vw, 24px);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -635,7 +678,7 @@ export default {
 
 .topbar {
   display: grid;
-  grid-template-columns: minmax(210px, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   background: var(--color-bg-secondary);
@@ -785,6 +828,242 @@ select {
   box-shadow: var(--shadow-xl);
 }
 
+.medication-task-backdrop {
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255, 237, 213, 0.24), transparent 32%),
+    radial-gradient(circle at 78% 24%, rgba(199, 210, 254, 0.22), transparent 28%),
+    rgba(15, 23, 42, 0.58);
+}
+
+.medication-task-modal {
+  width: min(940px, 100%);
+  padding: 0;
+  border: 1px solid rgba(49, 130, 206, 0.16);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 235, 0.82) 0%, rgba(240, 253, 250, 0.9) 42%, var(--color-bg-secondary) 100%);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
+}
+
+.medication-task-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid rgba(49, 130, 206, 0.12);
+  background:
+    linear-gradient(135deg, rgba(255, 247, 237, 0.96), rgba(236, 253, 245, 0.9)),
+    var(--color-bg-secondary);
+}
+
+.medication-title-group {
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+}
+
+.medication-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #c7f9cc 0%, #bfdbfe 100%);
+  color: #166534;
+  box-shadow: 0 12px 24px rgba(49, 130, 206, 0.15);
+}
+
+.medication-icon :deep(.care-icon) {
+  width: 27px;
+  height: 27px;
+  stroke-width: 2;
+}
+
+.medication-task-header h2 {
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  line-height: 1.12;
+}
+
+.modal-intro {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.medication-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.medication-close-button:hover,
+.medication-close-button:focus-visible {
+  border-color: rgba(49, 130, 206, 0.36);
+  background: #eff6ff;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.medication-task-content {
+  display: grid;
+  gap: 16px;
+  padding: 22px 26px 26px;
+}
+
+.medication-form-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 22px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.section-heading {
+  margin-bottom: 15px;
+}
+
+.section-heading h3 {
+  margin: 3px 0 0;
+  color: #1e293b;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.medication-field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-field-wide {
+  grid-column: 1 / -1;
+}
+
+.form-field span {
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.form-field input,
+.form-field select {
+  border-color: rgba(148, 163, 184, 0.32);
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.12);
+  outline: none;
+}
+
+.form-field small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.medication-safety-note {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(240, 168, 58, 0.34);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(254, 243, 199, 0.78));
+  color: #7c2d12;
+  box-shadow: 0 10px 24px rgba(240, 168, 58, 0.12);
+}
+
+.medication-safety-note strong {
+  font-size: 0.9rem;
+}
+
+.medication-safety-note span {
+  color: #92400e;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.medication-form-error {
+  margin: 0;
+  border: 1px solid var(--color-missed-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: var(--color-missed);
+}
+
+.medication-task-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+  padding-top: 4px;
+}
+
+.primary-medication-button,
+.medication-cancel-button {
+  min-height: 46px;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.primary-medication-button {
+  border: 0;
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-dark));
+  color: #fff;
+  box-shadow: 0 14px 26px rgba(49, 130, 206, 0.24);
+}
+
+.primary-medication-button:hover,
+.primary-medication-button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(49, 130, 206, 0.3);
+}
+
+:global([data-theme="dark"]) .medication-task-modal {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+}
+
+:global([data-theme="dark"]) .medication-task-header,
+:global([data-theme="dark"]) .medication-form-card {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.82);
+}
+
+:global([data-theme="dark"]) .medication-task-header h2,
+:global([data-theme="dark"]) .section-heading h3,
+:global([data-theme="dark"]) .form-field span {
+  color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .modal-intro,
+:global([data-theme="dark"]) .form-field small {
+  color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .form-field input,
+:global([data-theme="dark"]) .form-field select,
+:global([data-theme="dark"]) .medication-close-button {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
 .emergency-modal {
   position: relative;
   width: min(1120px, calc(100vw - 32px));
@@ -832,7 +1111,7 @@ select {
 
 .emergency-body {
   display: grid;
-  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
+  grid-template-columns: minmax(min(280px, 100%), 0.75fr) minmax(0, 1.25fr);
   gap: 16px;
   width: 100%;
   height: 100%;
@@ -994,7 +1273,7 @@ select {
 
 .children-search {
   min-height: 42px;
-  min-width: 220px;
+  min-width: min(220px, 100%);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 10px 14px;
@@ -1016,7 +1295,7 @@ select {
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 10px;
   margin-top: 12px;
 }
@@ -1163,7 +1442,7 @@ select {
 
 .day-timeline-panel {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -1248,7 +1527,7 @@ select {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  grid-template-columns: minmax(0, 1fr) minmax(min(320px, 100%), 380px);
   gap: 16px;
   margin-top: 16px;
   align-items: start;
@@ -1412,7 +1691,7 @@ select {
 
 @media (max-width: 640px) {
   .dashboard {
-    padding: 20px;
+    padding: 14px;
   }
 
   .topbar {
@@ -1441,6 +1720,8 @@ select {
 
   .control-actions button {
     flex: 1 1 120px;
+    min-width: 0;
+    white-space: normal;
   }
 
   h1 {
@@ -1460,6 +1741,51 @@ select {
     padding: 10px;
   }
 
+  .modal {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .medication-task-modal {
+    padding: 0;
+    border-radius: 20px;
+  }
+
+  .medication-task-header {
+    padding: 18px;
+  }
+
+  .medication-title-group {
+    align-items: flex-start;
+  }
+
+  .medication-task-content {
+    padding: 16px;
+  }
+
+  .medication-form-card {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .medication-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .medication-task-actions {
+    justify-content: stretch;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions button,
+  .children-search {
+    width: 100%;
+  }
+
   .emergency-modal {
     width: 100%;
     height: calc(100vh - 20px);
@@ -1469,6 +1795,54 @@ select {
 
   .emergency-body {
     padding: 10px;
+  }
+
+  .emergency-poi-panel {
+    max-height: 36vh;
+  }
+}
+
+@media (max-width: 420px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .top-actions button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .top-action-buttons,
+  .control-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .medication-task-header {
+    gap: 14px;
+  }
+
+  .medication-title-group {
+    display: grid;
+    gap: 10px;
+  }
+
+  .medication-close-button {
+    padding-inline: 12px;
+  }
+
+  .holiday-list li,
+  .timeline-section header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .holiday-name {
+    text-align: left;
+  }
+
+  .emergency-map {
+    min-height: 280px;
   }
 }
 </style>

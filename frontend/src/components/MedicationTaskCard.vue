@@ -89,6 +89,7 @@ export default {
 .task-card {
   display: grid;
   gap: 16px;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-left: 6px solid var(--color-bg-tertiary);
   border-radius: 14px;
@@ -368,6 +369,26 @@ dd {
 
   .card-actions > button {
     flex: 1 1 150px;
+  }
+}
+
+@media (max-width: 420px) {
+  .task-card {
+    padding: 14px;
+  }
+
+  .status-control,
+  dl {
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions > button {
+    width: 100%;
   }
 }
 </style>

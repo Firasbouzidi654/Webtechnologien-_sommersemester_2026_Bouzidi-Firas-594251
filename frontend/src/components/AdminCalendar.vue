@@ -174,6 +174,7 @@ export default {
 .calendar-panel {
   display: grid;
   gap: 14px;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 18px;
@@ -206,6 +207,8 @@ h3,
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .calendar-actions span {
@@ -388,9 +391,62 @@ h3,
   flex-wrap: wrap;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 640px) {
+  .calendar-panel {
+    padding: 14px;
+  }
+
+  header,
+  .day-plan-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-actions {
+    justify-content: stretch;
+  }
+
+  .calendar-actions span {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
+  .calendar-actions button,
+  .day-plan-header button {
+    flex: 1 1 0;
+  }
+
   .calendar-task {
     grid-template-columns: 1fr;
+  }
+
+  .task-actions button {
+    flex: 1 1 120px;
+  }
+
+  .day-cell {
+    min-height: 48px;
+    padding: 4px;
+  }
+
+  .day-cell small {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .weekdays,
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .weekdays strong {
+    font-size: 0.66rem;
+  }
+
+  .day-cell {
+    min-height: 42px;
+    border-radius: 6px;
   }
 }
 </style>

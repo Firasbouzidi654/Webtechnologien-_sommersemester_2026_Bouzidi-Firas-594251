@@ -348,7 +348,7 @@ export default {
   z-index: 20;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: clamp(10px, 3vw, 20px);
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
 }
@@ -356,6 +356,7 @@ export default {
 .modal {
   display: grid;
   gap: 16px;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 24px;
@@ -560,10 +561,18 @@ export default {
 }
 
 @media (max-width: 640px) {
+  .medication-assistant {
+    padding: 15px;
+  }
+
   .medication-search,
   .assistant-inline-search,
   .result-heading {
     grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 18px;
   }
 
   .medication-search {
@@ -576,6 +585,25 @@ export default {
     width: 100%;
     max-width: none;
     text-align: left;
+  }
+
+  .medication-results {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .medication-result-card {
+    padding: 13px;
+  }
+
+  .modal > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal > header > button {
+    align-self: flex-end;
   }
 }
 </style>

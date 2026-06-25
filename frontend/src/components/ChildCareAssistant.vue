@@ -184,6 +184,7 @@ export default {
   justify-content: space-between;
   gap: 10px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .eyebrow { margin: 0 0 4px; color: var(--color-text-secondary); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -314,6 +315,9 @@ textarea:focus { outline: 2px solid color-mix(in srgb, var(--color-brand) 36%, t
 
 @media (max-width: 640px) {
   .ai-care-hub { padding: 15px; }
+  .hub-header { flex-direction: column; }
+  .ai-tabs { display: grid; grid-template-columns: 1fr; }
+  .ai-tabs button { width: 100%; text-align: left; }
   .primary-button,
   .secondary-button { width: 100%; }
   .ai-badge { display: none; }

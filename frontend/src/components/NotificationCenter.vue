@@ -156,6 +156,7 @@ export default {
 <style scoped>
 .notification-center {
   position: relative;
+  min-width: 0;
 }
 
 .notification-bell {
@@ -410,13 +411,29 @@ export default {
 
 @media (max-width: 520px) {
   .notification-dropdown {
-    right: auto;
-    left: 0;
+    position: fixed;
+    top: 74px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(var(--notification-max-height, 310px), calc(100vh - 92px));
   }
 
   .toast-stack {
     right: 16px;
+    left: 16px;
     bottom: 16px;
+    width: auto;
+  }
+
+  .notification-dropdown header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .notification-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }
 </style>
