@@ -30,4 +30,22 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("PARENT"));
     }
+
+    @Test
+    void rejectsDuplicateRegistration() throws Exception {
+        String account = "{\"email\":\"duplicate@example.test\",\"password\":\"SecurePass123\",\"role\":\"PARENT\"}";
+
+        mockMvc.perform(post("/api/auth/register").contentType(JSON_CONTENT_TYPE).content(account))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/auth/register").contentType(JSON_CONTENT_TYPE).content(account))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void rejectsInvalidLogin() throws Exception {
+        mockMvc.perform(post("/api/auth/login").contentType(JSON_CONTENT_TYPE)
+                .content("{\"email\":\"missing@example.test\",\"password\":\"WrongPass123\"}"))
+                .andExpect(status().isUnauthorized());
+    }
 }

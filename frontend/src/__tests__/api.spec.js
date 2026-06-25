@@ -44,4 +44,14 @@ describe('medication timeline API mapping', () => {
     const payload = JSON.parse(fetchMock.mock.calls[1][1].body);
     expect(payload).toMatchObject({ frequency: 'EVERY_X_DAYS', intervalDays: 3, startDate: '2026-06-23' });
   });
+
+  it('surfaces backend validation messages for invalid input', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ message: 'A medication name is required.' })
+    })));
+
+    await expect(api.updateMedication(7, { name: ' ' })).rejects.toThrow('A medication name is required.');
+  });
 });

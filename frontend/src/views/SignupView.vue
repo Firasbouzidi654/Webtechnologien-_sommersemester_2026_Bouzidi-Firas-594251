@@ -172,9 +172,11 @@
           />
           <span>
             {{ signup.checkboxText }}
-            <button class="text-link" type="button" @click="$emit('navigate', '/privacy')">
-              {{ common.privacyLink }}
-            </button>
+            <router-link custom to="/privacy" v-slot="{ navigate }">
+              <button class="text-link" type="button" @click="navigate">
+                {{ common.privacyLink }}
+              </button>
+            </router-link>
           </span>
         </label>
         <Transition name="field-message">
@@ -196,9 +198,11 @@
 
       <footer class="auth-footer">
         <span>{{ signup.alternatePrompt }}</span>
-        <button class="text-link" type="button" @click="$emit('navigate', '/signin')">
-          {{ signup.alternateAction }}
-        </button>
+        <router-link custom to="/signin" v-slot="{ navigate }">
+          <button class="text-link" type="button" @click="navigate">
+            {{ signup.alternateAction }}
+          </button>
+        </router-link>
       </footer>
     </form>
 

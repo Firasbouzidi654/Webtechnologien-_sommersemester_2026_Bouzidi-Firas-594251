@@ -169,6 +169,56 @@ class MedicationControllerTest {
     }
 
     @Test
+    void medicationCreationRequiresAllowedRole() throws Exception {
+        long childId = createChildNamed("Role Child");
+
+        mockMvc.perform(post("/api/medications")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\"5 drops\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void medicationRejectsInvalidStatusAndTime() throws Exception {
+        long childId = createChildNamed("Invalid Medication Child");
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\"5 drops\",\"status\":\"DONE\"}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\"5 drops\",\"time\":\"25:99\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void medicationReturnsNotFoundForUnknownChild() throws Exception {
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":999999,\"dosage\":\"5 drops\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void medicationRejectsInvalidScheduleInput() throws Exception {
+        long childId = createChildNamed("Schedule Validation Child");
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId
+                        + ",\"dosage\":\"5 drops\",\"frequency\":\"EVERY_X_DAYS\",\"intervalDays\":1}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId
+                        + ",\"dosage\":\"5 drops\",\"frequency\":\"SPECIFIC_DAY\",\"dayOfWeek\":\"FUNDAY\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void parentAndStaffCanSaveMedicationSchedules() throws Exception {
         long childId = createChildNamed("Schedule Child");
 

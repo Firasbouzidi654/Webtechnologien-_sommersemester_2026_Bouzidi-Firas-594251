@@ -115,6 +115,8 @@ Example response:
   "parentMessage": "Dear Parent,\n\nToday Emma experienced a mild fever at approximately 14:00...\n\nKind regards,\nKinderCare Staff"
 }
 ```
+Frontend: https://webtechnologien-sommersemester-2026.onrender.com/#/
+Backend: https://kindercare-backend.onrender.com
+API example: https://kindercare-backend.onrender.com/api/children
 
-
-
+Github : https://github.com/Firasbouzidi654/Webtechnologien-_sommersemester_2026_Bouzidi-Firas-594251

@@ -92,9 +92,11 @@
 
       <footer class="auth-footer">
         <span>{{ signin.alternatePrompt }}</span>
-        <button class="text-link" type="button" @click="$emit('navigate', '/signup')">
-          {{ signin.alternateAction }}
-        </button>
+        <router-link custom to="/signup" v-slot="{ navigate }">
+          <button class="text-link" type="button" @click="navigate">
+            {{ signin.alternateAction }}
+          </button>
+        </router-link>
       </footer>
     </form>
 

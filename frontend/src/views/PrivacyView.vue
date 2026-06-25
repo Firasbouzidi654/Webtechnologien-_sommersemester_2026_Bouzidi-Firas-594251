@@ -22,12 +22,16 @@
     </section>
 
     <div class="privacy-actions">
-      <button class="primary-button" type="button" @click="$emit('navigate', '/signup')">
-        {{ common.backToSignUp }}
-      </button>
-      <button class="secondary-button" type="button" @click="$emit('navigate', '/signin')">
-        {{ common.goToSignIn }}
-      </button>
+      <router-link custom to="/signup" v-slot="{ navigate }">
+        <button class="primary-button" type="button" @click="navigate">
+          {{ common.backToSignUp }}
+        </button>
+      </router-link>
+      <router-link custom to="/signin" v-slot="{ navigate }">
+        <button class="secondary-button" type="button" @click="navigate">
+          {{ common.goToSignIn }}
+        </button>
+      </router-link>
     </div>
   </AuthShell>
 </template>
