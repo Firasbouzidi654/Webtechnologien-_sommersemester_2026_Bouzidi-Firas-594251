@@ -92,9 +92,10 @@ public class ChildCareAssistantService {
                     new HttpEntity<>(payload, headers),
                     JsonNode.class
             );
-            String answer = response.getBody() == null
+            JsonNode body = response.getBody();
+            String answer = body == null
                     ? ""
-                    : response.getBody().path("choices").path(0).path("message").path("content").asText("").trim();
+                    : body.path("choices").path(0).path("message").path("content").asText("").trim();
 
             if (answer.isBlank()) {
                 throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
