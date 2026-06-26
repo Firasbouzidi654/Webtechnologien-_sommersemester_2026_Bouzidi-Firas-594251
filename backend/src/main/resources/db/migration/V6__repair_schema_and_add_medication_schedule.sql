@@ -1,3 +1,6 @@
+-- This migration repairs the schema left by the retired data model and creates the
+-- compact schema used by the current Spring Boot application. It is deliberately
+-- idempotent so it can also baseline an existing Render PostgreSQL database.
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
