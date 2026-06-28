@@ -2,9 +2,12 @@ package de.htw_berlin.kindercare.medication;
 
 import de.htw_berlin.kindercare.child.Child;
 import de.htw_berlin.kindercare.child.ChildRepository;
+import de.htw_berlin.kindercare.child.ChildService;
+import de.htw_berlin.kindercare.config.RoleAccess;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -13,10 +16,12 @@ import java.util.List;
 public class MedicationService {
     private final MedicationRepository repository;
     private final ChildRepository children;
+    private final ChildService childService;
 
-    public MedicationService(MedicationRepository repository, ChildRepository children) {
+    public MedicationService(MedicationRepository repository, ChildRepository children, ChildService childService) {
         this.repository = repository;
         this.children = children;
+        this.childService = childService;
     }
 
     @NonNull
@@ -25,14 +30,35 @@ public class MedicationService {
     }
 
     @NonNull
-    public Medication create(@NonNull Medication medication) {
+    public List<Medication> findVisibleTo(@Nullable String role, @Nullable String userId) {
+        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
+        if (RoleAccess.hasAny(role, "STAFF", "ADMIN")) {
+            return findAll();
+        }
+
+        List<Long> childIds = childService.findVisibleTo(role, userId).stream()
+                .map(Child::getId)
+                .toList();
+        if (childIds.isEmpty()) {
+            return List.of();
+        }
+        return repository.findByChildIdInOrderByIdAsc(childIds);
+    }
+
+    @NonNull
+    public Medication create(@NonNull Medication medication, @Nullable String role, @Nullable String userId) {
+        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
         Long childId = medication.getChildId();
         if (childId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
         }
 
-        Child linkedChild = children.findById(childId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Child not found."));
+        // Medication records expose child details, so parent-created medication must
+        // be linked only to a child assigned to that same parent account.
+        Child linkedChild = RoleAccess.hasAny(role, "STAFF", "ADMIN")
+                ? children.findById(childId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Child not found."))
+                : childService.findAccessibleById(childId, role, userId);
 
         Medication toSave = new Medication(
                 medication.getName().trim(),

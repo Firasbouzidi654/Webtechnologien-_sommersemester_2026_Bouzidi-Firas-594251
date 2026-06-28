@@ -32,8 +32,11 @@ public class MedicationController {
 
     @GetMapping
     @NonNull
-    public List<Medication> getAll() {
-        return service.findAll();
+    public List<Medication> getAll(
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId
+    ) {
+        return service.findVisibleTo(role, userId);
     }
 
     @PostMapping
@@ -41,13 +44,13 @@ public class MedicationController {
     @NonNull
     public Medication create(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId,
             @RequestBody @NonNull Medication medication
     ) {
         requireMedicationDetails(medication);
-        RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
         normalizeStatus(medication);
         normalizeSchedule(medication);
-        return service.create(medication);
+        return service.create(medication, role, userId);
     }
 
     @PutMapping("/{id}")

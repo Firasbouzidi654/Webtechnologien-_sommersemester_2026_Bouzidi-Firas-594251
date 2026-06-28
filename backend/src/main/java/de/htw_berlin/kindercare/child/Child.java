@@ -14,12 +14,18 @@ public class Child {
     private Long id;
     private String name;
     private String allergies;
+    private Long parentId;
 
     public Child() { }
 
     public Child(String name, String allergies) {
+        this(name, allergies, null);
+    }
+
+    public Child(String name, String allergies, Long parentId) {
         this.name = name;
         this.allergies = allergies;
+        this.parentId = parentId;
     }
 
     public Long getId() { return id; }
@@ -27,4 +33,6 @@ public class Child {
     public void setName(String name) { this.name = name; }
     public String getAllergies() { return allergies; }
     public void setAllergies(String allergies) { this.allergies = allergies; }
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
 }

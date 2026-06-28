@@ -9,15 +9,26 @@
       <ul class="activity-list"><li><CareIcon name="activity" /><span>Arts &amp; Crafts</span></li><li><CareIcon name="learning" /><span>Story Time</span></li><li><CareIcon name="learning" /><span>Alphabet Activities</span></li><li><CareIcon name="children" /><span>Outdoor Play</span></li></ul>
     </article>
     <article class="care-highlight classroom-highlight">
-      <header><span class="highlight-icon classroom-icon"><CareIcon name="children" /></span><div><p class="eyebrow">Classroom theme</p><h2>Animals &amp; Nature</h2></div></header>
-      <div class="theme-focus"><span>Today's Focus</span><strong>Forest Animals</strong></div>
+      <header><span class="highlight-icon classroom-icon"><CareIcon name="children" /></span><div><p class="eyebrow">Classroom theme</p><h2>{{ classroom.theme }}</h2></div></header>
+      <div class="theme-focus"><span>Today's Focus</span><strong>{{ classroom.focus }}</strong></div>
     </article>
   </section>
 </template>
 
 <script>
 import CareIcon from './CareIcon.vue';
-export default { name: 'CareHighlights', components: { CareIcon }, props: { medicationCount: { type: Number, default: 0 } } };
+import { randomClassroomThemeFocus } from '../config/classroomThemes';
+
+export default {
+  name: 'CareHighlights',
+  components: { CareIcon },
+  props: { medicationCount: { type: Number, default: 0 } },
+  data() {
+    return {
+      classroom: randomClassroomThemeFocus()
+    };
+  }
+};
 </script>
 
 <style scoped>

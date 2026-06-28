@@ -32,8 +32,13 @@ public class ChildController {
 
     @GetMapping
     @NonNull
-    public List<Child> getAll() {
-        return service.findAll();
+    public List<Child> getAll(
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId
+    ) {
+        // Access rule: admins/staff receive the full directory; parents only receive
+        // children whose parent_id matches their logged-in account id.
+        return service.findVisibleTo(role, userId);
     }
 
     @PostMapping
@@ -41,36 +46,41 @@ public class ChildController {
     @NonNull
     public Child create(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId,
             @RequestBody @NonNull Child child
     ) {
-        RoleAccess.require(role, "PARENT");
         if (child.getName() == null || child.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child name is required.");
         }
         validateAllergies(child);
-        return service.create(child);
+        return service.create(child, role, userId);
     }
 
     @PutMapping("/{id}")
     @NonNull
     public Child update(
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId,
             @PathVariable @NonNull Long id,
             @RequestBody @NonNull Child child
     ) {
-        RoleAccess.require(role, "PARENT");
         validateAllergies(child);
-        Child updated = service.update(id, child);
+        Child updated = service.update(id, child, role, userId);
         medicationService.updateChildName(id, updated.getName());
         return updated;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestHeader(value = "X-User-Role", required = false) @Nullable String role, @PathVariable @NonNull Long id) {
-        RoleAccess.require(role, "PARENT");
+    public void delete(
+            @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
+            @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId,
+            @PathVariable @NonNull Long id
+    ) {
+        RoleAccess.require(role, "PARENT", "ADMIN");
+        service.findAccessibleById(id, role, userId);
         medicationService.deleteByChildId(id);
-        service.delete(id);
+        service.delete(id, role, userId);
     }
 
     private void validateAllergies(Child child) {

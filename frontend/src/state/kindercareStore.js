@@ -1,6 +1,5 @@
 import { reactive } from 'vue';
 import { api } from '../services/api';
-import { currentUser } from './authStore';
 
 export const MEDICATION_STATUSES = ['Pending', 'Taken', 'Missed', 'Upcoming'];
 
@@ -30,31 +29,7 @@ function safeStatus(status, fallback = 'Pending') {
   return MEDICATION_STATUSES.includes(status) ? status : fallback;
 }
 
-// ─── Per-user parentChildIds persistence ─────────────────────────────────────
-
-function parentChildIdsKey() {
-  const email = currentUser()?.email;
-  return email ? `kindercare-parent-children-${email}` : null;
-}
-
-function loadParentChildIds() {
-  const key = parentChildIdsKey();
-  if (!key) return [];
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveParentChildIds(ids) {
-  const key = parentChildIdsKey();
-  if (!key) return;
-  try {
-    localStorage.setItem(key, JSON.stringify(ids));
-  } catch {}
-}
+// ─── Child access helpers ────────────────────────────────────────────────────
 
 function findMedicationOwner(medicationId) {
   return kindercareStore.children.find((child) =>
@@ -80,10 +55,7 @@ export async function loadChildren() {
   try {
     const children = await api.getChildren();
     mergeChildrenFromApi(children);
-    // Restore only the IDs this specific logged-in parent created
-    if (kindercareStore.parentChildIds.length === 0) {
-      kindercareStore.parentChildIds = loadParentChildIds();
-    }
+    kindercareStore.parentChildIds = children.map((child) => child.id);
   } catch {
     addNotification({ title: 'Load failed', message: 'Could not load children from the server.', type: 'danger' });
   } finally {
@@ -146,11 +118,9 @@ export function taskReminderDue(task) {
 }
 
 export function parentChildren() {
-  // In public demo mode (opening /#/parent directly), show the saved records.
-  if (kindercareStore.parentChildIds.length === 0) {
-    return kindercareStore.children;
-  }
-  return kindercareStore.children.filter((child) => kindercareStore.parentChildIds.includes(child.id));
+  // The backend is the access-control boundary: parents receive only children
+  // assigned to their account, while admin/staff users receive the full list.
+  return kindercareStore.children;
 }
 
 export function setParentAvatar(dataUrl) {
@@ -181,7 +151,6 @@ export async function addChild(data) {
   if (!kindercareStore.parentChildIds.includes(child.id)) {
     kindercareStore.parentChildIds.push(child.id);
   }
-  saveParentChildIds(kindercareStore.parentChildIds);
 
   addNotification({
     title: 'Child added',
@@ -195,7 +164,6 @@ export async function deleteChild(childId) {
   // Optimistic remove so the UI feels instant
   kindercareStore.children = kindercareStore.children.filter((c) => c.id !== childId);
   kindercareStore.parentChildIds = kindercareStore.parentChildIds.filter((id) => id !== childId);
-  saveParentChildIds(kindercareStore.parentChildIds);
 
   try {
     await api.deleteChild(childId);

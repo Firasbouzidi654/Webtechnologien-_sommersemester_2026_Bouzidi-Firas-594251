@@ -12,6 +12,6 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOriginPatterns("http://localhost:5173", "https://*.onrender.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("Content-Type", "X-User-Role");
+                .allowedHeaders("Content-Type", "X-User-Role", "X-User-Id");
     }
 }

@@ -8,7 +8,7 @@ afterEach(() => {
 
 describe('medication timeline API mapping', () => {
   it('loads the saved medication time and status after refresh', async () => {
-    localStorage.setItem('kindercare-simple-user', JSON.stringify({ role: 'PARENT' }));
+    localStorage.setItem('kindercare-simple-user', JSON.stringify({ id: 12, role: 'PARENT' }));
     vi.stubGlobal('fetch', vi.fn((url) => {
       const data = String(url).endsWith('/api/children')
         ? [{ id: 1, name: 'Emma', allergies: 'Peanuts' }]
@@ -24,7 +24,7 @@ describe('medication timeline API mapping', () => {
   });
 
   it('sends schedule fields when creating a medication', async () => {
-    localStorage.setItem('kindercare-simple-user', JSON.stringify({ role: 'PARENT' }));
+    localStorage.setItem('kindercare-simple-user', JSON.stringify({ id: 12, role: 'PARENT' }));
     const fetchMock = vi.fn((url, options = {}) => {
       if (String(url).endsWith('/api/children')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([{ id: 1, name: 'Emma' }]) });
@@ -43,6 +43,7 @@ describe('medication timeline API mapping', () => {
 
     const payload = JSON.parse(fetchMock.mock.calls[1][1].body);
     expect(payload).toMatchObject({ frequency: 'EVERY_X_DAYS', intervalDays: 3, startDate: '2026-06-23' });
+    expect(fetchMock.mock.calls[1][1].headers).toMatchObject({ 'X-User-Role': 'PARENT', 'X-User-Id': '12' });
   });
 
   it('surfaces backend validation messages for invalid input', async () => {

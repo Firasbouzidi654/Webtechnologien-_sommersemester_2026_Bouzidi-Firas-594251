@@ -7,4 +7,9 @@ import java.util.List;
 public interface ChildRepository extends JpaRepository<Child, Long> {
     @NonNull
     List<Child> findAllByOrderByIdAsc();
+
+    @NonNull
+    List<Child> findByParentIdOrderByIdAsc(@NonNull Long parentId);
+
+    boolean existsByIdAndParentId(@NonNull Long id, @NonNull Long parentId);
 }

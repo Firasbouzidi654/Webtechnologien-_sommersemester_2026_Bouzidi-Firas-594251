@@ -10,4 +10,7 @@ public interface MedicationRepository extends JpaRepository<Medication, Long> {
 
     @NonNull
     List<Medication> findByChildId(@NonNull Long childId);
+
+    @NonNull
+    List<Medication> findByChildIdInOrderByIdAsc(@NonNull List<Long> childIds);
 }

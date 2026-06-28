@@ -5,7 +5,10 @@ export function apiBaseUrl() {
 function roleHeader() {
   try {
     const user = JSON.parse(localStorage.getItem('kindercare-simple-user'));
-    return user?.role ? { 'X-User-Role': user.role } : {};
+    return {
+      ...(user?.role ? { 'X-User-Role': user.role } : {}),
+      ...(user?.id ? { 'X-User-Id': String(user.id) } : {})
+    };
   } catch {
     return {};
   }
