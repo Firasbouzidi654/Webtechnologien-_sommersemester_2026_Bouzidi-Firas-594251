@@ -10,6 +10,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,9 +37,13 @@ public class MedicationService {
             return findAll();
         }
 
-        List<Long> childIds = childService.findVisibleTo(role, userId).stream()
-                .map(Child::getId)
-                .toList();
+        List<Long> childIds = new ArrayList<>();
+        for (Child child : childService.findVisibleTo(role, userId)) {
+            Long childId = child.getId();
+            if (childId != null) {
+                childIds.add(childId);
+            }
+        }
         if (childIds.isEmpty()) {
             return List.of();
         }
