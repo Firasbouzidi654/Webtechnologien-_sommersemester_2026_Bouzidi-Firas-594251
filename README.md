@@ -2,22 +2,25 @@
 
 KinderCare Connect is a university web project for coordinating child profiles, allergies, and medication schedules between parents and the care team. It is a prototype and must not be used with real personal or medical data.
 
+## Deployed application
+
+- Frontend: https://webtechnologien-sommersemester-2026.onrender.com/#/
+- Backend: https://kindercare-backend.onrender.com
+- Backend configuration check: https://kindercare-backend.onrender.com/api/ai/test
+- GitHub: https://github.com/Firasbouzidi654/Webtechnologien-_sommersemester_2026_Bouzidi-Firas-594251
+
 ## Features
 
-- Parent and staff sign-in with role-based prototype access
-- Child profiles with allergy information
-- Medication plans with dosage, time, date, status, and recurrence: daily, weekly, weekdays only, or every X days
-- Parent medication entry and calendar-based staff medication management
-- Emergency map and nearby points of interest
-- Light/dark themes and English/German interface text
+- Parent and staff sign-in with role-based prototype access.
+- Parent dashboard for creating child profiles, managing allergies, and adding one-time medication requests by date and time.
+- Staff/admin dashboard for reviewing children, managing medication tasks, updating medication status, and using a medication calendar.
+- Alert center with unread badges, mark-read behavior, and temporary toast notifications.
+- Emergency mode with an OpenStreetMap/Leaflet map and nearby support from Overpass API.
+- OpenFDA medication label search for public medication information.
+- AI Child Care Assistant and AI Parent Message Generator through the backend Groq integration.
+- Light/dark theme support and responsive layouts for desktop and mobile.
 
-## Technology
 
-- Vue 3 + Vite frontend
-- Java 21, Spring Boot, Spring Data JPA backend
-- PostgreSQL database
-- Flyway schema migrations
-- Docker/Render deployment configuration
 
 ## Database tables
 
@@ -26,7 +29,9 @@ KinderCare Connect is a university web project for coordinating child profiles, 
 | `users` | Stores sign-in email, BCrypt password hash, and prototype role. |
 | `children` | Stores registered child names and allergy information. |
 | `medications` | Stores medication plans, their child link, dosage, time, schedule frequency, interval, start date, and current status. |
-| `flyway_schema_history` | Flyway's migration record; required to apply schema changes safely. |
+
+
+
 
 ## External APIs Used
 
@@ -41,24 +46,28 @@ KinderCare Connect is a university web project for coordinating child profiles, 
 
 The project does not use Google Maps or the Browser Geolocation API.
 
-## Run locally
+ 
 
-Prerequisites: Java 21, Node.js/npm, and PostgreSQL. Docker Desktop and Docker
-Compose are the quickest way to start the local database.
 
 ```powershell
-docker compose up -d db
-docker compose ps
-.\gradlew.bat bootRun
+.\gradlew.bat test
 ```
 
-In a second terminal, start the frontend:
+Build the frontend locally:
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+
+## Render deployment
+
+The repository includes `render.yaml`. The backend is built from the Dockerfile and the frontend is deployed as a static Vite build. Production secrets must be configured in the Render dashboard and must not be committed.
+
+Required Render environment variables:
+
+- `DATABASE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `VITE_API_BASE_URL`
+- `GROQ_API_KEY` for AI features
+- `GROQ_MODEL`, default: `llama-3.1-8b-instant`
 
 ## AI Child Care Assistant
 
@@ -89,34 +98,3 @@ Both AI features use the Groq API through the backend only. Create a local `.env
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.1-8b-instant
 ```
-
-### AI API endpoints
-
-Both endpoints require a staff or admin role through the existing `X-User-Role` request header.
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/ai/childcare-assistant` | Returns a concise, safety-focused answer for a staff question. |
-| `POST` | `/api/ai/parent-message` | Generates a professional parent message from a staff description. |
-| `GET` | `/api/ai/test` | Shows whether Groq is configured and the configured model; it never returns the API key. |
-
-Example parent-message request:
-
-```json
-{
-  "message": "Emma had a fever at 14:00. Parents were informed and Emma rested."
-}
-```
-
-Example response:
-
-```json
-{
-  "parentMessage": "Dear Parent,\n\nToday Emma experienced a mild fever at approximately 14:00...\n\nKind regards,\nKinderCare Staff"
-}
-```
-Frontend: https://webtechnologien-sommersemester-2026.onrender.com/#/
-Backend: https://kindercare-backend.onrender.com
-API example: https://kindercare-backend.onrender.com/api/children
-
-Github : https://github.com/Firasbouzidi654/Webtechnologien-_sommersemester_2026_Bouzidi-Firas-594251
