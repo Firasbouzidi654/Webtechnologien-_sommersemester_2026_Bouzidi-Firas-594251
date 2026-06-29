@@ -79,6 +79,16 @@ class ChildControllerTest {
     }
 
     @Test
+    void childrenListIsPublicForRenderHealthAndApiDemo() throws Exception {
+        long parentId = createParentAccount();
+        createChildNamed("Public Child", parentId);
+
+        mockMvc.perform(get("/api/children"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.name == 'Public Child')]").isNotEmpty());
+    }
+
+    @Test
     void newParentSeesNoChildrenByDefault() throws Exception {
         long parentId = createParentAccount();
 

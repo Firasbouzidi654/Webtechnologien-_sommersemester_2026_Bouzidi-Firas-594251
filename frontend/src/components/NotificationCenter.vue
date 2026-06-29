@@ -1,6 +1,13 @@
 <template>
   <div class="notification-center">
-    <button class="notification-bell" type="button" aria-label="Open notifications" @click="toggleDropdown">
+    <button
+      class="notification-bell"
+      type="button"
+      :aria-expanded="dropdownOpen ? 'true' : 'false'"
+      aria-haspopup="true"
+      aria-label="Open notifications"
+      @click="toggleDropdown"
+    >
       <span class="bell-icon">!</span>
       <span v-if="unreadCount" class="notification-count">{{ unreadCount }}</span>
     </button>
@@ -13,15 +20,22 @@
       aria-label="Recent notifications"
     >
       <header>
-        <div>
+        <div class="notification-heading">
           <p class="eyebrow">Alerts</p>
           <h3>{{ audience === 'parent' ? 'Family updates' : 'Care updates' }}</h3>
         </div>
         <div class="notification-actions">
-          <button v-if="hasMoreNotifications" type="button" @click="showAll = !showAll">
+          <button
+            v-if="hasMoreNotifications"
+            type="button"
+            :aria-pressed="showAll ? 'true' : 'false'"
+            @click="showAll = !showAll"
+          >
             {{ showAll ? 'Show recent' : 'View All' }}
           </button>
-          <button type="button" @click="markNotificationsRead">Mark read</button>
+          <button type="button" aria-label="Mark all notifications as read" @click="markNotificationsRead">
+            Mark all as read
+          </button>
         </div>
       </header>
 
@@ -71,7 +85,7 @@ export default {
   data() {
     return {
       dropdownOpen: false,
-      dropdownMaxHeight: 310,
+      dropdownMaxHeight: 380,
       showAll: false,
       dismissedToastIds: new Set(),
       toastTimers: new Map()
@@ -154,7 +168,7 @@ export default {
 
       const viewportPadding = 16;
       const availableHeight = window.innerHeight - dropdown.getBoundingClientRect().top - viewportPadding;
-      this.dropdownMaxHeight = Math.max(0, Math.min(310, availableHeight));
+      this.dropdownMaxHeight = Math.max(220, Math.min(380, availableHeight));
     },
     markNotificationsRead() {
       markNotificationsRead((notification) => this.isVisibleToAudience(notification));
@@ -175,6 +189,7 @@ export default {
 <style scoped>
 .notification-center {
   position: relative;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
@@ -190,11 +205,15 @@ export default {
   color: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.notification-bell:hover {
+.notification-bell:hover,
+.notification-bell:focus-visible {
+  border-color: rgba(49, 130, 206, 0.32);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+  outline: none;
 }
 
 .bell-icon {
@@ -231,10 +250,13 @@ export default {
   right: 0;
   z-index: 1300;
   box-sizing: border-box;
-  width: min(336px, calc(100vw - 32px));
-  max-height: var(--notification-max-height, 310px);
-  display: flex;
-  flex-direction: column;
+  width: clamp(320px, 34vw, 380px);
+  max-width: calc(100vw - 24px);
+  max-height: min(var(--notification-max-height, 380px), calc(100dvh - 24px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 12px;
@@ -246,9 +268,11 @@ export default {
 .notification-dropdown header {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 10px;
 }
 
 .notification-dropdown h3,
@@ -256,44 +280,61 @@ export default {
   margin: 0;
 }
 
+.notification-heading {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
 .notification-dropdown h3 {
   color: var(--color-text-primary);
   font-size: 0.98rem;
+  line-height: 1.2;
 }
 
 .notification-dropdown header button {
   flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  padding: 7px 10px;
+  min-height: 32px;
+  padding: 6px 10px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.notification-dropdown header button:hover {
+.notification-dropdown header button:hover,
+.notification-dropdown header button:focus-visible {
+  border-color: rgba(49, 130, 206, 0.28);
   background: var(--color-bg-primary);
+  box-shadow: var(--shadow-sm);
+  outline: none;
 }
 
 .notification-list {
-  flex: 1 1 auto;
   display: grid;
   align-content: start;
   gap: 8px;
   min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 2px;
+  padding-right: 4px;
   scrollbar-gutter: stable;
 }
 
 .notification-actions {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
+  max-width: 190px;
+  flex-wrap: wrap;
 }
 
 .notification-item {
@@ -303,8 +344,16 @@ export default {
   align-items: start;
   border: 1px solid var(--color-border-light);
   border-radius: 12px;
-  padding: 9px;
+  padding: 10px;
   background: var(--color-bg-primary);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.notification-item:hover {
+  border-color: rgba(49, 130, 206, 0.18);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .notification-dot {
@@ -330,18 +379,19 @@ export default {
 .notification-item > div {
   min-width: 0;
   display: grid;
-  gap: 2px;
+  gap: 4px;
 }
 
 .notification-item strong {
   color: var(--color-text-primary);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.25;
+  font-weight: 900;
 }
 
 .notification-item p {
   margin: 0;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   display: -webkit-box;
   overflow: hidden;
   font-size: 0.82rem;
@@ -357,6 +407,15 @@ export default {
   color: var(--color-text-secondary);
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+.empty-note {
+  margin: 0;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  padding: 18px 12px;
+  background: var(--color-bg-primary);
+  text-align: center;
 }
 
 .toast-stack {
@@ -435,12 +494,12 @@ export default {
   }
 
   .notification-dropdown {
-    position: fixed;
-    top: 62px;
-    right: 10px;
-    left: 10px;
-    width: auto;
-    max-height: min(var(--notification-max-height, 310px), calc(100dvh - 76px));
+    top: calc(100% + 10px);
+    right: auto;
+    left: 0;
+    width: min(360px, calc(100vw - 20px));
+    max-width: none;
+    max-height: min(var(--notification-max-height, 380px), calc(100dvh - 96px));
     padding: 10px;
     border-radius: 14px;
   }
@@ -456,17 +515,20 @@ export default {
     align-items: stretch;
     flex-direction: column;
     gap: 8px;
+    padding-bottom: 8px;
   }
 
   .notification-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 6px;
+    max-width: none;
   }
 
   .notification-dropdown header button {
     min-height: 34px;
     padding: 6px 8px;
+    white-space: normal;
   }
 
   .notification-list {
