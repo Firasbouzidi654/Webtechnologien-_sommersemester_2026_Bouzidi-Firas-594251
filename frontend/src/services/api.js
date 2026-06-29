@@ -194,7 +194,7 @@ export const api = {
         dosage: medication.dosage || '',
         time: medication.scheduledTime || '12:00',
         status: apiStatus(medication.status),
-        frequency: medication.frequency || 'DAILY',
+        frequency: medication.frequency || 'ONE_TIME',
         intervalDays: medication.intervalDays || null,
         dayOfWeek: medication.dayOfWeek || null,
         startDate: medication.startDate || null

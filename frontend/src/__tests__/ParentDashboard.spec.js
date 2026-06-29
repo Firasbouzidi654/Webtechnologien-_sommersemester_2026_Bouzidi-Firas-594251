@@ -85,6 +85,7 @@ describe('ParentDashboard', () => {
     await form.find('input[type="text"]').setValue('Vitamin D');
     await form.findAll('input[type="text"]')[1].setValue('5 drops');
     await form.find('input[type="time"]').setValue('08:30');
+    await form.find('input[type="date"]').setValue('2026-06-30');
     await form.trigger('submit');
     await flushPromises();
 
@@ -96,7 +97,8 @@ describe('ParentDashboard', () => {
       childId: 1,
       dosage: '5 drops',
       time: '08:30',
-      frequency: 'DAILY'
+      frequency: 'ONE_TIME',
+      startDate: '2026-06-30'
     });
     expect(wrapper.text()).toContain('Vitamin D');
   });

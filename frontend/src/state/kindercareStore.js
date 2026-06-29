@@ -235,7 +235,7 @@ export async function addMedication(childId, data) {
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',
       status: data.status || 'Pending',
-      frequency: data.frequency || 'DAILY',
+      frequency: data.frequency || 'ONE_TIME',
       intervalDays: data.intervalDays || null,
       dayOfWeek: data.dayOfWeek || null,
       startDate,
@@ -255,7 +255,7 @@ export async function addMedication(childId, data) {
       scheduledTime: data.time || '12:00',
       scheduledDate: startDate,
       status: data.status || 'Pending',
-      frequency: data.frequency || 'DAILY',
+      frequency: data.frequency || 'ONE_TIME',
       intervalDays: data.intervalDays || null,
       dayOfWeek: data.dayOfWeek || null,
       reminderDue: false

@@ -73,7 +73,8 @@ export default {
       dropdownOpen: false,
       dropdownMaxHeight: 310,
       showAll: false,
-      dismissedToastIds: new Set()
+      dismissedToastIds: new Set(),
+      toastTimers: new Map()
     };
   },
   computed: {
@@ -99,6 +100,7 @@ export default {
   watch: {
     toasts: {
       deep: true,
+      immediate: true,
       handler(toasts) {
         toasts.forEach((toast) => {
           if (this.dismissedToastIds.has(toast.id)) {
@@ -106,18 +108,25 @@ export default {
           }
 
           this.dismissedToastIds.add(toast.id);
-          window.setTimeout(() => clearToast(toast.id), 3800);
+          this.toastTimers.set(toast.id, window.setTimeout(() => {
+            clearToast(toast.id);
+            this.toastTimers.delete(toast.id);
+          }, 3000));
         });
       }
     }
   },
   mounted() {
+    document.addEventListener('pointerdown', this.handleOutsideClick);
     window.addEventListener('resize', this.updateDropdownMaxHeight);
     window.addEventListener('scroll', this.updateDropdownMaxHeight, true);
   },
   beforeUnmount() {
+    document.removeEventListener('pointerdown', this.handleOutsideClick);
     window.removeEventListener('resize', this.updateDropdownMaxHeight);
     window.removeEventListener('scroll', this.updateDropdownMaxHeight, true);
+    this.toastTimers.forEach((timerId) => window.clearTimeout(timerId));
+    this.toastTimers.clear();
   },
   methods: {
     toggleDropdown() {
@@ -127,6 +136,14 @@ export default {
       if (this.dropdownOpen) {
         this.$nextTick(this.updateDropdownMaxHeight);
       }
+    },
+    handleOutsideClick(event) {
+      if (!this.dropdownOpen || this.$el.contains(event.target)) {
+        return;
+      }
+
+      this.dropdownOpen = false;
+      this.showAll = false;
     },
     updateDropdownMaxHeight() {
       const dropdown = this.$refs.dropdown;
@@ -141,6 +158,8 @@ export default {
     },
     markNotificationsRead() {
       markNotificationsRead((notification) => this.isVisibleToAudience(notification));
+      this.dropdownOpen = false;
+      this.showAll = false;
     },
     isVisibleToAudience(notification) {
       return this.audience !== 'parent' || PARENT_NOTIFICATION_TITLES.has(notification.title);

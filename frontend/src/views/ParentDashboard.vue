@@ -145,34 +145,8 @@
             <input v-model="medicationForm.time" type="time" required />
           </label>
           <label>
-            <span>Frequency</span>
-            <select v-model="medicationForm.frequency">
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="SPECIFIC_DAY">Specific day</option>
-              <option value="ONE_TIME">One-time</option>
-              <option value="EVERY_X_DAYS">Every X days</option>
-            </select>
-          </label>
-          <label v-if="medicationForm.frequency === 'SPECIFIC_DAY'">
-            <span>Day</span>
-            <select v-model="medicationForm.dayOfWeek" required>
-              <option value="MONDAY">Monday</option>
-              <option value="TUESDAY">Tuesday</option>
-              <option value="WEDNESDAY">Wednesday</option>
-              <option value="THURSDAY">Thursday</option>
-              <option value="FRIDAY">Friday</option>
-              <option value="SATURDAY">Saturday</option>
-              <option value="SUNDAY">Sunday</option>
-            </select>
-          </label>
-          <label v-if="medicationForm.frequency === 'ONE_TIME'">
             <span>Date</span>
             <input v-model="medicationForm.date" type="date" required />
-          </label>
-          <label v-if="medicationForm.frequency === 'EVERY_X_DAYS'">
-            <span>Every how many days?</span>
-            <input v-model.number="medicationForm.intervalDays" type="number" min="2" required />
           </label>
           <button type="submit" :disabled="medicationSubmitting">
             {{ medicationSubmitting ? 'Saving…' : 'Add medication' }}
@@ -302,9 +276,7 @@ export default {
         name: '',
         dosage: '',
         time: '12:00',
-        frequency: 'DAILY',
-        intervalDays: 2,
-        dayOfWeek: 'MONDAY',
+        frequency: 'ONE_TIME',
         date: ''
       },
       medicationSubmitting: false
@@ -458,19 +430,25 @@ export default {
     },
     async submitParentMedication() {
       if (this.medicationSubmitting) return;
-      const { childId, name, dosage, time, frequency, intervalDays, dayOfWeek, date } = this.medicationForm;
-      if (!childId || !name || !dosage || !time) return;
+      const { childId, name, dosage, time, date } = this.medicationForm;
+      if (!childId || !name || !dosage || !time || !date) return;
 
       this.medicationSubmitting = true;
       try {
-        const saved = await storeAddMedication(childId, { name, dosage, time, frequency, intervalDays, dayOfWeek, date });
+        const saved = await storeAddMedication(childId, {
+          name,
+          dosage,
+          time,
+          frequency: 'ONE_TIME',
+          intervalDays: null,
+          dayOfWeek: null,
+          date
+        });
         if (!saved) return;
         this.medicationForm.name = '';
         this.medicationForm.dosage = '';
         this.medicationForm.time = '12:00';
-        this.medicationForm.frequency = 'DAILY';
-        this.medicationForm.intervalDays = 2;
-        this.medicationForm.dayOfWeek = 'MONDAY';
+        this.medicationForm.frequency = 'ONE_TIME';
         this.medicationForm.date = '';
       } finally {
         this.medicationSubmitting = false;
@@ -759,14 +737,17 @@ textarea {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  grid-template-columns: repeat(4, minmax(148px, 190px));
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 15px;
-  background: linear-gradient(135deg, var(--color-bg-secondary), var(--pastel-blue));
-  box-shadow: var(--shadow-sm);
+  padding: clamp(16px, 2.4vw, 24px);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(224, 242, 254, 0.78)),
+    var(--color-bg-secondary);
+  box-shadow: var(--shadow-md);
 }
 
 .quick-actions header {
@@ -781,31 +762,35 @@ textarea {
 .quick-actions header > p { max-width: 340px; color: var(--color-text-secondary); font-size: .82rem; line-height: 1.4; text-align: right; }
 
 .quick-actions button {
-  border-radius: 12px;
-}
-
-.quick-actions button {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   justify-items: center;
-  min-height: 70px;
+  align-content: center;
+  min-height: 112px;
+  width: 100%;
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
+  border-radius: 14px;
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 800;
+  text-align: center;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
-.quick-actions button:hover {
-  transform: translateY(-4px);
+.quick-actions button:hover,
+.quick-actions button:focus-visible {
+  border-color: rgba(49, 130, 206, 0.32);
+  transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
+  outline: none;
 }
 
 .quick-actions span {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   place-items: center;
   border-radius: 50%;
   background: var(--color-icon-bg);
@@ -814,31 +799,31 @@ textarea {
   font-weight: 700;
 }
 
-.quick-actions span svg { width: 20px; height: 20px; }
+.quick-actions span svg { width: 22px; height: 22px; }
 
-.quick-actions button:nth-child(1) span {
+.quick-actions button:nth-of-type(1) span {
   background: rgba(34, 197, 94, 0.18);
   color: #166534;
 }
 
-.quick-actions button:nth-child(2) span {
+.quick-actions button:nth-of-type(2) span {
   background: rgba(59, 130, 246, 0.18);
   color: #1e3a8a;
 }
 
-.quick-actions button:nth-child(3) span {
+.quick-actions button:nth-of-type(3) span {
   background: rgba(139, 92, 246, 0.18);
   color: #5b21b6;
 }
 
-.quick-actions button:nth-child(4) span {
+.quick-actions button:nth-of-type(4) span {
   background: rgba(99, 102, 241, 0.18);
   color: #3730a3;
 }
 
-.quick-actions button:nth-child(5) span,
-.quick-actions button:nth-child(6) span,
-.quick-actions button:nth-child(7) span {
+.quick-actions button:nth-of-type(5) span,
+.quick-actions button:nth-of-type(6) span,
+.quick-actions button:nth-of-type(7) span {
   background: rgba(245, 158, 11, 0.18);
   color: #92400e;
 }
@@ -1223,18 +1208,29 @@ textarea {
   background: rgba(255, 255, 255, 0.12);
 }
 
+:global([data-theme="dark"]) .parent-dashboard .quick-actions {
+  border-color: rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(
+      135deg,
+      #111827 0%,
+      #1e293b 100%
+    );
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
 :global([data-theme="dark"]) .parent-dashboard .quick-actions span,
 :global([data-theme="dark"]) .parent-dashboard .initials {
   background: rgba(59, 130, 246, 0.22) !important;
   color: #bfdbfe !important;
 }
 
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(1) span,
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-of-type(1) span,
 :global([data-theme="dark"]) .parent-dashboard .health-summary article:nth-child(1) {
   background: var(--gradient-live-card);
 }
 
-:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-child(2) span {
+:global([data-theme="dark"]) .parent-dashboard .quick-actions button:nth-of-type(2) span {
   background: var(--gradient-weather-card);
 }
 
@@ -1246,7 +1242,7 @@ textarea {
   }
 
   .quick-actions {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(2, minmax(150px, 220px));
   }
 
   .simple-medication-list li {
@@ -1383,13 +1379,13 @@ textarea {
   }
 
   .quick-actions {
-    gap: 8px;
+    gap: 10px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .quick-actions button {
-    min-height: 58px;
-    gap: 5px;
+    min-height: 90px;
+    gap: 7px;
   }
 
   .quick-actions span {
