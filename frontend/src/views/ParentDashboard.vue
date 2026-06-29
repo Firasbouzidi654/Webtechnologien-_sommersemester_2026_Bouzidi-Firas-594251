@@ -20,7 +20,6 @@
         </div>
       </div>
       <div class="parent-top-actions">
-        <NotificationCenter audience="parent" />
         <button class="logout-button secondary" type="button" @click="$emit('toggle-theme')">Theme</button>
         <button class="logout-button" type="button" @click="$emit('logout')">Log out</button>
       </div>
@@ -223,7 +222,6 @@
 
 <script>
 import heroImage from '../assets/hero.png';
-import NotificationCenter from '../components/NotificationCenter.vue';
 import CareHighlights from '../components/CareHighlights.vue';
 import CareIcon from '../components/CareIcon.vue';
 import { currentUser } from '../state/authStore';
@@ -244,7 +242,6 @@ import {
 export default {
   name: 'ParentDashboard',
   components: {
-    NotificationCenter,
     CareHighlights,
     CareIcon
   },
