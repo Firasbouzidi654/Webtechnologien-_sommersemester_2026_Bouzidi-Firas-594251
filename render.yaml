@@ -3,7 +3,7 @@ services:
     name: kindercare-backend
     runtime: docker
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/children
+    healthCheckPath: /api/ai/test
     envVars:
       - key: DATABASE_URL
         sync: false

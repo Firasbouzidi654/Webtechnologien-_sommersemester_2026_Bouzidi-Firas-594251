@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 public class MedicationService {
@@ -71,13 +72,10 @@ public class MedicationService {
                 medication.getDosage(),
                 medication.getTime() == null ? "12:00" : medication.getTime(),
                 medication.getStatus() == null ? "PENDING" : medication.getStatus(),
-                medication.getFrequency() == null ? "DAILY" : medication.getFrequency(),
-                medication.getIntervalDays(),
-                medication.getStartDate()
+                medication.getScheduledDate() == null ? LocalDate.now().toString() : medication.getScheduledDate()
         );
 
         toSave.setChildId(linkedChild.getId());
-        toSave.setDayOfWeek(medication.getDayOfWeek());
 
         return repository.save(toSave);
     }
@@ -90,14 +88,7 @@ public class MedicationService {
         if (changes.getDosage() != null) medication.setDosage(changes.getDosage());
         if (changes.getTime() != null) medication.setTime(changes.getTime());
         if (changes.getStatus() != null) medication.setStatus(changes.getStatus());
-        if (changes.getFrequency() != null) {
-            medication.setFrequency(changes.getFrequency());
-            medication.setIntervalDays(changes.getIntervalDays());
-            medication.setDayOfWeek(changes.getDayOfWeek());
-        } else if (changes.getIntervalDays() != null) {
-            medication.setIntervalDays(changes.getIntervalDays());
-        }
-        if (changes.getStartDate() != null) medication.setStartDate(changes.getStartDate());
+        if (changes.getScheduledDate() != null) medication.setScheduledDate(changes.getScheduledDate());
 
         return repository.save(medication);
     }

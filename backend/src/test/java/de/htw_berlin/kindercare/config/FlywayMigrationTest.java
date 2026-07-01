@@ -33,9 +33,11 @@ class FlywayMigrationTest {
 
         try (var connection = DriverManager.getConnection(url, "sa", "")) {
             var metadata = connection.getMetaData();
-            assertTrue(columnExists(metadata, "MEDICATIONS", "FREQUENCY"));
-            assertTrue(columnExists(metadata, "MEDICATIONS", "INTERVAL_DAYS"));
-            assertTrue(columnExists(metadata, "MEDICATIONS", "START_DATE"));
+            assertTrue(columnExists(metadata, "MEDICATIONS", "SCHEDULED_DATE"));
+            assertFalse(columnExists(metadata, "MEDICATIONS", "FREQUENCY"));
+            assertFalse(columnExists(metadata, "MEDICATIONS", "INTERVAL_DAYS"));
+            assertFalse(columnExists(metadata, "MEDICATIONS", "DAY_OF_WEEK"));
+            assertFalse(columnExists(metadata, "MEDICATIONS", "START_DATE"));
             assertFalse(columnExists(metadata, "MEDICATIONS", "MEDICATION_ID"));
             assertFalse(tableExists(metadata, "PARENT_NOTES"));
             assertFalse(tableExists(metadata, "EMERGENCY_CONTACTS"));
@@ -43,7 +45,7 @@ class FlywayMigrationTest {
             assertFalse(tableExists(metadata, "STAFF"));
             assertFalse(tableExists(metadata, "APP_USERS"));
             try (var statement = connection.createStatement();
-                 var result = statement.executeQuery("SELECT start_date FROM medications WHERE id = 1")) {
+                 var result = statement.executeQuery("SELECT scheduled_date FROM medications WHERE id = 1")) {
                 assertTrue(result.next());
                 assertTrue("2026-06-23".equals(result.getString(1)));
             }

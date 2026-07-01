@@ -97,8 +97,7 @@ describe('ParentDashboard', () => {
       childId: 1,
       dosage: '5 drops',
       time: '08:30',
-      frequency: 'ONE_TIME',
-      startDate: '2026-06-30'
+      scheduledDate: '2026-06-30'
     });
     expect(wrapper.text()).toContain('Vitamin D');
   });

@@ -20,28 +20,22 @@ public class Medication {
     @Column(name = "medication_time")
     private String time;
     private String status;
-    private String frequency;
-    private Integer intervalDays;
-    private String dayOfWeek;
-    @Column(name = "start_date")
-    private String startDate;
+    @Column(name = "scheduled_date")
+    private String scheduledDate;
 
     public Medication() { }
 
     public Medication(String name, String childName, String dosage) {
-        this(name, childName, dosage, "12:00", "PENDING", "DAILY", null, null);
+        this(name, childName, dosage, "12:00", "PENDING", null);
     }
 
-    public Medication(String name, String childName, String dosage, String time, String status,
-                      String frequency, Integer intervalDays, String startDate) {
+    public Medication(String name, String childName, String dosage, String time, String status, String scheduledDate) {
         this.name = name;
         this.childName = childName;
         this.dosage = dosage;
         this.time = time;
         this.status = status;
-        this.frequency = frequency;
-        this.intervalDays = intervalDays;
-        this.startDate = startDate;
+        this.scheduledDate = scheduledDate;
     }
 
     public Long getId() { return id; }
@@ -57,12 +51,6 @@ public class Medication {
     public void setTime(String time) { this.time = time; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public String getFrequency() { return frequency; }
-    public void setFrequency(String frequency) { this.frequency = frequency; }
-    public Integer getIntervalDays() { return intervalDays; }
-    public void setIntervalDays(Integer intervalDays) { this.intervalDays = intervalDays; }
-    public String getDayOfWeek() { return dayOfWeek; }
-    public void setDayOfWeek(String dayOfWeek) { this.dayOfWeek = dayOfWeek; }
-    public String getStartDate() { return startDate; }
-    public void setStartDate(String startDate) { this.startDate = startDate; }
+    public String getScheduledDate() { return scheduledDate; }
+    public void setScheduledDate(String scheduledDate) { this.scheduledDate = scheduledDate; }
 }

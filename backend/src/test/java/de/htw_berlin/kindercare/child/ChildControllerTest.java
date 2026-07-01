@@ -79,13 +79,12 @@ class ChildControllerTest {
     }
 
     @Test
-    void childrenListIsPublicForRenderHealthAndApiDemo() throws Exception {
+    void childrenListRequiresAnAllowedRole() throws Exception {
         long parentId = createParentAccount();
         createChildNamed("Public Child", parentId);
 
         mockMvc.perform(get("/api/children"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.name == 'Public Child')]").isNotEmpty());
+                .andExpect(status().isForbidden());
     }
 
     @Test

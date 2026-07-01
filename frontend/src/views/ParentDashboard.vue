@@ -155,7 +155,7 @@
         <ul class="simple-medication-list">
           <li v-for="medication in parentMedications" :key="medication.medicationId">
             <strong>{{ medication.childName }}</strong>
-            <span>{{ medication.name }} - {{ medication.dosage }} - {{ medication.schedule.specificTime }} - {{ medication.schedule.frequency }}</span>
+            <span>{{ medication.name }} - {{ medication.dosage }} - {{ medication.schedule.specificTime }} - {{ medication.schedule.scheduledDate }}</span>
             <span class="status-badge" :class="statusClass(medication.status)">{{ medication.status }}</span>
           </li>
           <p v-if="parentMedications.length === 0" class="empty-state">No medication added yet.</p>
@@ -273,7 +273,6 @@ export default {
         name: '',
         dosage: '',
         time: '12:00',
-        frequency: 'ONE_TIME',
         date: ''
       },
       medicationSubmitting: false
@@ -436,16 +435,12 @@ export default {
           name,
           dosage,
           time,
-          frequency: 'ONE_TIME',
-          intervalDays: null,
-          dayOfWeek: null,
           date
         });
         if (!saved) return;
         this.medicationForm.name = '';
         this.medicationForm.dosage = '';
         this.medicationForm.time = '12:00';
-        this.medicationForm.frequency = 'ONE_TIME';
         this.medicationForm.date = '';
       } finally {
         this.medicationSubmitting = false;

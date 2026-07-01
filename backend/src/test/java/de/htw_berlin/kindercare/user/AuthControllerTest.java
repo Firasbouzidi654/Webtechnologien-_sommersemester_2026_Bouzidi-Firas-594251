@@ -43,6 +43,13 @@ class AuthControllerTest {
     }
 
     @Test
+    void rejectsUnknownRegistrationRole() throws Exception {
+        mockMvc.perform(post("/api/auth/register").contentType(JSON_CONTENT_TYPE)
+                .content("{\"email\":\"role@example.test\",\"password\":\"SecurePass123\",\"role\":\"ADMIN\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void rejectsInvalidLogin() throws Exception {
         mockMvc.perform(post("/api/auth/login").contentType(JSON_CONTENT_TYPE)
                 .content("{\"email\":\"missing@example.test\",\"password\":\"WrongPass123\"}"))

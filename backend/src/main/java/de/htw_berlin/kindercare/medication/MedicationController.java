@@ -24,8 +24,6 @@ import java.time.format.DateTimeParseException;
 @RequestMapping("/api/medications")
 public class MedicationController {
     private static final Set<String> STATUSES = Set.of("UPCOMING", "PENDING", "TAKEN", "MISSED");
-    private static final Set<String> FREQUENCIES = Set.of("DAILY", "WEEKLY", "EVERY_X_DAYS", "SPECIFIC_DAY", "ONE_TIME");
-    private static final Set<String> DAYS_OF_WEEK = Set.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
     private final MedicationService service;
 
     public MedicationController(MedicationService service) { this.service = service; }
@@ -49,7 +47,7 @@ public class MedicationController {
     ) {
         requireMedicationDetails(medication);
         normalizeStatus(medication);
-        normalizeSchedule(medication);
+        normalizeScheduledDate(medication);
         return service.create(medication, role, userId);
     }
 
@@ -66,7 +64,7 @@ public class MedicationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
         }
         normalizeStatus(medication);
-        normalizeSchedule(medication);
+        normalizeScheduledDate(medication);
         return service.update(id, medication);
     }
 
@@ -90,6 +88,9 @@ public class MedicationController {
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
         }
+        if (medication.getScheduledDate() == null || medication.getScheduledDate().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A scheduled date is required.");
+        }
     }
 
     private void requireNonBlankUpdateFields(Medication medication) {
@@ -111,40 +112,12 @@ public class MedicationController {
         medication.setStatus(status);
     }
 
-    private void normalizeSchedule(Medication medication) {
-        if (medication.getFrequency() != null) {
-            String frequency = medication.getFrequency().trim().toUpperCase();
-            if (!FREQUENCIES.contains(frequency)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Frequency must be DAILY, WEEKLY, EVERY_X_DAYS, SPECIFIC_DAY, or ONE_TIME.");
-            }
-            medication.setFrequency(frequency);
-            if ("EVERY_X_DAYS".equals(frequency)) {
-                if (medication.getIntervalDays() == null || medication.getIntervalDays() < 2) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Every X days requires an interval of at least 2 days.");
-                }
-            } else {
-                medication.setIntervalDays(null);
-            }
-
-            if ("SPECIFIC_DAY".equals(frequency)) {
-                String dayOfWeek = medication.getDayOfWeek() == null ? "" : medication.getDayOfWeek().trim().toUpperCase();
-                if (!DAYS_OF_WEEK.contains(dayOfWeek)) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "A valid day of the week is required for a specific-day schedule.");
-                }
-                medication.setDayOfWeek(dayOfWeek);
-            } else {
-                medication.setDayOfWeek(null);
-            }
-        }
-
-        if (medication.getStartDate() != null && !medication.getStartDate().isBlank()) {
+    private void normalizeScheduledDate(Medication medication) {
+        if (medication.getScheduledDate() != null && !medication.getScheduledDate().isBlank()) {
             try {
-                LocalDate.parse(medication.getStartDate());
+                medication.setScheduledDate(LocalDate.parse(medication.getScheduledDate()).toString());
             } catch (DateTimeParseException exception) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must use the YYYY-MM-DD format.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Scheduled date must use the YYYY-MM-DD format.");
             }
         }
     }

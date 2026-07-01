@@ -40,6 +40,7 @@ describe('kindercareStore medication status updates', () => {
       medicationName: 'Vitamin D',
       status: 'Pending',
       scheduledTime: '08:00',
+      scheduledDate: new Date().toISOString().slice(0, 10),
       scheduledToday: true
     }];
     localStorage.setItem('kindercare-simple-user', JSON.stringify({ role: 'STAFF' }));
@@ -52,7 +53,7 @@ describe('kindercareStore medication status updates', () => {
         return jsonResponse([{ id: 1, name: 'Emma', allergies: '' }]);
       }
       if (String(url).endsWith('/api/medications')) {
-        return jsonResponse([{ id: 7, childId: 1, name: 'Vitamin D', dosage: '5 drops', time: '08:00', status: 'MISSED' }]);
+        return jsonResponse([{ id: 7, childId: 1, name: 'Vitamin D', dosage: '5 drops', time: '08:00', scheduledDate: new Date().toISOString().slice(0, 10), status: 'MISSED' }]);
       }
       return jsonResponse({});
     });

@@ -20,7 +20,7 @@
       </div>
     </dl>
 
-    <p class="schedule-frequency">{{ frequencyLabel }}</p>
+    <p class="scheduled-date">{{ task.scheduledDate || 'No date set' }}</p>
     <p v-if="task.reminderDue" class="reminder">Reminder: scheduled medication time has arrived.</p>
 
     <div class="status-control" aria-label="Medication status">
@@ -72,14 +72,6 @@ export default {
     },
     statusClass() {
       return `status-${this.normalizedStatus.toLowerCase()}`;
-    },
-    frequencyLabel() {
-      if (this.task.frequency === 'EVERY_X_DAYS') return `Every ${this.task.intervalDays || 2} days`;
-      if (this.task.frequency === 'SPECIFIC_DAY') {
-        const day = String(this.task.dayOfWeek || 'MONDAY').toLowerCase();
-        return `Every ${day.replace(/^./, (letter) => letter.toUpperCase())}`;
-      }
-      return { DAILY: 'Daily', WEEKLY: 'Weekly', ONE_TIME: 'One-time' }[this.task.frequency] || 'Daily';
     }
   }
 };
@@ -231,7 +223,7 @@ dd {
   overflow-wrap: anywhere;
 }
 
-.schedule-frequency {
+.scheduled-date {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 0.84rem;

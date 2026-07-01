@@ -28,7 +28,7 @@ KinderCare Connect is a university web project for coordinating child profiles, 
 | --- | --- |
 | `users` | Stores sign-in email, BCrypt password hash, and prototype role. |
 | `children` | Stores registered child names and allergy information. |
-| `medications` | Stores medication plans, their child link, dosage, time, schedule frequency, interval, start date, and current status. |
+| `medications` | Stores one medication task per selected date/time, including child link, dosage, scheduled date, time, and independent status. |
 
 
 

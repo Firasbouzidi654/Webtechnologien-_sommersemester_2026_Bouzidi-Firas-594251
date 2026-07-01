@@ -63,41 +63,12 @@ function apiStatus(status) {
   return String(status || 'Pending').trim().toUpperCase();
 }
 
-function displayFrequency(frequency, intervalDays, dayOfWeek) {
-  const labels = {
-    DAILY: 'Daily',
-    WEEKLY: 'Weekly',
-    ONE_TIME: 'One-time'
-  };
-  if (String(frequency).toUpperCase() === 'EVERY_X_DAYS') {
-    return `Every ${intervalDays || 2} days`;
-  }
-  if (String(frequency).toUpperCase() === 'SPECIFIC_DAY') {
-    return `Every ${String(dayOfWeek || 'MONDAY').toLowerCase().replace(/^./, (letter) => letter.toUpperCase())}`;
-  }
-  return labels[String(frequency || 'DAILY').toUpperCase()] || 'Daily';
+function medicationDate(medication, fallbackDate) {
+  return medication.scheduledDate || fallbackDate;
 }
 
-function isScheduledForDate(medication, dateKey) {
-  const startDate = medication.startDate || dateKey;
-  const start = new Date(`${startDate}T00:00:00`);
-  const target = new Date(`${dateKey}T00:00:00`);
-  if (Number.isNaN(start.getTime()) || target < start) return false;
-
-  const days = Math.round((target - start) / 86400000);
-  switch (String(medication.frequency || 'DAILY').toUpperCase()) {
-    case 'WEEKLY': return days % 7 === 0;
-    case 'EVERY_X_DAYS': return days % Math.max(Number(medication.intervalDays) || 2, 2) === 0;
-    case 'SPECIFIC_DAY': {
-      const weekdayNumbers = { SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6 };
-      return target.getDay() === weekdayNumbers[String(medication.dayOfWeek || 'MONDAY').toUpperCase()];
-    }
-    case 'ONE_TIME': return days === 0;
-    default: return true;
-  }
-}
-
-function toMedication(medication, child) {
+function toMedication(medication, child, fallbackDate = new Date().toISOString().slice(0, 10)) {
+  const scheduledDate = medicationDate(medication, fallbackDate);
   return {
     id: medication.id,
     medicationId: String(medication.id),
@@ -106,13 +77,10 @@ function toMedication(medication, child) {
     name: medication.name,
     dosage: medication.dosage || '',
     schedule: {
-      frequency: displayFrequency(medication.frequency, medication.intervalDays, medication.dayOfWeek),
-      frequencyCode: medication.frequency || 'DAILY',
-      intervalDays: medication.intervalDays || null,
-      dayOfWeek: medication.dayOfWeek || null,
+      date: scheduledDate,
       dayPart: 'Specific time',
       specificTime: medication.time || '12:00',
-      startDate: medication.startDate || null
+      scheduledDate
     },
     history: [],
     todayStatus: displayStatus(medication.status)
@@ -133,10 +101,11 @@ function belongsToChild(medication, child) {
 
 async function getChildren() {
   const { children, medications } = await loadRawRecords();
+  const today = new Date().toISOString().slice(0, 10);
   return children.map((child) => ({
     ...child,
     allergies: asList(child.allergies),
-    medications: medications.filter((medication) => belongsToChild(medication, child)).map((medication) => toMedication(medication, child))
+    medications: medications.filter((medication) => belongsToChild(medication, child)).map((medication) => toMedication(medication, child, today))
   }));
 }
 
@@ -145,6 +114,7 @@ async function getTodayTasks() {
   const today = new Date().toISOString().slice(0, 10);
   return medications.map((medication) => {
     const child = children.find((item) => belongsToChild(medication, item));
+    const scheduledDate = medicationDate(medication, today);
     return {
       taskId: `TASK-${medication.id}`,
       medicationId: String(medication.id),
@@ -153,12 +123,9 @@ async function getTodayTasks() {
       medicationName: medication.name,
       dosage: medication.dosage || '',
       scheduledTime: medication.time || '12:00',
-      scheduledDate: medication.startDate || today,
-      scheduledToday: isScheduledForDate(medication, today),
+      scheduledDate,
+      scheduledToday: scheduledDate === today,
       status: displayStatus(medication.status),
-      frequency: medication.frequency || 'DAILY',
-      intervalDays: medication.intervalDays || null,
-      dayOfWeek: medication.dayOfWeek || null,
       reminderDue: false
     };
   });
@@ -194,10 +161,7 @@ export const api = {
         dosage: medication.dosage || '',
         time: medication.scheduledTime || '12:00',
         status: apiStatus(medication.status),
-        frequency: medication.frequency || 'ONE_TIME',
-        intervalDays: medication.intervalDays || null,
-        dayOfWeek: medication.dayOfWeek || null,
-        startDate: medication.startDate || null
+        scheduledDate: medication.scheduledDate || null
       })
     });
     return toMedication(saved, child);
@@ -209,10 +173,7 @@ export const api = {
       dosage: medication.dosage,
       time: medication.scheduledTime || medication.time,
       status: medication.status ? apiStatus(medication.status) : undefined,
-      frequency: medication.frequency,
-      intervalDays: medication.intervalDays || null,
-      dayOfWeek: medication.dayOfWeek || null,
-      startDate: medication.startDate || null
+      scheduledDate: medication.scheduledDate || null
     })
   }),
   deleteMedication: (medicationId) => request(`/api/medications/${medicationId}`, { method: 'DELETE' }),

@@ -7,8 +7,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Set;
+
 @Service
 public class UserService {
+    private static final Set<String> REGISTERABLE_ROLES = Set.of("PARENT", "STAFF");
     private final UserRepository repository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -28,6 +31,9 @@ public class UserService {
         }
 
         String normalizedRole = (role == null || role.isBlank()) ? "PARENT" : role.trim().toUpperCase();
+        if (!REGISTERABLE_ROLES.contains(normalizedRole)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must be PARENT or STAFF.");
+        }
         User user = new User(normalizedEmail, passwordEncoder.encode(password), normalizedRole);
         return repository.save(user);
     }

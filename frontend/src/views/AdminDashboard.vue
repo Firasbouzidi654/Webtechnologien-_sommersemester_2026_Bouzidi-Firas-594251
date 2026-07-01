@@ -7,7 +7,6 @@
       </div>
       <div class="top-actions">
         <div class="top-action-buttons">
-          <NotificationCenter />
           <div class="control-actions" aria-label="Dashboard controls">
             <button class="theme-button" type="button" @click="$emit('toggle-theme')">Theme</button>
             <button class="emergency" type="button" @click="openEmergency">Emergency mode</button>
@@ -118,35 +117,6 @@
                 </select>
                 <small>New tasks usually start as Pending.</small>
               </label>
-              <label class="form-field">
-                <span>Frequency</span>
-                <select v-model="taskForm.frequency" required>
-                  <option value="DAILY">Daily</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="SPECIFIC_DAY">Specific day</option>
-                  <option value="ONE_TIME">One-time</option>
-                  <option value="EVERY_X_DAYS">Every X days</option>
-                </select>
-                <small>Set how often the care team should see this reminder.</small>
-              </label>
-              <label v-if="taskForm.frequency === 'SPECIFIC_DAY'" class="form-field">
-                <span>Day</span>
-                <select v-model="taskForm.dayOfWeek" required>
-                  <option value="MONDAY">Monday</option>
-                  <option value="TUESDAY">Tuesday</option>
-                  <option value="WEDNESDAY">Wednesday</option>
-                  <option value="THURSDAY">Thursday</option>
-                  <option value="FRIDAY">Friday</option>
-                  <option value="SATURDAY">Saturday</option>
-                  <option value="SUNDAY">Sunday</option>
-                </select>
-                <small>Select the weekday for recurring tasks.</small>
-              </label>
-              <label v-if="taskForm.frequency === 'EVERY_X_DAYS'" class="form-field">
-                <span>Every how many days?</span>
-                <input v-model.number="taskForm.intervalDays" type="number" min="2" required />
-                <small>Use at least 2 days between repeated reminders.</small>
-              </label>
             </div>
           </section>
 
@@ -192,7 +162,7 @@
     <section class="stats-row">
       <article class="pending" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Pending }}</span>
-        <p>Pending medications</p>
+        <p>Pending today</p>
       </article>
       <article class="taken" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Taken }}</span>
@@ -204,7 +174,7 @@
       </article>
       <article class="upcoming" :class="{ 'panel-dark': isDark }">
         <span>{{ stats.Upcoming }}</span>
-        <p>Upcoming</p>
+        <p>Upcoming today</p>
       </article>
     </section>
 
@@ -285,7 +255,6 @@ import MedicationAssistant from '../components/MedicationAssistant.vue';
 import ChildCareAssistant from '../components/ChildCareAssistant.vue';
 import CareHighlights from '../components/CareHighlights.vue';
 import MedicationTaskCard from '../components/MedicationTaskCard.vue';
-import NotificationCenter from '../components/NotificationCenter.vue';
 import CareIcon from '../components/CareIcon.vue';
 import L from 'leaflet';
 import { MEDICATION_STATUSES, kindercareStore, markMedicationTaken, setMedicationStatus, taskReminderDue, addMedication, editMedication, removeMedication, loadChildren, loadMedicationTasks } from '../state/kindercareStore';
@@ -311,7 +280,6 @@ export default {
     ChildCareAssistant,
     CareHighlights,
     MedicationTaskCard,
-    NotificationCenter,
     CareIcon
   },
   props: {
@@ -338,10 +306,7 @@ export default {
         dosage: '',
         date: this.todayDateKey(),
         time: '',
-        status: 'Pending',
-        frequency: 'DAILY',
-        intervalDays: 2,
-        dayOfWeek: 'MONDAY'
+        status: 'Pending'
       },
       statusOptions: MEDICATION_STATUSES,
       taskError: '',
@@ -432,7 +397,7 @@ export default {
       return sections;
     },
     stats() {
-      return this.tasks.reduce((counts, task) => {
+      return this.filteredTasks.reduce((counts, task) => {
         const status = this.statusOptions.includes(task.status) ? task.status : 'Pending';
         counts[status] += 1;
         return counts;
@@ -537,10 +502,7 @@ export default {
             dosage: task.dosage,
             date: task.scheduledDate || this.todayDateKey(),
             time: task.scheduledTime,
-            status: this.statusOptions.includes(task.status) ? task.status : 'Pending',
-            frequency: task.frequency || 'DAILY',
-            intervalDays: task.intervalDays || 2,
-            dayOfWeek: task.dayOfWeek || 'MONDAY'
+            status: this.statusOptions.includes(task.status) ? task.status : 'Pending'
           };
         }
       } else {
@@ -551,10 +513,7 @@ export default {
           dosage: '',
           date: selectedDate || this.todayDateKey(),
           time: '12:00',
-          status: 'Pending',
-          frequency: 'DAILY',
-          intervalDays: 2,
-          dayOfWeek: 'MONDAY'
+          status: 'Pending'
         };
       }
 
@@ -578,10 +537,7 @@ export default {
           date: this.taskForm.date,
           time: this.taskForm.time,
           status: this.taskForm.status,
-          childId: this.taskForm.childId,
-          frequency: this.taskForm.frequency,
-          intervalDays: this.taskForm.intervalDays,
-          dayOfWeek: this.taskForm.dayOfWeek
+          childId: this.taskForm.childId
         });
       } else {
         saved = await addMedication(this.taskForm.childId, {
@@ -589,10 +545,7 @@ export default {
           dosage: this.taskForm.dosage,
           date: this.taskForm.date,
           time: this.taskForm.time,
-          status: this.taskForm.status,
-          frequency: this.taskForm.frequency,
-          intervalDays: this.taskForm.intervalDays,
-          dayOfWeek: this.taskForm.dayOfWeek
+          status: this.taskForm.status
         });
       }
       if (!saved) {

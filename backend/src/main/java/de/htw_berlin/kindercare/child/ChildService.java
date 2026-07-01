@@ -28,10 +28,6 @@ public class ChildService {
 
     @NonNull
     public List<Child> findVisibleTo(@Nullable String role, @Nullable String userId) {
-        if (role == null || role.isBlank()) {
-            return findAll();
-        }
-
         RoleAccess.require(role, "PARENT", "STAFF", "ADMIN");
         if (RoleAccess.hasAny(role, "STAFF", "ADMIN")) {
             return findAll();

@@ -38,7 +38,7 @@
       <article v-for="task in selectedTasks" :key="task.taskId || task.medicationId" class="calendar-task" :class="statusClass(task.status)">
         <strong>{{ task.scheduledTime || '--:--' }}</strong>
         <span>{{ task.childName || 'Unknown child' }} - {{ task.medicationName || 'Medication' }}</span>
-        <small>{{ frequencyLabel(task) }}</small>
+        <small>{{ task.scheduledDate }}</small>
         <em>{{ normalizedStatus(task.status) }}</em>
         <div class="task-actions">
           <button type="button" @click="$emit('edit-task', task.medicationId)">Edit</button>
@@ -132,32 +132,8 @@ export default {
     statusClass(status) {
       return this.normalizedStatus(status).toLowerCase();
     },
-    frequencyLabel(task) {
-      if (task.frequency === 'EVERY_X_DAYS') return `Every ${task.intervalDays || 2} days`;
-      if (task.frequency === 'SPECIFIC_DAY') {
-        const day = String(task.dayOfWeek || 'MONDAY').toLowerCase();
-        return `Every ${day.replace(/^./, (letter) => letter.toUpperCase())}`;
-      }
-      return {
-        DAILY: 'Daily',
-        WEEKLY: 'Weekly',
-        ONE_TIME: 'One-time'
-      }[task.frequency] || 'Daily';
-    },
     isTaskScheduledForDate(task, dateKey) {
-      const startKey = task.scheduledDate || this.toDateKey(this.today);
-      const start = new Date(`${startKey}T00:00:00`);
-      const target = new Date(`${dateKey}T00:00:00`);
-      if (Number.isNaN(start.getTime()) || target < start) return false;
-      const days = Math.round((target - start) / 86400000);
-      if (task.frequency === 'WEEKLY') return days % 7 === 0;
-      if (task.frequency === 'EVERY_X_DAYS') return days % Math.max(Number(task.intervalDays) || 2, 2) === 0;
-      if (task.frequency === 'SPECIFIC_DAY') {
-        const weekdayNumbers = { SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6 };
-        return target.getDay() === weekdayNumbers[String(task.dayOfWeek || 'MONDAY').toUpperCase()];
-      }
-      if (task.frequency === 'ONE_TIME') return days === 0;
-      return true;
+      return (task.scheduledDate || this.toDateKey(this.today)) === dateKey;
     },
 
     tasksForDate(dateKey) {

@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import AdminCalendar from '../components/AdminCalendar.vue';
 
 describe('AdminCalendar', () => {
-  it('shows a one-time medication only on its selected date', () => {
+  it('shows a medication task only on its selected date', () => {
     const wrapper = mount(AdminCalendar, {
       props: {
         tasks: [{
@@ -12,7 +12,6 @@ describe('AdminCalendar', () => {
           childName: 'Emma',
           scheduledDate: '2026-06-24',
           scheduledTime: '12:00',
-          frequency: 'ONE_TIME',
           status: 'Pending'
         }]
       }

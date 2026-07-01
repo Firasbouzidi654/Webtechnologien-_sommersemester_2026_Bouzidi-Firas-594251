@@ -227,7 +227,7 @@ export async function removeAllergy(childId, index) {
 export async function addMedication(childId, data) {
   const child = findChild(childId);
   if (!child) return null;
-  const startDate = data.date || todayDateKey();
+  const scheduledDate = data.date || todayDateKey();
 
   try {
     const saved = await api.createMedication(childId, {
@@ -235,10 +235,7 @@ export async function addMedication(childId, data) {
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',
       status: data.status || 'Pending',
-      frequency: data.frequency || 'ONE_TIME',
-      intervalDays: data.intervalDays || null,
-      dayOfWeek: data.dayOfWeek || null,
-      startDate,
+      scheduledDate,
       dayPart: 'Specific time'
     });
 
@@ -253,11 +250,9 @@ export async function addMedication(childId, data) {
       medicationName: data.name,
       dosage: data.dosage || '',
       scheduledTime: data.time || '12:00',
-      scheduledDate: startDate,
+      scheduledDate,
       status: data.status || 'Pending',
-      frequency: data.frequency || 'ONE_TIME',
-      intervalDays: data.intervalDays || null,
-      dayOfWeek: data.dayOfWeek || null,
+      scheduledToday: scheduledDate === todayDateKey(),
       reminderDue: false
     });
 
@@ -285,10 +280,7 @@ export async function editMedication(childId, medicationId, data) {
     dosage: data.dosage,
     scheduledTime: data.time || medication.schedule?.specificTime || '12:00',
     status: data.status || medication.todayStatus || 'Pending',
-    frequency: data.frequency || medication.schedule?.frequencyCode || 'DAILY',
-    intervalDays: data.intervalDays || medication.schedule?.intervalDays || null,
-    dayOfWeek: data.dayOfWeek || medication.schedule?.dayOfWeek || null,
-    startDate: data.date || medication.schedule?.startDate || null,
+    scheduledDate: data.date || medication.schedule?.scheduledDate || medication.schedule?.date || null,
     dayPart: medication.schedule?.dayPart || 'Specific time'
   };
 
@@ -297,10 +289,8 @@ export async function editMedication(childId, medicationId, data) {
     dosage: updates.dosage,
     schedule: {
       ...medication.schedule,
-      frequencyCode: updates.frequency,
-      intervalDays: updates.intervalDays,
-      dayOfWeek: updates.dayOfWeek,
-      startDate: updates.startDate,
+      date: updates.scheduledDate,
+      scheduledDate: updates.scheduledDate,
       specificTime: updates.scheduledTime,
       dosage: updates.dosage,
     }
@@ -312,10 +302,8 @@ export async function editMedication(childId, medicationId, data) {
       medicationName: data.name,
       dosage: data.dosage,
       scheduledTime: updates.scheduledTime,
-      frequency: updates.frequency,
-      intervalDays: updates.intervalDays,
-      dayOfWeek: updates.dayOfWeek,
-      scheduledDate: updates.startDate || task.scheduledDate,
+      scheduledDate: updates.scheduledDate || task.scheduledDate,
+      scheduledToday: (updates.scheduledDate || task.scheduledDate) === todayDateKey(),
       status: updates.status
     });
   }
