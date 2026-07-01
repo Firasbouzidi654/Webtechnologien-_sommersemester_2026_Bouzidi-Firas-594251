@@ -85,6 +85,9 @@ public class MedicationController {
         if (medication.getChildId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
         }
+        if (medication.getTime() == null || medication.getTime().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A medication time is required.");
+        }
         if (medication.getTime() != null && !medication.getTime().matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Time must use the HH:mm format.");
         }

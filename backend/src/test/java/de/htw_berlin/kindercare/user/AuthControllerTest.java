@@ -50,6 +50,13 @@ class AuthControllerTest {
     }
 
     @Test
+    void rejectsWeakPassword() throws Exception {
+        mockMvc.perform(post("/api/auth/register").contentType(JSON_CONTENT_TYPE)
+                .content("{\"email\":\"weak@example.test\",\"password\":\"short\",\"role\":\"PARENT\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void rejectsInvalidLogin() throws Exception {
         mockMvc.perform(post("/api/auth/login").contentType(JSON_CONTENT_TYPE)
                 .content("{\"email\":\"missing@example.test\",\"password\":\"WrongPass123\"}"))

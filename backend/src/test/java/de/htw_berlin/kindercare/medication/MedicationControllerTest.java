@@ -59,7 +59,7 @@ class MedicationControllerTest {
         String medicationResponse = mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"childName\":\"Wrong Name\",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"childName\":\"Wrong Name\",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.childId").value(child.id()))
                 .andExpect(jsonPath("$.childName").value("Lina"))
@@ -119,7 +119,7 @@ class MedicationControllerTest {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", firstChild.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Blocked\",\"childId\":" + secondChild.id() + ",\"dosage\":\"1 ml\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Blocked\",\"childId\":" + secondChild.id() + ",\"dosage\":\"1 ml\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -142,7 +142,7 @@ class MedicationControllerTest {
         String response = mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return responseId(response);
@@ -154,7 +154,7 @@ class MedicationControllerTest {
         String response = mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Salbutamol\",\"childId\":" + child.id() + ",\"dosage\":\"1 puff\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Salbutamol\",\"childId\":" + child.id() + ",\"dosage\":\"1 puff\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -173,7 +173,7 @@ class MedicationControllerTest {
     void medicationRequiresChildId() throws Exception {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Salbutamol\",\"childName\":\"Emma\",\"dosage\":\"1 puff\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Salbutamol\",\"childName\":\"Emma\",\"dosage\":\"1 puff\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -184,13 +184,13 @@ class MedicationControllerTest {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\" \",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\" \",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\" \",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\" \",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -200,7 +200,7 @@ class MedicationControllerTest {
 
         mockMvc.perform(post("/api/medications")
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + childId + ",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -211,13 +211,19 @@ class MedicationControllerTest {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\",\"status\":\"DONE\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\",\"status\":\"DONE\"}"))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
                 .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\",\"time\":\"25:99\"}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .header("X-User-Id", child.parentId())
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -227,7 +233,7 @@ class MedicationControllerTest {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", parentId)
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":999999,\"dosage\":\"5 drops\",\"scheduledDate\":\"2026-07-01\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":999999,\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"2026-07-01\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -238,14 +244,14 @@ class MedicationControllerTest {
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\"}"))
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id() + ",\"dosage\":\"5 drops\",\"time\":\"12:00\"}"))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)
                 .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id()
-                        + ",\"dosage\":\"5 drops\",\"scheduledDate\":\"not-a-date\"}"))
+                        + ",\"dosage\":\"5 drops\",\"time\":\"12:00\",\"scheduledDate\":\"not-a-date\"}"))
                 .andExpect(status().isBadRequest());
     }
 

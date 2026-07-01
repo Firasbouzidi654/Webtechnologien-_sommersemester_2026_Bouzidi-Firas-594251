@@ -13,8 +13,9 @@ class FlywayMigrationTest {
     void repairMigrationRemovesLegacyMedicationRequirementAndUnusedTables() throws Exception {
         String url = "jdbc:h2:mem:flyway-repair;MODE=PostgreSQL;DB_CLOSE_DELAY=-1";
         try (var connection = DriverManager.getConnection(url, "sa", "");
-             var statement = connection.createStatement()) {
+            var statement = connection.createStatement()) {
             statement.execute("CREATE TABLE children (id BIGINT PRIMARY KEY, name VARCHAR(255), allergies VARCHAR(255))");
+            statement.execute("INSERT INTO children (id, name, allergies) VALUES (1, 'Emma', '')");
             statement.execute("CREATE TABLE medications (id BIGINT PRIMARY KEY, medication_id VARCHAR(50) NOT NULL, child_id BIGINT, name VARCHAR(255), dosage VARCHAR(255), scheduled_time VARCHAR(10), scheduled_date DATE, today_status VARCHAR(50))");
             statement.execute("INSERT INTO medications (id, medication_id, child_id, name, dosage, scheduled_time, scheduled_date, today_status) VALUES (1, 'legacy-1', 1, 'Vitamin D', '5 drops', '08:00', DATE '2026-06-23', 'PENDING')");
             statement.execute("CREATE TABLE parent_notes (id BIGINT PRIMARY KEY)");

@@ -24,6 +24,9 @@ public class UserService {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are required.");
         }
+        if (password.length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long.");
+        }
 
         String normalizedEmail = email.trim().toLowerCase();
         if (repository.existsByEmail(normalizedEmail)) {
