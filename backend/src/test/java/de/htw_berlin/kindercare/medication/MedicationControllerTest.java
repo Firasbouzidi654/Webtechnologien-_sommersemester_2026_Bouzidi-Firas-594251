@@ -4,7 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,6 +26,7 @@ class MedicationControllerTest {
     private static final String JSON_CONTENT_TYPE = "application/json";
 
     @Autowired MockMvc mockMvc;
+    @Autowired MedicationRepository medications;
 
     private record TestChild(long id, long parentId) { }
 
@@ -27,10 +35,10 @@ class MedicationControllerTest {
         long childId = createChildNamed("Emma");
         String response = mockMvc.perform(post("/api/medications").header("X-User-Role", "STAFF")
                 .contentType(JSON_CONTENT_TYPE)
-                .content("{\"name\":\"Salbutamol\",\"childId\":" + childId + ",\"dosage\":\"1 puff\",\"time\":\"08:30\",\"scheduledDate\":\"2026-07-01\",\"status\":\"PENDING\"}"))
+                .content("{\"name\":\"Salbutamol\",\"childId\":" + childId + ",\"dosage\":\"1 puff\",\"time\":\"08:30\",\"scheduledDate\":\"2026-07-03\",\"status\":\"PENDING\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.time").value("08:30"))
-                .andExpect(jsonPath("$.scheduledDate").value("2026-07-01"))
+                .andExpect(jsonPath("$.scheduledDate").value("2026-07-03"))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andReturn().getResponse().getContentAsString();
 
@@ -293,6 +301,58 @@ class MedicationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == " + firstId + ")].status").value("MISSED"))
                 .andExpect(jsonPath("$[?(@.id == " + secondId + ")].status").value("PENDING"));
+    }
+
+    @Test
+    void overduePendingMedicationIsMarkedMissedWhenCreated() throws Exception {
+        TestChild child = createOwnedChildNamed("Overdue Create Child");
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .header("X-User-Id", child.parentId())
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id()
+                        + ",\"dosage\":\"5 drops\",\"time\":\"08:00\",\"scheduledDate\":\"2026-07-02\",\"status\":\"PENDING\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("MISSED"));
+    }
+
+    @Test
+    void futurePendingMedicationStaysPending() throws Exception {
+        TestChild child = createOwnedChildNamed("Future Pending Child");
+
+        mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
+                .header("X-User-Id", child.parentId())
+                .contentType(JSON_CONTENT_TYPE)
+                .content("{\"name\":\"Vitamin D\",\"childId\":" + child.id()
+                        + ",\"dosage\":\"5 drops\",\"time\":\"13:00\",\"scheduledDate\":\"2026-07-02\",\"status\":\"PENDING\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void existingOverduePendingMedicationIsMarkedMissedWhenRead() throws Exception {
+        long childId = createChildNamed("Overdue Read Child");
+
+        Medication medication = new Medication("Vitamin D", "Overdue Read Child", "5 drops", "08:00", "PENDING", "2026-07-01");
+        medication.setChildId(childId);
+        long medicationId = medications.save(medication).getId();
+
+        mockMvc.perform(get("/api/medications").header("X-User-Role", "STAFF"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + medicationId + ")].status").value("MISSED"));
+
+        mockMvc.perform(get("/api/medications").header("X-User-Role", "STAFF"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + medicationId + ")].status").value("MISSED"));
+    }
+
+    @TestConfiguration
+    static class FixedClockConfig {
+        @Bean
+        @Primary
+        Clock fixedClock() {
+            return Clock.fixed(Instant.parse("2026-07-02T12:00:00Z"), ZoneId.of("UTC"));
+        }
     }
 
     private long responseId(String response) {

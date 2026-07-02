@@ -12,23 +12,29 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 
 @Service
 public class MedicationService {
     private final MedicationRepository repository;
     private final ChildRepository children;
     private final ChildService childService;
+    private final Clock clock;
 
-    public MedicationService(MedicationRepository repository, ChildRepository children, ChildService childService) {
+    public MedicationService(MedicationRepository repository, ChildRepository children, ChildService childService, Clock clock) {
         this.repository = repository;
         this.children = children;
         this.childService = childService;
+        this.clock = clock;
     }
 
     @NonNull
     public List<Medication> findAll() {
-        return repository.findAllByOrderByIdAsc();
+        return resolveOverdueStatuses(repository.findAllByOrderByIdAsc());
     }
 
     @NonNull
@@ -48,7 +54,7 @@ public class MedicationService {
         if (childIds.isEmpty()) {
             return List.of();
         }
-        return repository.findByChildIdInOrderByIdAsc(childIds);
+        return resolveOverdueStatuses(repository.findByChildIdInOrderByIdAsc(childIds));
     }
 
     @NonNull
@@ -72,11 +78,12 @@ public class MedicationService {
                 medication.getDosage(),
                 medication.getTime() == null ? "12:00" : medication.getTime(),
                 medication.getStatus() == null ? "PENDING" : medication.getStatus(),
-                medication.getScheduledDate() == null ? LocalDate.now().toString() : medication.getScheduledDate()
+                medication.getScheduledDate() == null ? LocalDate.now(clock).toString() : medication.getScheduledDate()
         );
 
         toSave.setChildId(linkedChild.getId());
 
+        markMissedIfOverdue(toSave);
         return repository.save(toSave);
     }
 
@@ -90,6 +97,7 @@ public class MedicationService {
         if (changes.getStatus() != null) medication.setStatus(changes.getStatus());
         if (changes.getScheduledDate() != null) medication.setScheduledDate(changes.getScheduledDate());
 
+        markMissedIfOverdue(medication);
         return repository.save(medication);
     }
 
@@ -111,7 +119,39 @@ public class MedicationService {
 
     @NonNull
     private Medication findById(@NonNull Long id) {
-        return repository.findById(id)
+        Medication medication = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found."));
+        return saveIfStatusChanged(medication);
+    }
+
+    @NonNull
+    private List<Medication> resolveOverdueStatuses(@NonNull List<Medication> medications) {
+        return medications.stream().map(this::saveIfStatusChanged).toList();
+    }
+
+    @NonNull
+    private Medication saveIfStatusChanged(@NonNull Medication medication) {
+        String previousStatus = medication.getStatus();
+        markMissedIfOverdue(medication);
+        if (!String.valueOf(previousStatus).equals(String.valueOf(medication.getStatus()))) {
+            return repository.save(medication);
+        }
+        return medication;
+    }
+
+    private void markMissedIfOverdue(@NonNull Medication medication) {
+        if (!"PENDING".equalsIgnoreCase(medication.getStatus())) {
+            return;
+        }
+
+        try {
+            LocalDate scheduledDate = LocalDate.parse(medication.getScheduledDate());
+            LocalTime scheduledTime = LocalTime.parse(medication.getTime() == null ? "12:00" : medication.getTime());
+            if (LocalDateTime.of(scheduledDate, scheduledTime).isBefore(LocalDateTime.now(clock))) {
+                medication.setStatus("MISSED");
+            }
+        } catch (DateTimeParseException | NullPointerException ignored) {
+            // Invalid dates/times are rejected by the controller for new writes.
+        }
     }
 }

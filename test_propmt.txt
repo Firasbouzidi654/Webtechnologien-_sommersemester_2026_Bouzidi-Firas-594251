@@ -16,3 +16,15 @@ Lucas fell while running in the playground and cried for five minutes.
 
 ✉️ AI Parent Message Generator
 Sophie did not eat much lunch today and seemed tired during the afternoon.
+
+Medication : 
+Aspirin
+Ibuprofen
+Advil
+Tylenol
+Metformin
+Lisinopril
+Amoxicillin
+Atorvastatin
+Omeprazole
+Cetirizine
