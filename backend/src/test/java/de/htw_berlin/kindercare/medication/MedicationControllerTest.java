@@ -62,8 +62,7 @@ class MedicationControllerTest {
     void medicationLinksToChildByIdNotJustByName() throws Exception {
         TestChild child = createOwnedChildNamed("Lina");
 
-        // The request sends a stale/wrong childName on purpose; the backend must
-        // ignore it and use the real name from the child record via childId.
+        // Stale childName should be ignored in favor of childId.
         String medicationResponse = mockMvc.perform(post("/api/medications").header("X-User-Role", "PARENT")
                 .header("X-User-Id", child.parentId())
                 .contentType(JSON_CONTENT_TYPE)

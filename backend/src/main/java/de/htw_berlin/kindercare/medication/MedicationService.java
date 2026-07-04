@@ -65,8 +65,7 @@ public class MedicationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A child is required.");
         }
 
-        // Medication records expose child details, so parent-created medication must
-        // be linked only to a child assigned to that same parent account.
+        // Restrict parent-created medication to assigned children.
         Child linkedChild = RoleAccess.hasAny(role, "STAFF", "ADMIN")
                 ? children.findById(childId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Child not found."))

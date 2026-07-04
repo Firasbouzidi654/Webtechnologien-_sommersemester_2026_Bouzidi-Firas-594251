@@ -50,7 +50,13 @@
     </section>
 
     <section v-if="taskModalActive" class="modal-backdrop medication-task-backdrop" @click.self="closeTaskModal" role="dialog" aria-modal="true">
-      <form class="modal medication-task-modal" @submit.prevent="saveTask">
+      <form
+        class="modal medication-task-modal"
+        @submit.prevent="saveTask"
+        @invalid.capture="setEnglishValidationMessage"
+        @input.capture="clearValidationMessage"
+        @change.capture="clearValidationMessage"
+      >
         <header class="medication-task-header">
           <div class="medication-title-group">
             <span class="medication-icon" aria-hidden="true"><CareIcon name="health" /></span>
@@ -135,7 +141,6 @@
       </form>
     </section>
 
-    <!-- Emergency modal -->
     <section v-if="emergencyActive" class="modal-backdrop" @click.self="closeEmergency" role="dialog" aria-modal="true">
       <div class="modal emergency-modal">
         <button class="modal-close" type="button" aria-label="Close map" @click="closeEmergency">x</button>
@@ -325,8 +330,6 @@ export default {
     if (!this.selectedEmergencyChildId && this.children.length > 0) {
       this.selectedEmergencyChildId = this.children[0].id;
     }
-    // Parents add children from a separate session, so poll the backend
-    // periodically to pick up new children/medications without a page reload.
     this.syncInterval = window.setInterval(() => {
       loadChildren();
       loadMedicationTasks();
@@ -522,6 +525,17 @@ export default {
     closeTaskModal() {
       this.taskModalActive = false;
       this.taskError = '';
+    },
+    setEnglishValidationMessage(event) {
+      const field = event.target;
+      if (typeof field?.setCustomValidity !== 'function') return;
+      field.setCustomValidity(field.validity?.valueMissing ? 'Please fill out this field.' : '');
+    },
+    clearValidationMessage(event) {
+      const field = event.target;
+      if (typeof field?.setCustomValidity === 'function') {
+        field.setCustomValidity('');
+      }
     },
     async saveTask() {
       if (!this.taskForm.childId || !this.taskForm.medicationName || !this.taskForm.dosage || !this.taskForm.date || !this.taskForm.time) {

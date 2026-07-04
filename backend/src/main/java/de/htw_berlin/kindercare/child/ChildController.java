@@ -36,8 +36,7 @@ public class ChildController {
             @RequestHeader(value = "X-User-Role", required = false) @Nullable String role,
             @RequestHeader(value = "X-User-Id", required = false) @Nullable String userId
     ) {
-        // Access rule: admins/staff receive the full directory; parents only receive
-        // children whose parent_id matches their logged-in account id.
+        // Apply role-based child visibility.
         return service.findVisibleTo(role, userId);
     }
 

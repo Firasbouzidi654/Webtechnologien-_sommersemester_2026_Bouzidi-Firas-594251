@@ -144,13 +144,31 @@ li {
 }
 
 :global([data-theme="dark"]) .care-highlight {
-  --highlight-title: #111827;
-  --highlight-text: #1f2937;
-  --highlight-muted: #475569;
+  --highlight-title: #0f172a;
+  --highlight-text: #1e293b;
+  --highlight-muted: #334155;
   --highlight-focus-bg: rgba(255,255,255,.62);
   --highlight-focus-border: rgba(71,85,105,.22);
 
   border-color:rgba(255,255,255,.1);
+}
+
+:global([data-theme="dark"]) .care-highlight .eyebrow,
+:global([data-theme="dark"]) .care-highlight li,
+:global([data-theme="dark"]) .theme-focus span {
+  color: var(--highlight-muted) !important;
+  -webkit-text-fill-color: var(--highlight-muted) !important;
+}
+
+:global([data-theme="dark"]) .care-highlight h2,
+:global([data-theme="dark"]) .theme-focus strong {
+  color: var(--highlight-title) !important;
+  -webkit-text-fill-color: var(--highlight-title) !important;
+}
+
+:global([data-theme="dark"]) .care-highlight li span {
+  color: var(--highlight-text) !important;
+  -webkit-text-fill-color: var(--highlight-text) !important;
 }
 
 :global([data-theme="dark"]) .wellness-highlight {

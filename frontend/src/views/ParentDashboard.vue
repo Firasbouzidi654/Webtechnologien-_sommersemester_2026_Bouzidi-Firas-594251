@@ -37,7 +37,6 @@
       </div>
     </section>
 
-    <!-- Empty state: new parent with no children yet -->
     <section v-if="!kindercareStore.loading && !hasChildren" class="empty-dashboard-state" :class="{ 'panel-dark': isDark }">
       <div class="empty-state-icon">👶</div>
       <h2>No child added yet</h2>
@@ -124,7 +123,13 @@
           </div>
         </header>
 
-        <form class="simple-medication-form" @submit.prevent="submitParentMedication">
+        <form
+          class="simple-medication-form"
+          @submit.prevent="submitParentMedication"
+          @invalid.capture="setEnglishValidationMessage"
+          @input.capture="clearValidationMessage"
+          @change.capture="clearValidationMessage"
+        >
           <label>
             <span>Child name</span>
             <select v-model.number="medicationForm.childId" required>
@@ -163,10 +168,17 @@
       </section>
     </section>
 
-    </template><!-- /v-if="hasChildren" -->
+    </template>
 
     <section v-if="activeDialog" class="modal-backdrop" @click.self="closeDialog">
-      <form v-if="activeDialog !== 'calendar'" class="modal" @submit.prevent="submitDialog">
+      <form
+        v-if="activeDialog !== 'calendar'"
+        class="modal"
+        @submit.prevent="submitDialog"
+        @invalid.capture="setEnglishValidationMessage"
+        @input.capture="clearValidationMessage"
+        @change.capture="clearValidationMessage"
+      >
         <header>
           <h2>{{ dialogTitle }}</h2>
           <button type="button" aria-label="Close dialog" @click="closeDialog">x</button>
@@ -391,6 +403,17 @@ export default {
     },
     closeDialog() {
       this.activeDialog = '';
+    },
+    setEnglishValidationMessage(event) {
+      const field = event.target;
+      if (typeof field?.setCustomValidity !== 'function') return;
+      field.setCustomValidity(field.validity?.valueMissing ? 'Please fill out this field.' : '');
+    },
+    clearValidationMessage(event) {
+      const field = event.target;
+      if (typeof field?.setCustomValidity === 'function') {
+        field.setCustomValidity('');
+      }
     },
     async submitDialog() {
       if (this.submitting) return;
@@ -1414,8 +1437,6 @@ textarea {
   }
 }
 
-/* ─── Child toolbar photo + delete ──────────────────────────────────────── */
-
 .child-toolbar {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
@@ -1496,8 +1517,6 @@ textarea {
   box-shadow: 0 6px 20px rgba(229, 62, 62, 0.35);
 }
 
-/* ─── Photo form field ───────────────────────────────────────────────────── */
-
 .photo-file-input {
   cursor: pointer;
 }
@@ -1525,8 +1544,6 @@ textarea {
   font-weight: 600;
   cursor: pointer;
 }
-
-/* ─── Empty-dashboard state ──────────────────────────────────────────────── */
 
 .empty-dashboard-state {
   display: grid;

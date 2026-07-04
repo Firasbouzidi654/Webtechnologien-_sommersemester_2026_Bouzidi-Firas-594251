@@ -29,8 +29,6 @@ function safeStatus(status, fallback = 'Pending') {
   return MEDICATION_STATUSES.includes(status) ? status : fallback;
 }
 
-// ─── Child access helpers ────────────────────────────────────────────────────
-
 function findMedicationOwner(medicationId) {
   return kindercareStore.children.find((child) =>
     Array.isArray(child.medications) && child.medications.some((medication) => medication.medicationId === medicationId)
@@ -47,8 +45,6 @@ function statusNotificationType(status) {
 function mergeChildrenFromApi(apiChildren) {
   kindercareStore.children = apiChildren;
 }
-
-// ─── Data loading ────────────────────────────────────────────────────────────
 
 export async function loadChildren() {
   kindercareStore.loading = true;
@@ -71,8 +67,6 @@ export async function loadMedicationTasks() {
     addNotification({ title: 'Load failed', message: 'Could not load medication tasks.', type: 'danger' });
   }
 }
-
-// ─── Notifications & toasts ──────────────────────────────────────────────────
 
 export function addNotification({ title, message, type = 'info', toast = true }) {
   const notification = {
@@ -107,8 +101,6 @@ export function markNotificationsRead(filter = () => true) {
   });
 }
 
-// ─── Utility ─────────────────────────────────────────────────────────────────
-
 export function taskReminderDue(task) {
   if (!task || task.status !== 'Pending' || !task.scheduledTime) {
     return false;
@@ -118,16 +110,12 @@ export function taskReminderDue(task) {
 }
 
 export function parentChildren() {
-  // The backend is the access-control boundary: parents receive only children
-  // assigned to their account, while admin/staff users receive the full list.
   return kindercareStore.children;
 }
 
 export function setParentAvatar(dataUrl) {
   kindercareStore.parentAvatar = dataUrl;
 }
-
-// ─── Children CRUD ───────────────────────────────────────────────────────────
 
 export async function addChild(data) {
   let child;
@@ -161,7 +149,6 @@ export async function addChild(data) {
 }
 
 export async function deleteChild(childId) {
-  // Optimistic remove so the UI feels instant
   kindercareStore.children = kindercareStore.children.filter((c) => c.id !== childId);
   kindercareStore.parentChildIds = kindercareStore.parentChildIds.filter((id) => id !== childId);
 
@@ -173,8 +160,6 @@ export async function deleteChild(childId) {
     await loadChildren();
   }
 }
-
-// ─── Allergies ───────────────────────────────────────────────────────────────
 
 export async function addAllergy(childId, name) {
   const child = findChild(childId);
@@ -221,8 +206,6 @@ export async function removeAllergy(childId, index) {
     addNotification({ title: 'Save failed', message: 'Could not remove allergy.', type: 'danger' });
   }
 }
-
-// ─── Medications ─────────────────────────────────────────────────────────────
 
 export async function addMedication(childId, data) {
   const child = findChild(childId);
