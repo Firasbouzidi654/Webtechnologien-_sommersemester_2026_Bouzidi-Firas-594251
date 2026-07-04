@@ -345,6 +345,89 @@ dd {
   border-color: color-mix(in srgb, var(--color-missed-border) 40%, transparent);
 }
 
+:global([data-theme="dark"]) .task-card {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .task-card h3,
+:global([data-theme="dark"]) .task-card dd {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .task-card p,
+:global([data-theme="dark"]) .task-card dt,
+:global([data-theme="dark"]) .task-card .scheduled-date,
+:global([data-theme="dark"]) .task-card .time {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .task-card dl > div,
+:global([data-theme="dark"]) .task-card .time {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+:global([data-theme="dark"]) .task-card .status,
+:global([data-theme="dark"]) .status-option {
+  border-color: currentColor !important;
+  font-weight: 900;
+}
+
+:global([data-theme="dark"]) .status-pending .status,
+:global([data-theme="dark"]) .status-option.status-pending {
+  background: var(--color-pending) !important;
+  color: var(--color-pending-text) !important;
+  -webkit-text-fill-color: var(--color-pending-text) !important;
+}
+
+:global([data-theme="dark"]) .status-upcoming .status,
+:global([data-theme="dark"]) .status-option.status-upcoming {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .status-taken .status,
+:global([data-theme="dark"]) .status-option.status-taken {
+  background: var(--color-taken) !important;
+  color: var(--color-taken-text) !important;
+  -webkit-text-fill-color: var(--color-taken-text) !important;
+}
+
+:global([data-theme="dark"]) .status-missed .status,
+:global([data-theme="dark"]) .status-option.status-missed {
+  background: var(--color-missed) !important;
+  color: var(--color-missed-text) !important;
+  -webkit-text-fill-color: var(--color-missed-text) !important;
+}
+
+:global([data-theme="dark"]) .task-card .confirm-button {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+:global([data-theme="dark"]) .task-card .confirm-button:disabled,
+:global([data-theme="dark"]) .task-card .secondary-button,
+:global([data-theme="dark"]) .task-card .delete-button {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:global([data-theme="dark"]) .task-card .secondary-button {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .task-card .delete-button {
+  background: var(--color-missed) !important;
+  color: var(--color-missed-text) !important;
+  -webkit-text-fill-color: var(--color-missed-text) !important;
+}
+
 @media (max-width: 640px) {
   header,
   dl {

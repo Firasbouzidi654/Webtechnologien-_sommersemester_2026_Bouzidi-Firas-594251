@@ -554,6 +554,64 @@ export default {
   overflow-wrap: anywhere;
 }
 
+:global([data-theme="dark"]) .medication-assistant,
+:global([data-theme="dark"]) .medication-modal,
+:global([data-theme="dark"]) .medication-result-card {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .medication-assistant h2,
+:global([data-theme="dark"]) .medication-result-card h3,
+:global([data-theme="dark"]) .result-grid dd,
+:global([data-theme="dark"]) .search-field {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .assistant-summary,
+:global([data-theme="dark"]) .assistant-disclaimer,
+:global([data-theme="dark"]) .assistant-message,
+:global([data-theme="dark"]) .result-grid dt {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .assistant-inline-search input,
+:global([data-theme="dark"]) .search-field input,
+:global([data-theme="dark"]) .assistant-disclaimer,
+:global([data-theme="dark"]) .assistant-message,
+:global([data-theme="dark"]) .result-grid div {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+:global([data-theme="dark"]) .assistant-inline-search input,
+:global([data-theme="dark"]) .search-field input {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .assistant-inline-search input::placeholder,
+:global([data-theme="dark"]) .search-field input::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+:global([data-theme="dark"]) .result-heading > span {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .error-message {
+  border-color: var(--color-missed-border) !important;
+  background: var(--color-missed) !important;
+  color: var(--color-missed-text) !important;
+  -webkit-text-fill-color: var(--color-missed-text) !important;
+}
+
 @keyframes assistant-spin {
   to {
     transform: rotate(360deg);

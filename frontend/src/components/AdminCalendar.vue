@@ -367,6 +367,83 @@ h3,
   flex-wrap: wrap;
 }
 
+:global([data-theme="dark"]) .calendar-panel {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .calendar-panel h2,
+:global([data-theme="dark"]) .calendar-panel h3,
+:global([data-theme="dark"]) .calendar-task strong,
+:global([data-theme="dark"]) .day-cell span {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .weekdays strong,
+:global([data-theme="dark"]) .calendar-actions span,
+:global([data-theme="dark"]) .calendar-task span,
+:global([data-theme="dark"]) .calendar-task small,
+:global([data-theme="dark"]) .empty {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .day-cell,
+:global([data-theme="dark"]) .calendar-task,
+:global([data-theme="dark"]) .calendar-actions span,
+:global([data-theme="dark"]) .calendar-actions button,
+:global([data-theme="dark"]) .day-plan-header button,
+:global([data-theme="dark"]) .task-actions button {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .day-cell small {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+:global([data-theme="dark"]) .day-cell.muted {
+  opacity: 0.7;
+}
+
+:global([data-theme="dark"]) .day-cell.today {
+  border-color: var(--color-taken-border) !important;
+  background: var(--color-taken) !important;
+}
+
+:global([data-theme="dark"]) .day-cell.selected {
+  border-color: #93c5fd !important;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.24);
+}
+
+:global([data-theme="dark"]) .calendar-task.pending em {
+  background: var(--color-pending) !important;
+  color: var(--color-pending-text) !important;
+  -webkit-text-fill-color: var(--color-pending-text) !important;
+}
+
+:global([data-theme="dark"]) .calendar-task.upcoming em {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .calendar-task.taken em {
+  background: var(--color-taken) !important;
+  color: var(--color-taken-text) !important;
+  -webkit-text-fill-color: var(--color-taken-text) !important;
+}
+
+:global([data-theme="dark"]) .calendar-task.missed em {
+  background: var(--color-missed) !important;
+  color: var(--color-missed-text) !important;
+  -webkit-text-fill-color: var(--color-missed-text) !important;
+}
+
 @media (max-width: 640px) {
   .calendar-panel {
     padding: 14px;

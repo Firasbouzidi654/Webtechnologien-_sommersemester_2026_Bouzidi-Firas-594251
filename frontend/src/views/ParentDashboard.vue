@@ -1203,6 +1203,59 @@ textarea {
   color: #f8fafc;
 }
 
+:global([data-theme="dark"]) .parent-dashboard input::placeholder,
+:global([data-theme="dark"]) .parent-dashboard textarea::placeholder {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .simple-medication-list li,
+:global([data-theme="dark"]) .parent-dashboard .compact-list article {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .simple-medication-list li span:not(.status-badge),
+:global([data-theme="dark"]) .parent-dashboard .compact-list span {
+  color: #cbd5e1;
+  -webkit-text-fill-color: #cbd5e1;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .status-badge {
+  border: 1px solid currentColor;
+  font-weight: 900;
+}
+
+:global([data-theme="dark"]) .parent-dashboard .status-badge.status-upcoming {
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+  -webkit-text-fill-color: var(--color-upcoming-text);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .status-badge.status-pending {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+  -webkit-text-fill-color: var(--color-pending-text);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .status-badge.status-taken {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+  -webkit-text-fill-color: var(--color-taken-text);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .status-badge.status-missed {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+  -webkit-text-fill-color: var(--color-missed-text);
+}
+
+:global([data-theme="dark"]) .parent-dashboard .simple-medication-form button,
+:global([data-theme="dark"]) .parent-dashboard .child-toolbar button:not(.delete-child-btn),
+:global([data-theme="dark"]) .parent-dashboard .modal footer button:not(.secondary-button) {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
 :global([data-theme="dark"]) .parent-dashboard .logout-button.secondary,
 :global([data-theme="dark"]) .parent-dashboard .compact-list header button,
 :global([data-theme="dark"]) .parent-dashboard .item-actions button,

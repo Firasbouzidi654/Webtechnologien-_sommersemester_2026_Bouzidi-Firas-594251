@@ -208,6 +208,53 @@ small {
   background: var(--color-bg-tertiary);
 }
 
+:global([data-theme="dark"]) .child-list h2,
+:global([data-theme="dark"]) .child-row strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .child-list .eyebrow,
+:global([data-theme="dark"]) .child-row small {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .child-row {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .child-row.active {
+  border-color: #5eead4 !important;
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.16);
+}
+
+:global([data-theme="dark"]) .wellness-chip {
+  background: var(--color-taken) !important;
+  color: var(--color-taken-text) !important;
+  -webkit-text-fill-color: var(--color-taken-text) !important;
+}
+
+:global([data-theme="dark"]) .group-chip {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .allergy-chip {
+  background: var(--color-pending) !important;
+  color: var(--color-pending-text) !important;
+  -webkit-text-fill-color: var(--color-pending-text) !important;
+}
+
+:global([data-theme="dark"]) .no-allergies {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
 @media (max-width: 480px) {
   .child-list {
     gap: 8px;

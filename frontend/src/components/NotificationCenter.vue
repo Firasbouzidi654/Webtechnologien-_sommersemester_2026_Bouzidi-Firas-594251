@@ -463,6 +463,49 @@ export default {
   font-size: 0.9rem;
 }
 
+:global([data-theme="dark"]) .notification-bell,
+:global([data-theme="dark"]) .notification-dropdown,
+:global([data-theme="dark"]) .notification-item,
+:global([data-theme="dark"]) .toast {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .notification-dropdown h3,
+:global([data-theme="dark"]) .notification-item strong,
+:global([data-theme="dark"]) .toast strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .notification-dropdown .eyebrow,
+:global([data-theme="dark"]) .notification-item p,
+:global([data-theme="dark"]) .notification-item time,
+:global([data-theme="dark"]) .toast p,
+:global([data-theme="dark"]) .empty-note {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .notification-dropdown header button,
+:global([data-theme="dark"]) .empty-note {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .bell-icon {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .notification-count {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 @keyframes dropdown-in {
   from {
     opacity: 0;

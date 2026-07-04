@@ -1571,11 +1571,70 @@ select {
 :global([data-theme="dark"]) .admin-dashboard input,
 :global([data-theme="dark"]) .admin-dashboard textarea,
 :global([data-theme="dark"]) .admin-dashboard .timeline-section,
-:global([data-theme="dark"]) .admin-dashboard .mini-timeline > span,
 :global([data-theme="dark"]) .admin-dashboard .empty-state {
   border-color: rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
+}
+
+:global([data-theme="dark"]) .admin-dashboard input::placeholder,
+:global([data-theme="dark"]) .admin-dashboard textarea::placeholder {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+}
+
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline > span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline .status-taken {
+  background: var(--color-taken);
+  color: var(--color-taken-text);
+  -webkit-text-fill-color: var(--color-taken-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline .status-missed {
+  background: var(--color-missed);
+  color: var(--color-missed-text);
+  -webkit-text-fill-color: var(--color-missed-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline .status-pending {
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+  -webkit-text-fill-color: var(--color-pending-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .mini-timeline .status-upcoming {
+  background: var(--color-upcoming);
+  color: var(--color-upcoming-text);
+  -webkit-text-fill-color: var(--color-upcoming-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .medication-safety-note {
+  border-color: var(--color-pending-border);
+  background: var(--color-pending);
+  color: var(--color-pending-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .medication-safety-note strong,
+:global([data-theme="dark"]) .admin-dashboard .medication-safety-note span {
+  color: var(--color-pending-text);
+  -webkit-text-fill-color: var(--color-pending-text);
+}
+
+:global([data-theme="dark"]) .admin-dashboard .primary-medication-button,
+:global([data-theme="dark"]) .admin-dashboard .top-actions button {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+:global([data-theme="dark"]) .admin-dashboard .top-actions .theme-button,
+:global([data-theme="dark"]) .admin-dashboard .top-actions .logout-button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
 }
 
 :global([data-theme="dark"]) .admin-dashboard .secondary-button,

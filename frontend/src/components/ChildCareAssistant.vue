@@ -302,9 +302,9 @@ textarea:focus { outline: 2px solid color-mix(in srgb, var(--color-brand) 36%, t
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-:global([data-theme="dark"]) textarea,
-:global([data-theme="dark"]) .ai-answer-card,
-:global([data-theme="dark"]) .secondary-button {
+:global([data-theme="dark"]) .ai-care-hub textarea,
+:global([data-theme="dark"]) .ai-care-hub .ai-answer-card,
+:global([data-theme="dark"]) .ai-care-hub .secondary-button {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
@@ -312,6 +312,57 @@ textarea:focus { outline: 2px solid color-mix(in srgb, var(--color-brand) 36%, t
 
 :global([data-theme="dark"]) .hub-summary,
 :global([data-theme="dark"]) .eyebrow { color: #cbd5e1; }
+
+:global([data-theme="dark"]) .ai-care-hub h2,
+:global([data-theme="dark"]) .message-field,
+:global([data-theme="dark"]) .answer-content {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .hub-summary,
+:global([data-theme="dark"]) .assistant-disclaimer,
+:global([data-theme="dark"]) .status-message,
+:global([data-theme="dark"]) .ai-care-hub .eyebrow {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+:global([data-theme="dark"]) .ai-care-hub .ai-tabs button,
+:global([data-theme="dark"]) .ai-care-hub textarea,
+:global([data-theme="dark"]) .ai-answer-card,
+:global([data-theme="dark"]) .assistant-disclaimer,
+:global([data-theme="dark"]) .status-message,
+:global([data-theme="dark"]) .ai-care-hub .secondary-button {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .ai-care-hub textarea::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+:global([data-theme="dark"]) .ai-care-hub .ai-tabs button.active {
+  border-color: #93c5fd !important;
+  background: rgba(49, 130, 206, 0.24) !important;
+  color: #f8fafc !important;
+}
+
+:global([data-theme="dark"]) .ai-badge {
+  background: var(--color-upcoming) !important;
+  color: var(--color-upcoming-text) !important;
+  -webkit-text-fill-color: var(--color-upcoming-text) !important;
+}
+
+:global([data-theme="dark"]) .ai-care-hub .error-message {
+  border-color: var(--color-missed-border) !important;
+  background: var(--color-missed) !important;
+  color: var(--color-missed-text) !important;
+  -webkit-text-fill-color: var(--color-missed-text) !important;
+}
 
 @media (max-width: 640px) {
   .ai-care-hub { padding: 15px; }
