@@ -87,20 +87,27 @@ This project is a university prototype and must not be used with real personal o
 
 ---
 
-## Testing
 
-### Backend
 
-```powershell
-.\gradlew.bat test
-```
+## Local Development
 
-### Frontend
+Start the local PostgreSQL database first:
 
 ```powershell
-cd frontend
-npm test
-npm run build
+docker compose up -d db
 ```
+
+Check that the database container is running:
+
+```powershell
+docker ps
+```
+
+```powershell
+.\gradlew.bat :backend:bootRun
+```
+
+
+
 
 
