@@ -12,7 +12,7 @@ This project is a university prototype and must not be used with real personal o
 
 - Frontend: https://webtechnologien-sommersemester-2026.onrender.com
 - Backend: https://kindercare-backend.onrender.com
-- Children Check: https://kindercare-backend.onrender.com/api/children
+- Health Check: https://kindercare-backend.onrender.com/api/health
 - GitHub Repository:
   https://github.com/Firasbouzidi654/Webtechnologien-_sommersemester_2026_Bouzidi-Firas-594251
 
@@ -93,3 +93,14 @@ This project is a university prototype and must not be used with real personal o
 
 ```powershell
 .\gradlew.bat test
+```
+
+### Frontend
+
+```powershell
+cd frontend
+npm test
+npm run build
+```
+
+

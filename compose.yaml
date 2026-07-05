@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: kindercare-db
     environment:
-      POSTGRES_DB: kindercare
-      POSTGRES_USER: kindercare
-      POSTGRES_PASSWORD: kindercare
+      POSTGRES_DB: ${POSTGRES_DB:-kindercare}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env for local development}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env for local development}
     ports:
       - "5433:5432"
     volumes:
